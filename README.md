@@ -7,83 +7,88 @@ Monorepo containing:
 This project is portfolio-focused and production-ready to demo. It follows an AI-first policy with DB-only as the secondary source (no static placeholders):
 - Grammar Coach, Speech Coach, Quiz generation: use AI if `OPENAI_API_KEY` is set; otherwise use seeded DB data. If neither is available, endpoints return clear 503 responses (no simulated or static results).
 
-## Quick start
+## Quick Start (Docker - Recommended)
 
 Prereqs:
-- Node.js 18+
-- Python 3.10+
-- MongoDB Atlas URI (or local Mongo for dev)
+- Docker and Docker Compose
+- MongoDB Atlas URI (or local MongoDB)
 
-## Production Setup
-
-Set the following environment variables for the backend (via your hosting provider or Docker secrets):
-
+### 1. Clone and Configure
 ```bash
-# Backend (FastAPI)
-MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/<db>?retryWrites=true&w=majority
-MONGODB_DB_NAME=german
-JWT_SECRET=<long-random-secret>
-# Optional AI
-OPENAI_API_KEY=<your-openai-key>           # optional; enables AI features
-ENABLE_AI_QUIZ_TOPUP=false                 # set true only when OPENAI_API_KEY is set
+git clone https://github.com/saud06/german-ai.git
+cd german-ai
 
-# Mode flags (safe defaults)
-DEV_MODE=false
-ALLOW_DEV_ROUTES=false
+# Copy environment template
+cp .env.example .env
+
+# Edit .env with your settings (required):
+# - MONGODB_URI: Your MongoDB Atlas connection string
+# - JWT_SECRET: A secure random string (32+ characters)
+# - OPENAI_API_KEY: Optional, for AI features
+nano .env
 ```
 
-Frontend:
+**Required Configuration:**
+- **MONGODB_URI**: Get from [MongoDB Atlas](https://cloud.mongodb.com/) (free tier available)
+- **JWT_SECRET**: Generate with `openssl rand -base64 32` or use any secure 32+ character string
+- **OPENAI_API_KEY**: Optional, get from [OpenAI Platform](https://platform.openai.com/api-keys) for AI features
 
+### 2. Run with Docker
 ```bash
-# Next.js
-NEXT_PUBLIC_API_BASE_URL=https://<your-backend-domain>/api/v1
+docker compose up --build
 ```
 
-Docker (local or server):
+### 3. Access the Application
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000/docs
+
+### 4. Demo Login
+Use these credentials to test the application:
+- **Email**: `saud@gmail.com`
+- **Password**: `password`
+
+## Features
+
+### 🤖 AI-Powered (with OPENAI_API_KEY)
+- Grammar checking with AI suggestions
+- AI-generated quiz questions
+- Enhanced speech feedback
+
+### 📚 Database-First (without OPENAI_API_KEY)
+- Pre-seeded vocabulary and grammar rules
+- Static quiz questions from database
+- Basic speech recognition
+
+### 🎯 Core Features
+- German vocabulary learning
+- Grammar exercises
+- Speech practice
+- Progress tracking
+- Quiz system
+
+## Docker Commands
 
 ```bash
+# Start the application
+docker compose up --build
+
+# Start in background (detached mode)
 docker compose up --build -d
+
+# Stop the application
+docker compose down
+
+# View logs
+docker compose logs backend
+docker compose logs frontend
+
+# Rebuild after code changes
+docker compose up --build --force-recreate
 ```
 
-## Backend
+## Local Development (Optional)
 
-1) Create `.env` from example:
-```
-cp backend/.env.example backend/.env
-```
-Fill values (at least `MONGODB_URI`, `JWT_SECRET`).
-
-2) Install deps and run:
-```
-python -m venv .venv
-. .venv/Scripts/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
-pip install -r backend/requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --app-dir backend
-```
-
-API docs: http://localhost:8000/docs
-
-## Frontend (Next.js only)
-
-1) Install and run:
-```
-cd frontend
-npm i
-npm run dev
-```
-
-Then open http://localhost:3000
-
-Set `NEXT_PUBLIC_API_BASE_URL` in `frontend/.env.local` (e.g. `http://localhost:8000/api/v1`).
-
-Note: This project uses Next.js only (no Streamlit).
-
-### Demo login (for preview)
-
-Use the following temporary demo account on the login page:
-
-- Email: `saud@gmail.com`
-- Password: `password`
+If you prefer local development without Docker, see the detailed setup instructions in the legacy documentation. The Docker approach above is recommended for consistency and ease of setup.
 
 ### Screenshots
 
