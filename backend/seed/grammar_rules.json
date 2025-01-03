@@ -1,0 +1,182 @@
+[
+  {
+    "pattern": "gehen",
+    "replacement": "gehe",
+    "explanation": "Verb conjugation: ich gehe (not gehen).",
+    "suggestion": "Ich gehe zur Schule.",
+    "word_boundary": true
+  },
+  {
+    "pattern": "das Frau",
+    "replacement": "die Frau",
+    "explanation": "Article agreement: feminine nouns use die in nominative singular.",
+    "suggestion": "Die Frau ist nett.",
+    "word_boundary": true
+  },
+  {
+    "pattern": "ich gehen",
+    "replacement": "ich gehe",
+    "explanation": "Verb conjugation with ich: gehe not gehen.",
+    "suggestion": "Ich gehe nach Hause."
+  },
+  {
+    "pattern": "du gehen",
+    "replacement": "du gehst",
+    "explanation": "Verb conjugation with du: gehst not gehen.",
+    "suggestion": "Du gehst ins Kino."
+  },
+  {
+    "pattern": "er gehen",
+    "replacement": "er geht",
+    "explanation": "Verb conjugation with er/sie/es: geht not gehen.",
+    "suggestion": "Er geht zur Arbeit."
+  },
+  {
+    "pattern": "die Mann",
+    "replacement": "der Mann",
+    "explanation": "Article agreement: der Mann (masculine, nominative).",
+    "suggestion": "Der Mann ist müde."
+  },
+  {
+    "pattern": "der Frau",
+    "replacement": "die Frau",
+    "explanation": "Article agreement: die Frau (feminine, nominative).",
+    "suggestion": "Die Frau arbeitet viel."
+  },
+  {
+    "pattern": "ich haben",
+    "replacement": "ich habe",
+    "explanation": "Verb conjugation of haben with ich: habe not haben.",
+    "suggestion": "Ich habe Zeit."
+  },
+  {
+    "pattern": "du haben",
+    "replacement": "du hast",
+    "explanation": "Verb conjugation of haben with du: hast not haben.",
+    "suggestion": "Du hast recht."
+  },
+  {
+    "pattern": "er haben",
+    "replacement": "er hat",
+    "explanation": "Verb conjugation of haben with er/sie/es: hat not haben.",
+    "suggestion": "Er hat Hunger."
+  },
+  {
+    "pattern": "ich sind",
+    "replacement": "ich bin",
+    "explanation": "Verb conjugation of sein with ich: bin not sind.",
+    "suggestion": "Ich bin müde."
+  },
+  {
+    "pattern": "du sind",
+    "replacement": "du bist",
+    "explanation": "Verb conjugation of sein with du: bist not sind.",
+    "suggestion": "Du bist freundlich."
+  },
+  {
+    "pattern": "er sind",
+    "replacement": "er ist",
+    "explanation": "Verb conjugation of sein with er/sie/es: ist not sind.",
+    "suggestion": "Er ist Lehrer."
+  },
+  {
+    "pattern": "du ist",
+    "replacement": "du bist",
+    "explanation": "Verb conjugation of sein with du: bist not ist.",
+    "suggestion": "Du bist hier."
+  },
+  {
+    "pattern": "wir ist",
+    "replacement": "wir sind",
+    "explanation": "Verb conjugation of sein with wir: sind not ist.",
+    "suggestion": "Wir sind bereit."
+  },
+  {
+    "pattern": "ihr ist",
+    "replacement": "ihr seid",
+    "explanation": "Verb conjugation of sein with ihr: seid not ist.",
+    "suggestion": "Ihr seid früh."
+  },
+  {
+    "pattern": "ich machen",
+    "replacement": "ich mache",
+    "explanation": "Verb conjugation with ich: mache not machen.",
+    "suggestion": "Ich mache Hausaufgaben."
+  },
+  {
+    "pattern": "du machen",
+    "replacement": "du machst",
+    "explanation": "Verb conjugation with du: machst not machen.",
+    "suggestion": "Du machst Kaffee."
+  },
+  {
+    "pattern": "er machen",
+    "replacement": "er macht",
+    "explanation": "Verb conjugation with er/sie/es: macht not machen.",
+    "suggestion": "Er macht Sport."
+  },
+  {
+    "pattern": "ich kommen",
+    "replacement": "ich komme",
+    "explanation": "Verb conjugation with ich: komme not kommen.",
+    "suggestion": "Ich komme später."
+  },
+  {
+    "pattern": "du kommen",
+    "replacement": "du kommst",
+    "explanation": "Verb conjugation with du: kommst not kommen.",
+    "suggestion": "Du kommst mit."
+  },
+  {
+    "pattern": "er kommen",
+    "replacement": "er kommt",
+    "explanation": "Verb conjugation with er/sie/es: kommt not kommen.",
+    "suggestion": "Er kommt morgen."
+  },
+  {
+    "pattern": "der Mädchen",
+    "replacement": "das Mädchen",
+    "explanation": "Article agreement: das Mädchen (neuter, diminutive -chen).",
+    "suggestion": "Das Mädchen spielt."
+  },
+  {
+    "pattern": "die Junge",
+    "replacement": "der Junge",
+    "explanation": "Article agreement: der Junge (masculine, nominative).",
+    "suggestion": "Der Junge rennt.",
+    "word_boundary": true
+  },
+  { "pattern": "das Mann", "replacement": "der Mann", "explanation": "Article agreement: der Mann (masculine).", "suggestion": "Der Mann liest." },
+  { "pattern": "die Kind", "replacement": "das Kind", "explanation": "Article agreement: das Kind (neuter).", "suggestion": "Das Kind spielt." },
+  { "pattern": "der Kind", "replacement": "das Kind", "explanation": "Article agreement: das Kind (neuter).", "suggestion": "Das Kind schläft." },
+  
+  { "regex": "\\bich\\s+am\\s+lernen\\b", "flags": "i", "replacement": "ich lerne", "explanation": "Normalize colloquial 'am lernen' to standard present tense.", "suggestion": "Ich lerne Deutsch.", "priority": 1 },
+  { "regex": "\\bzu\\s+die\\s+Schule\\b", "flags": "i", "replacement": "zur Schule", "explanation": "Contraction: 'zu der' → 'zur'.", "suggestion": "Ich gehe zur Schule.", "priority": 1 },
+  { "pattern": "ich sprechen", "replacement": "ich spreche", "explanation": "Verb conjugation: ich spreche.", "suggestion": "Ich spreche Deutsch." },
+  { "pattern": "du sprechen", "replacement": "du sprichst", "explanation": "Verb conjugation: du sprichst.", "suggestion": "Du sprichst leise." },
+  { "pattern": "er sprechen", "replacement": "er spricht", "explanation": "Verb conjugation: er/sie/es spricht.", "suggestion": "Er spricht gut." },
+
+  { "pattern": "ich sehen", "replacement": "ich sehe", "explanation": "Verb conjugation: ich sehe.", "suggestion": "Ich sehe den Film." },
+  { "pattern": "du sehen", "replacement": "du siehst", "explanation": "Verb conjugation: du siehst.", "suggestion": "Du siehst müde aus." },
+  { "pattern": "er sehen", "replacement": "er sieht", "explanation": "Verb conjugation: er/sie/es sieht.", "suggestion": "Er sieht den Hund." },
+
+  { "pattern": "ich nehmen", "replacement": "ich nehme", "explanation": "Verb conjugation: ich nehme.", "suggestion": "Ich nehme den Bus." },
+  { "pattern": "du nehmen", "replacement": "du nimmst", "explanation": "Verb conjugation: du nimmst.", "suggestion": "Du nimmst das Buch." },
+  { "pattern": "er nehmen", "replacement": "er nimmt", "explanation": "Verb conjugation: er/sie/es nimmt.", "suggestion": "Er nimmt einen Kaffee." },
+
+  { "pattern": "ich fahren", "replacement": "ich fahre", "explanation": "Verb conjugation: ich fahre.", "suggestion": "Ich fahre nach Berlin." },
+  { "pattern": "du fahren", "replacement": "du fährst", "explanation": "Verb conjugation: du fährst.", "suggestion": "Du fährst schnell." },
+  { "pattern": "er fahren", "replacement": "er fährt", "explanation": "Verb conjugation: er/sie/es fährt.", "suggestion": "Er fährt zur Arbeit." },
+
+  { "pattern": "ich lesen", "replacement": "ich lese", "explanation": "Verb conjugation: ich lese.", "suggestion": "Ich lese ein Buch." },
+  { "pattern": "du lesen", "replacement": "du liest", "explanation": "Verb conjugation: du liest.", "suggestion": "Du liest die Zeitung." },
+  { "pattern": "er lesen", "replacement": "er liest", "explanation": "Verb conjugation: er/sie/es liest.", "suggestion": "Er liest laut." },
+
+  { "pattern": "ich essen", "replacement": "ich esse", "explanation": "Verb conjugation: ich esse.", "suggestion": "Ich esse ein Brot." },
+  { "pattern": "du essen", "replacement": "du isst", "explanation": "Verb conjugation: du isst.", "suggestion": "Du isst gern Obst." },
+  { "pattern": "er essen", "replacement": "er isst", "explanation": "Verb conjugation: er/sie/es isst.", "suggestion": "Er isst zu Mittag." },
+
+  { "pattern": "ich trinken", "replacement": "ich trinke", "explanation": "Verb conjugation: ich trinke.", "suggestion": "Ich trinke Wasser." },
+  { "pattern": "du trinken", "replacement": "du trinkst", "explanation": "Verb conjugation: du trinkst.", "suggestion": "Du trinkst Tee." },
+  { "pattern": "er trinken", "replacement": "er trinkt", "explanation": "Verb conjugation: er/sie/es trinkt.", "suggestion": "Er trinkt Kaffee." }
+]

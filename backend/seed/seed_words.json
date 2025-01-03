@@ -1,0 +1,7 @@
+[
+  {"level": "A1", "word": "der Tisch", "translation": "the table", "examples": ["Der Tisch ist groß."], "source": "db"},
+  {"level": "A1", "word": "das Haus", "translation": "the house", "examples": ["Ich gehe nach Hause."], "source": "db"},
+  {"level": "A2", "word": "die Schule", "translation": "the school", "examples": ["Ich gehe zur Schule."], "source": "db"},
+  {"level": "B1", "word": "der Vorschlag", "translation": "the proposal", "examples": ["Ich mache einen Vorschlag."], "source": "db"},
+  {"level": "B2", "word": "die Herausforderung", "translation": "the challenge", "examples": ["Das ist eine große Herausforderung."], "source": "db"}
+]

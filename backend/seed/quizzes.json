@@ -1,0 +1,42 @@
+[
+  {
+    "_id": "quiz_a1_articles_1",
+    "level": "A1",
+    "track": "articles",
+    "questions": [
+      {"id": "a1_art_q1", "type": "mcq", "question": "____ Tisch ist groß.", "options": ["Der", "Die", "Das"], "answer": "Der", "skills": ["articles"]},
+      {"id": "a1_art_q2", "type": "mcq", "question": "____ Lampe ist neu.", "options": ["Der", "Die", "Das"], "answer": "Die", "skills": ["articles"]},
+      {"id": "a1_art_q3", "type": "mcq", "question": "____ Buch ist interessant.", "options": ["Der", "Die", "Das"], "answer": "Das", "skills": ["articles"]}
+    ]
+  },
+  {
+    "_id": "quiz_a1_verbs_1",
+    "level": "A1",
+    "track": "verbs",
+    "questions": [
+      {"id": "a1_v_q1", "type": "fill_in", "sentence": "Ich ___ zur Schule.", "answer": "gehe", "skills": ["verbs"]},
+      {"id": "a1_v_q2", "type": "fill_in", "sentence": "Er ___ Kaffee.", "answer": "trinkt", "skills": ["verbs"]},
+      {"id": "a1_v_q3", "type": "fill_in", "sentence": "Wir ___ Fußball.", "answer": "spielen", "skills": ["verbs"]}
+    ]
+  },
+  {
+    "_id": "quiz_a2_cases_1",
+    "level": "A2",
+    "track": "cases",
+    "questions": [
+      {"id": "a2_c_q1", "type": "mcq", "question": "Ich gehe in ____ Park.", "options": ["der", "den", "dem"], "answer": "den", "skills": ["cases"]},
+      {"id": "a2_c_q2", "type": "mcq", "question": "Das Buch liegt auf ____ Tisch.", "options": ["den", "dem", "der"], "answer": "dem", "skills": ["cases"]},
+      {"id": "a2_c_q3", "type": "mcq", "question": "Er kommt aus ____ Stadt.", "options": ["die", "der", "dem"], "answer": "der", "skills": ["cases"]}
+    ]
+  },
+  {
+    "_id": "quiz_b1_prepositions_1",
+    "level": "B1",
+    "track": "prepositions",
+    "questions": [
+      {"id": "b1_p_q1", "type": "mcq", "question": "Er wartet ____ den Bus.", "options": ["auf", "für", "an"], "answer": "auf", "skills": ["prepositions"]},
+      {"id": "b1_p_q2", "type": "mcq", "question": "Sie interessiert sich ____ Kunst.", "options": ["über", "für", "an"], "answer": "für", "skills": ["prepositions"]},
+      {"id": "b1_p_q3", "type": "mcq", "question": "Wir sprechen ____ das Projekt.", "options": ["mit", "über", "an"], "answer": "über", "skills": ["prepositions"]}
+    ]
+  }
+]

@@ -1,0 +1,38 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run tests
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017
+          MONGODB_DB_NAME: german_ci
+          JWT_SECRET: test-secret
+          DEV_MODE: 'true'
+        run: |
+          # Run tests that don't require a running Mongo instance
+          pytest -q backend/tests
