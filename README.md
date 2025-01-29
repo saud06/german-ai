@@ -78,6 +78,25 @@ Set `NEXT_PUBLIC_API_BASE_URL` in `frontend/.env.local` (e.g. `http://localhost:
 
 Note: This project uses Next.js only (no Streamlit).
 
+### Demo login (for preview)
+
+Use the following temporary demo account on the login page:
+
+- Email: `saud@gmail.com`
+- Password: `password`
+
+### Screenshots
+
+Below are example screenshots. If viewing on GitHub, the images will render if you add the files at the referenced paths.
+
+- Home page
+
+  ![Home](frontend/public/home.png)
+
+- Dashboard
+
+  ![Dashboard](frontend/public/dashboard.png)
+
 ## Docker (one command demo)
 
 Requirements: Docker and Docker Compose
