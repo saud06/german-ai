@@ -47,6 +47,11 @@ export default function LoginPage() {
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <button className="btn w-full" disabled={loading}>{loading ? 'Signing in…' : 'Login'}</button>
         </form>
+        <div className="mt-3 rounded-md border bg-amber-50 p-3 text-xs text-amber-800">
+          <div className="font-medium">Demo account</div>
+          <div>Email: <code>saud@gmail.com</code></div>
+          <div>Password: <code>password</code></div>
+        </div>
         <p className="mt-4 text-sm text-gray-600 dark:text-zinc-400">
           No account? <Link className="underline" href="/register" scroll={false}>Create one</Link>
         </p>
