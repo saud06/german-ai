@@ -155,3 +155,7 @@ Frontend (`frontend/.env.local`):
 GitHub Actions workflows:
 - `.github/workflows/backend.yml` — installs backend deps and runs `pytest`.
 - `.github/workflows/frontend.yml` — installs deps, type-checks, and builds Next.js.
+
+## Website
+
+https://german-frontend.onrender.com
