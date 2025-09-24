@@ -1,6 +1,7 @@
 "use client"
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import RequireAuth from '@/components/RequireAuth'
+import LiveTranscriptionCard from '@/components/LiveTranscriptionCard'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import Link from 'next/link'
@@ -69,8 +70,7 @@ export default function SpeechPage() {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const rafRef = useRef<number | null>(null)
 
-  // Optional browser speech recognition (Chrome/WebKit)
-  const recognitionRef = useRef<any>(null)
+  // Speech recognition is now handled by LiveTranscriptionCard
 
   const stopMeter = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
@@ -179,29 +179,7 @@ export default function SpeechPage() {
     timerRef.current = null
   }
 
-  const startRecognition = () => {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SR) return
-    const rec = new SR()
-    rec.lang = 'de-DE'
-    rec.continuous = true
-    rec.interimResults = true
-    rec.onresult = (evt: any) => {
-      let txt = ''
-      for (let i = evt.resultIndex; i < evt.results.length; i++) {
-        txt += evt.results[i][0].transcript + ' '
-      }
-      setLocalTranscript(txt.trim())
-      setLocalScore(similarity(expected, txt))
-    }
-    rec.onerror = () => {}
-    rec.start()
-    recognitionRef.current = rec
-  }
-  const stopRecognition = () => {
-    try { recognitionRef.current?.stop?.() } catch {}
-    recognitionRef.current = null
-  }
+  // Speech recognition moved to LiveTranscriptionCard component
 
   const startRecording = async () => {
     setError(null)
@@ -225,7 +203,6 @@ export default function SpeechPage() {
       await setupMeter(stream)
       rec.start()
       startTimer()
-      startRecognition()
       setIsRecording(true)
     } catch (e: any) {
       setError('Microphone permission denied or unsupported in this browser.')
@@ -234,7 +211,6 @@ export default function SpeechPage() {
 
   const stopRecording = () => {
     stopTimer()
-    stopRecognition()
     try { recorderRef.current?.stop() } catch {}
     recorderRef.current = null
     mediaStreamRef.current?.getTracks().forEach(t => t.stop())
@@ -275,7 +251,6 @@ export default function SpeechPage() {
 
   useEffect(() => () => {
     // cleanup on unmount
-    stopRecognition()
     stopMeter()
     stopTimer()
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
@@ -321,15 +296,27 @@ export default function SpeechPage() {
         {error && <p className="text-red-600 text-sm">{error}</p>}
       </div>
 
-      {/* Local feedback */}
+      {/* Live Transcription Card */}
+      <LiveTranscriptionCard 
+        expected={expected}
+        isRecording={isRecording}
+        onTranscriptUpdate={(transcript, score) => {
+          setLocalTranscript(transcript)
+          setLocalScore(score)
+        }}
+      />
+
+      {/* Local feedback - simplified */}
       <div className="rounded-md border p-3 text-sm space-y-2">
-        <h3 className="font-medium">Live Feedback (Browser)</h3>
-        <p className="text-gray-600">If supported by your browser, you will see a live transcript while you speak.</p>
-        <div><span className="font-semibold">Expected:</span> {expected}</div>
-        <div><span className="font-semibold">Heard (local):</span> {localTranscript || <span className="text-gray-400">—</span>}</div>
-        <div><span className="font-semibold">Similarity:</span> {localScore !== null ? `${localScore}%` : <span className="text-gray-400">—</span>}</div>
+        <h3 className="font-medium">Browser Compatibility</h3>
+        <p className="text-gray-600">
+          Live transcription works best in Chrome/Edge. If you don't see real-time feedback above, 
+          your browser may not support the Web Speech API.
+        </p>
         {localScore !== null && (
-          <p className="text-gray-600">Hint: Aim for similar word order and endings. Try slower, clearer vowels and final consonants.</p>
+          <p className="text-gray-600">
+            <strong>Tip:</strong> Aim for similar word order and endings. Try slower, clearer vowels and final consonants.
+          </p>
         )}
       </div>
 
