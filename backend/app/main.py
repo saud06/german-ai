@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
-from .routers import auth, vocab, grammar, quiz, progress, speech
+from .routers import auth, vocab, grammar, quiz, progress, speech, paragraph
 from .routers import users
 from .startup import seed_collections
 from contextlib import asynccontextmanager
@@ -47,7 +47,8 @@ app.include_router(vocab.router, prefix=API_PREFIX, tags=["vocab"])
 app.include_router(grammar.router, prefix=API_PREFIX, tags=["grammar"]) 
 app.include_router(quiz.router, prefix=API_PREFIX, tags=["quiz"]) 
 app.include_router(progress.router, prefix=API_PREFIX, tags=["progress"]) 
-app.include_router(speech.router, prefix=API_PREFIX, tags=["speech"]) 
+app.include_router(speech.router, prefix=API_PREFIX, tags=["speech"])
+app.include_router(paragraph.router, prefix=API_PREFIX, tags=["paragraph"])
 app.include_router(users.router, prefix=API_PREFIX, tags=["users"])
 if settings.DEV_MODE and getattr(settings, "ALLOW_DEV_ROUTES", False):
     # Lazy import to avoid importing dev code in production images

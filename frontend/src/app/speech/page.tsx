@@ -4,7 +4,7 @@ import RequireAuth from '@/components/RequireAuth'
 import LiveTranscriptionCard from '@/components/LiveTranscriptionCard'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
-import Link from 'next/link'
+// Simple dependency-free toggle UI will be used instead of a library Switch
 
 type SpeechResult = {
   expected: string
@@ -13,6 +13,9 @@ type SpeechResult = {
   feedback: string
   aligned?: { expected?: string | null; heard?: string | null; op: 'ok'|'sub'|'del'|'ins' }[]
 }
+
+// Fallback minimal BlobEvent type for browsers where TypeScript lib lacks it
+type BlobEvent = { data: Blob }
 
 // Simple Levenshtein similarity [0..100]
 function similarity(a: string, b: string): number {
@@ -53,6 +56,15 @@ export default function SpeechPage() {
   const [saving, setSaving] = useState(false)
   const [history, setHistory] = useState<{expected:string,transcribed:string,score:number,feedback:string,ts:string}[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [isParagraphMode, setIsParagraphMode] = useState(false)
+  const [paragraph, setParagraph] = useState<{title: string; sentences: string[]} | null>(null)
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)
+  const [isGeneratingParagraph, setIsGeneratingParagraph] = useState(false)
+  // TTS paragraph progress
+  const [ttsSpeaking, setTtsSpeaking] = useState(false)
+  const [ttsWordIndex, setTtsWordIndex] = useState<number>(-1)
+  const ttsTokensRef = useRef<{text:string; start:number; end:number; isWord:boolean}[]>([])
+  const ttsUttRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   // Recording state
   const mediaStreamRef = useRef<MediaStream | null>(null)
@@ -145,6 +157,80 @@ export default function SpeechPage() {
   }
   useEffect(() => { loadHistory() }, [])
 
+  // Paragraph mode helpers
+  const generateNewParagraph = async () => {
+    if (isGeneratingParagraph) return
+    setIsGeneratingParagraph(true)
+    try {
+      const r = await api.get('/paragraph/generate')
+      const data = r.data as { title: string; sentences: string[] }
+      setParagraph(data)
+      setCurrentSentenceIndex(0)
+      // In paragraph mode, expected should be the entire paragraph
+      setExpected((data.sentences || []).join(' '))
+      // reset feedback state when switching content
+      setServerResult(null)
+      setLocalTranscript('')
+      setLocalScore(null)
+    } catch (e) {
+      setError('Failed to generate paragraph. Please try again.')
+    } finally {
+      setIsGeneratingParagraph(false)
+    }
+  }
+
+  const handleNextSentence = () => {
+    if (!paragraph) return
+    const next = currentSentenceIndex + 1
+    if (next < paragraph.sentences.length) {
+      setCurrentSentenceIndex(next)
+      setExpected(paragraph.sentences[next] || '')
+      setServerResult(null)
+      setLocalTranscript('')
+      setLocalScore(null)
+    }
+  }
+
+  const handlePrevSentence = () => {
+    if (!paragraph) return
+    const prev = currentSentenceIndex - 1
+    if (prev >= 0) {
+      setCurrentSentenceIndex(prev)
+      setExpected(paragraph.sentences[prev] || '')
+      setServerResult(null)
+      setLocalTranscript('')
+      setLocalScore(null)
+    }
+  }
+
+  const toggleParagraphMode = async () => {
+    const newMode = !isParagraphMode
+    setIsParagraphMode(newMode)
+    if (newMode) {
+      await generateNewParagraph()
+    } else {
+      setParagraph(null)
+      setCurrentSentenceIndex(0)
+      // keep current expected or reset to a simple default
+      if (!expected) setExpected('Ich gehe zur Schule.')
+      // stop paragraph TTS if any
+      try { window.speechSynthesis?.cancel(); } catch {}
+      setTtsSpeaking(false)
+      setTtsWordIndex(-1)
+      setServerResult(null)
+      setLocalTranscript('')
+      setLocalScore(null)
+    }
+  }
+
+  // If user toggles into paragraph mode with no data yet, fetch one
+  useEffect(() => {
+    if (isParagraphMode && !paragraph && !isGeneratingParagraph) {
+      generateNewParagraph()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isParagraphMode])
+
   // TTS playback for expected sentence
   const speakExpected = () => {
     try {
@@ -161,6 +247,80 @@ export default function SpeechPage() {
     } catch {}
   }
 
+  // Build token map for paragraph TTS highlighting
+  const buildParagraphTokens = useCallback((text: string) => {
+    const tokens: {text:string; start:number; end:number; isWord:boolean}[] = []
+    let idx = 0
+    const re = /[\wÄÖÜäöüß]+|[^\w\s]+|\s+/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(text)) !== null) {
+      const t = m[0]
+      const start = idx
+      const end = idx + t.length
+      const isWord = /[\wÄÖÜäöüß]/.test(t[0] || '')
+      tokens.push({ text: t, start, end, isWord })
+      idx = end
+    }
+    return tokens
+  }, [])
+
+  const speakParagraph = () => {
+    if (!paragraph) return
+    try {
+      const synth: SpeechSynthesis | undefined = window.speechSynthesis
+      if (!synth) return
+      // Cancel any ongoing
+      try { synth.cancel() } catch {}
+      setTtsWordIndex(-1)
+
+      const fullText = (paragraph.sentences || []).join(' ')
+      const tokens = buildParagraphTokens(fullText)
+      ttsTokensRef.current = tokens
+
+      const utter = new SpeechSynthesisUtterance(fullText)
+      // Set German
+      const voices = synth.getVoices()
+      const de = voices.find(v => /de(-|_)?DE/i.test(v.lang))
+      if (de) utter.voice = de
+      utter.lang = de?.lang || 'de-DE'
+
+      utter.onstart = () => {
+        setTtsSpeaking(true)
+      }
+      utter.onend = () => {
+        setTtsSpeaking(false)
+        setTtsWordIndex(-1)
+        ttsUttRef.current = null
+      }
+      utter.onerror = () => {
+        setTtsSpeaking(false)
+        setTtsWordIndex(-1)
+        ttsUttRef.current = null
+      }
+      utter.onboundary = (ev: any) => {
+        // ev.charIndex is where current spoken fragment starts
+        const ci = ev.charIndex as number
+        const toks = ttsTokensRef.current
+        // find the first word token with start <= ci < end
+        let idx = -1
+        for (let i = 0; i < toks.length; i++) {
+          const tk = toks[i]
+          if (!tk.isWord) continue
+          if (ci >= tk.start && ci < tk.end) { idx = i; break }
+        }
+        if (idx !== -1) setTtsWordIndex(idx)
+      }
+      ttsUttRef.current = utter
+      synth.speak(utter)
+    } catch {}
+  }
+
+  const stopParagraphTTS = () => {
+    try { window.speechSynthesis?.cancel() } catch {}
+    setTtsSpeaking(false)
+    setTtsWordIndex(-1)
+  }
+
   const setupMeter = async (stream: MediaStream) => {
     audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
     const source = audioCtxRef.current.createMediaStreamSource(stream)
@@ -172,7 +332,7 @@ export default function SpeechPage() {
 
   const startTimer = () => {
     setElapsed(0)
-    timerRef.current = window.setInterval(() => setElapsed((e) => e + 1), 1000) as unknown as number
+    timerRef.current = window.setInterval(() => setElapsed((e: number) => e + 1), 1000) as unknown as number
   }
   const stopTimer = () => {
     if (timerRef.current) window.clearInterval(timerRef.current)
@@ -192,7 +352,7 @@ export default function SpeechPage() {
       mediaStreamRef.current = stream
       const rec = new MediaRecorder(stream)
       recorderRef.current = rec
-      rec.ondataavailable = (e) => { if (e.data?.size) chunksRef.current.push(e.data) }
+      rec.ondataavailable = (e: BlobEvent) => { if ((e as BlobEvent).data?.size) chunksRef.current.push((e as BlobEvent).data) }
       rec.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: rec.mimeType || 'audio/webm' })
         if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
@@ -213,7 +373,7 @@ export default function SpeechPage() {
     stopTimer()
     try { recorderRef.current?.stop() } catch {}
     recorderRef.current = null
-    mediaStreamRef.current?.getTracks().forEach(t => t.stop())
+    mediaStreamRef.current?.getTracks().forEach((t: MediaStreamTrack) => t.stop())
     mediaStreamRef.current = null
     stopMeter()
     setIsRecording(false)
@@ -237,7 +397,8 @@ export default function SpeechPage() {
     try {
       const blob = await fetch(audioUrl).then(r => r.blob())
       const fd = new FormData()
-      fd.append('expected', expected)
+      const expectedForCheck = isParagraphMode && paragraph ? (paragraph.sentences || []).join(' ') : expected
+      fd.append('expected', expectedForCheck)
       fd.append('file', blob, 'recording.webm')
       const r = await api.post('/speech/check', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
       setServerResult(r.data)
@@ -254,7 +415,7 @@ export default function SpeechPage() {
     stopMeter()
     stopTimer()
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
-    mediaStreamRef.current?.getTracks().forEach(t => t.stop())
+    mediaStreamRef.current?.getTracks().forEach((t: MediaStreamTrack) => t.stop())
   }, [])
 
   // Redirect unauthenticated users immediately
@@ -265,40 +426,128 @@ export default function SpeechPage() {
       <RequireAuth />
       <h2 className="text-xl font-semibold">Pronunciation Coach</h2>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Target sentence (DE)</label>
-        <input className="input w-full" value={expected} onChange={(e)=>setExpected(e.target.value)} />
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-gray-500">Tip: Keep it short (3–8 words) for best recognition.</p>
-          <button type="button" className="btn btn-sm" onClick={speakExpected}>Listen (TTS)</button>
-        </div>
-      </div>
+      {/* Unified header: Mode + Recorder controls */}
+      <div className="rounded-md border p-3 space-y-2">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+          {/* Left group: mode toggle */}
+          <div className="flex items-center gap-3 md:flex-1">
+            <span className="text-sm font-medium">Mode:</span>
+            <div className="inline-flex rounded border overflow-hidden">
+              <button
+                type="button"
+                className={`px-3 py-1 text-sm ${!isParagraphMode ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+                onClick={() => { if (isParagraphMode) toggleParagraphMode() }}
+              >
+                Sentence
+              </button>
+              <button
+                type="button"
+                className={`px-3 py-1 text-sm border-l ${isParagraphMode ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+                onClick={() => { if (!isParagraphMode) toggleParagraphMode() }}
+              >
+                Paragraph
+              </button>
+            </div>
+            {isParagraphMode && (
+              <>
+                <button type="button" className="btn btn-sm" onClick={generateNewParagraph} disabled={isGeneratingParagraph}>
+                  {isGeneratingParagraph ? 'Generating…' : 'New paragraph'}
+                </button>
+                {paragraph?.title && (
+                  <span className="text-xs text-gray-500 truncate max-w-[280px]">• {paragraph.title}</span>
+                )}
+              </>
+            )}
+          </div>
 
-      {/* Recorder controls */}
-      <div className="rounded-md border p-3 space-y-3">
-        <div className="flex items-center gap-3">
-          {!isRecording ? (
-            <button className="btn" onClick={startRecording}>Start Recording</button>
-          ) : (
-            <button className="btn bg-red-600 hover:bg-red-700" onClick={stopRecording}>Stop</button>
-          )}
-          <span className="text-sm text-gray-600">{isRecording ? 'Recording…' : 'Not recording'}</span>
-          <span className="ml-auto text-sm tabular-nums">{Math.floor(elapsed/60)}:{String(elapsed%60).padStart(2,'0')}</span>
+          {/* Right group: recording controls */}
+          <div className="flex items-center gap-3 md:min-w-[360px] md:flex-none">
+            {!isRecording ? (
+              <button className="btn" onClick={startRecording}>Start Recording</button>
+            ) : (
+              <button className="btn bg-red-600 hover:bg-red-700" onClick={stopRecording}>Stop</button>
+            )}
+            <span className="text-sm text-gray-600">{isRecording ? 'Recording…' : 'Not recording'}</span>
+            <span className="ml-auto text-sm tabular-nums">{Math.floor(elapsed/60)}:{String(elapsed%60).padStart(2,'0')}</span>
+          </div>
         </div>
-        <canvas ref={canvasRef} width={360} height={10} className="w-full rounded bg-gray-100" />
-        <div className="flex items-center gap-3">
-          <button className="btn" onClick={resetAll} disabled={isRecording}>Reset</button>
-          <button className="btn" onClick={uploadForCheck} disabled={!audioUrl || isRecording}>Send to Coach</button>
-          {audioUrl && (
-            <audio className="ml-auto" controls src={audioUrl} />
-          )}
+
+        {/* Meter */}
+        <canvas ref={canvasRef} width={360} height={6} className="w-full rounded bg-gray-100" />
+
+        {/* Actions */}
+        <div className="flex items-center gap-3 justify-between">
+          <div className="flex items-center gap-2">
+            <button className="btn" onClick={resetAll} disabled={isRecording}>Reset</button>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="btn" onClick={uploadForCheck} disabled={!audioUrl || isRecording}>Send to Coach</button>
+            {audioUrl && (
+              <audio className="ml-auto" controls src={audioUrl} />
+            )}
+          </div>
         </div>
         {error && <p className="text-red-600 text-sm">{error}</p>}
       </div>
 
+      {/* Expected / Paragraph content */}
+      {!isParagraphMode ? (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Target sentence (DE)</label>
+          <input className="input w-full" value={expected} onChange={(e: React.ChangeEvent<HTMLInputElement>)=>setExpected(e.target.value)} />
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-gray-500">Tip: Keep it short (3–8 words) for best recognition.</p>
+            <button type="button" className="btn btn-sm" onClick={speakExpected}>Listen (TTS)</button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium">Paragraph</div>
+              <div className="text-gray-700 font-semibold">{paragraph?.title || '—'}</div>
+            </div>
+          </div>
+          <div className="rounded border p-3 bg-gray-50 space-y-2">
+            <div className="text-sm"><span className="font-medium">Paragraph:</span></div>
+            <div className="flex items-center gap-2">
+              {!ttsSpeaking ? (
+                <button type="button" className="btn btn-sm" onClick={speakParagraph} disabled={!paragraph}>Listen (TTS) Paragraph</button>
+              ) : (
+                <button type="button" className="btn btn-sm bg-red-600 hover:bg-red-700" onClick={stopParagraphTTS}>Stop TTS</button>
+              )}
+            </div>
+            <div className="text-base leading-7 text-gray-800">
+              {paragraph ? (
+                (() => {
+                  const fullText = (paragraph.sentences || []).join(' ')
+                  const tokens = ttsTokensRef.current.length ? ttsTokensRef.current : buildParagraphTokens(fullText)
+                  return (
+                    <span>
+                      {tokens.map((tk: { text: string; isWord: boolean }, i: number) => {
+                        if (!tk.isWord) return <span key={i}>{tk.text}</span>
+                        const isCurrent = i === ttsWordIndex
+                        return (
+                          <span key={i} className={isCurrent ? 'font-bold text-blue-700' : ''}>{tk.text}</span>
+                        )
+                      })}
+                    </span>
+                  )
+                })()
+              ) : (
+                <span className="text-gray-500">No paragraph loaded yet.</span>
+              )}
+            </div>
+            <div className="text-xs text-gray-600">Words will be highlighted as the paragraph is spoken.</div>
+          </div>
+        </div>
+      )}
+
+      
+
       {/* Live Transcription Card */}
       <LiveTranscriptionCard 
-        expected={expected}
+        expected={isParagraphMode && paragraph ? (paragraph.sentences || []).join(' ') : expected}
         isRecording={isRecording}
         onTranscriptUpdate={(transcript, score) => {
           setLocalTranscript(transcript)
@@ -341,7 +590,7 @@ export default function SpeechPage() {
             <div className="mt-2">
               <div className="text-xs text-gray-500 mb-1">Alignment</div>
               <div className="flex flex-wrap gap-1">
-                {serverResult.aligned.map((t, i) => {
+                {serverResult.aligned.map((t: { expected?: string | null; heard?: string | null; op: 'ok'|'sub'|'del'|'ins' }, i: number) => {
                   let bg = 'bg-green-100 text-green-800'
                   if (t.op === 'sub') bg = 'bg-amber-100 text-amber-800'
                   if (t.op === 'del') bg = 'bg-red-100 text-red-800'
@@ -377,7 +626,7 @@ export default function SpeechPage() {
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1">
             <span className="text-gray-500">Level</span>
-            <select className="input py-1" value={levelFilter} onChange={(e)=>setLevelFilter(e.target.value)}>
+            <select className="input py-1" value={levelFilter} onChange={(e: React.ChangeEvent<HTMLSelectElement>)=>setLevelFilter(e.target.value)}>
               <option value="">Any</option>
               <option value="A1">A1</option>
               <option value="A2">A2</option>
@@ -387,7 +636,7 @@ export default function SpeechPage() {
           </div>
           <div className="flex items-center gap-1">
             <span className="text-gray-500">Track</span>
-            <select className="input py-1" value={trackFilter} onChange={(e)=>setTrackFilter(e.target.value)}>
+            <select className="input py-1" value={trackFilter} onChange={(e: React.ChangeEvent<HTMLSelectElement>)=>setTrackFilter(e.target.value)}>
               <option value="">Any</option>
               <option value="articles">articles</option>
               <option value="verbs">verbs</option>
@@ -398,7 +647,7 @@ export default function SpeechPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {suggestions.map((s, idx) => (
+          {suggestions.map((s: {text: string; source: string}, idx: number) => (
             <button key={idx} className="px-2 py-1 rounded border hover:bg-gray-50" onClick={()=>setExpected(s.text)} title={s.source}>{s.text}</button>
           ))}
           {suggestions.length === 0 && <span className="text-gray-500">No suggestions yet.</span>}
@@ -425,7 +674,7 @@ export default function SpeechPage() {
         </div>
         <div className="space-y-1">
           {history.length === 0 && <div className="text-gray-500">No attempts saved yet.</div>}
-          {history.map((h, i) => (
+          {history.map((h: {expected:string; transcribed:string; score:number; feedback:string; ts:string}, i: number) => (
             <div key={i} className="rounded border px-2 py-1">
               <div className="flex items-center justify-between">
                 <div className="font-medium">{h.score}%</div>
