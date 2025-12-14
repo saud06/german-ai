@@ -163,4 +163,4 @@ GitHub Actions workflows:
 
 ## Website
 
-https://german-frontend.onrender.com
+https://german-ai.fly.dev
