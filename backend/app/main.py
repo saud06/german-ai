@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from .config import settings
-from .routers import auth, vocab, grammar, quiz, progress, speech, quiz_v2
+from .routers import auth, vocab, grammar, quiz, progress, speech, quiz_v2, paragraph
 from .routers import users, websocket, ai_conversation, voice, debug, scenarios, quiz_ai, analytics, reviews, achievements, grammar_rules, payments
 from .routers import grammar_exercises, writing_practice, reading_practice, organizations, api_keys, webhooks, admin_dashboard, gdpr, referrals, marketing_analytics, gamification, friends, leaderboard, learning_paths, integrated_learning
 from .startup import seed_collections
@@ -63,7 +63,6 @@ app = FastAPI(
     title="German AI Learner API", 
     version="1.0.0", 
     lifespan=lifespan,
-    # Disable by_alias to fix null serialization issues
     response_model_by_alias=False
 )
 
@@ -76,12 +75,11 @@ cors_origins = [
     "https://german-ai.fly.dev",  # Production frontend
 ]
 if getattr(settings, "FRONTEND_ORIGIN", None):
-    cors_origins.append(settings.FRONTEND_ORIGIN)  # e.g., https://your-frontend.onrender.com
+    cors_origins.append(settings.FRONTEND_ORIGIN)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    # Allow any localhost/127.0.0.1 port in development to avoid CORS issues when dev servers run on different ports
     allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
@@ -136,6 +134,5 @@ from .routers import notifications
 app.include_router(notifications.router, prefix=API_PREFIX + "/notifications", tags=["notifications"])
 
 if settings.DEV_MODE and getattr(settings, "ALLOW_DEV_ROUTES", False):
-    # Lazy import to avoid importing dev code in production images
-    from .routers import admin  # type: ignore
+    from .routers import admin
     app.include_router(admin.router, prefix=API_PREFIX, tags=["admin"]) 

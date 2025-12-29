@@ -80,10 +80,8 @@ export default function LiveTranscriptionCard({ expected, isRecording, onTranscr
   }, [isRecording, expected])
 
   const startRecognition = () => {
-    console.log('Starting speech recognition...')
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SpeechRecognition) {
-      console.error('Speech Recognition not supported in this browser')
       setIsSupported(false)
       return
     }
@@ -94,15 +92,8 @@ export default function LiveTranscriptionCard({ expected, isRecording, onTranscr
       recognition.continuous = true
       recognition.interimResults = true
       recognition.maxAlternatives = 1
-      
-      console.log('Speech Recognition configured:', {
-        lang: recognition.lang,
-        continuous: recognition.continuous,
-        interimResults: recognition.interimResults
-      })
 
     recognition.onresult = (event: any) => {
-      console.log('Speech recognition result:', event) // Debug log
       
       let finalTranscript = ''
       let interimTranscript = ''
@@ -141,10 +132,6 @@ export default function LiveTranscriptionCard({ expected, isRecording, onTranscr
         })
       }
 
-      console.log('Final transcript:', finalTranscript) // Debug log
-      console.log('Interim transcript:', interimTranscript) // Debug log
-      console.log('Word results:', allWordResults) // Debug log
-      
       setCurrentTranscript(fullTranscript)
       setWordResults(allWordResults)
 
@@ -162,16 +149,12 @@ export default function LiveTranscriptionCard({ expected, isRecording, onTranscr
     }
 
     recognition.onstart = () => {
-      console.log('Speech recognition started successfully')
       setIsSupported(true)
     }
 
     recognition.onend = () => {
-      console.log('Speech recognition ended')
-      // Don't automatically restart - let user control it
     }
 
-      console.log('Starting speech recognition...')
       recognition.start()
       recognitionRef.current = recognition
       

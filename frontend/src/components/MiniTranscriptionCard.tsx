@@ -82,7 +82,6 @@ export default function MiniTranscriptionCard({ expected, isRecording, onTranscr
   const startRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SpeechRecognition) {
-      console.log('Speech Recognition not supported, starting demo mode')
       setIsSupported(false)
       startDemoMode()
       return
@@ -96,8 +95,6 @@ export default function MiniTranscriptionCard({ expected, isRecording, onTranscr
       recognition.maxAlternatives = 1
 
       recognition.onresult = (event: any) => {
-        console.log('Speech recognition result:', event)
-        
         let finalTranscript = ''
         let interimTranscript = ''
         const allWordResults: WordResult[] = []
@@ -135,10 +132,6 @@ export default function MiniTranscriptionCard({ expected, isRecording, onTranscr
           })
         }
 
-        console.log('Final transcript:', finalTranscript)
-        console.log('Interim transcript:', interimTranscript)
-        console.log('Word results:', allWordResults)
-        
         setWordResults(allWordResults)
 
         // Calculate overall similarity score
@@ -164,7 +157,6 @@ export default function MiniTranscriptionCard({ expected, isRecording, onTranscr
   const startDemoMode = () => {
     if (!isRecording) return
     
-    console.log('Starting demo mode')
     const demoWords = ['guten', 'morgen']
     let wordIndex = 0
     
@@ -181,7 +173,6 @@ export default function MiniTranscriptionCard({ expected, isRecording, onTranscr
           })
         }
         
-        console.log('Demo adding words:', newResults)
         setWordResults(newResults)
         
         const spokenWords = newResults.map(w => w.word)
@@ -221,47 +212,84 @@ export default function MiniTranscriptionCard({ expected, isRecording, onTranscr
   }
 
   return (
-    <div className="text-xs space-y-2">
-      {/* Debug info */}
-      <div className="text-xs text-gray-500">
-        Recording: {isRecording ? 'Yes' : 'No'} | 
-        Supported: {isSupported ? 'Yes' : 'No'} | 
-        Words: {wordResults.length}
-        {!isSupported && (
-          <button 
-            onClick={startDemoMode}
-            className="ml-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-          >
-            Start Demo
-          </button>
-        )}
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">🎯 Word-by-Word Analysis</h3>
+          <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
+            Live Recognition
+          </span>
+        </div>
+        <button 
+          onClick={startDemoMode}
+          disabled={!isRecording}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          🎬 Test with Demo
+        </button>
       </div>
       
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        Watch your words appear in real-time with color-coded accuracy feedback
+      </p>
+      
       {/* Live transcription words */}
-      {isRecording && (
-        <div className="flex flex-wrap gap-1">
-          {wordResults.length > 0 ? (
-            wordResults.map((wordResult, index) => {
-              const status = getWordStatus(index, wordResult.word)
-              const colorClass = getWordColor(status, wordResult.isFinal)
-              
-              return (
-                <span
-                  key={index}
-                  className={`px-1.5 py-0.5 text-xs border rounded ${colorClass}`}
-                >
-                  {wordResult.word}
-                  {!wordResult.isFinal && (
-                    <span className="ml-0.5 opacity-60">...</span>
-                  )}
+      {isRecording ? (
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 min-h-[120px]">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {wordResults.length > 0 ? (
+              wordResults.map((wordResult, index) => {
+                const status = getWordStatus(index, wordResult.word)
+                const colorClass = getWordColor(status, wordResult.isFinal)
+                
+                return (
+                  <span
+                    key={index}
+                    className={`px-3 py-2 text-sm font-medium border-2 rounded-lg ${colorClass} transition-all duration-300 transform hover:scale-105`}
+                  >
+                    {wordResult.word}
+                    {!wordResult.isFinal && (
+                      <span className="ml-1 opacity-60 animate-pulse">...</span>
+                    )}
+                  </span>
+                )
+              })
+            ) : (
+              <div className="w-full text-center py-8">
+                <span className="text-gray-400 dark:text-gray-500 text-base italic">
+                  {isSupported ? '🎤 Listening for your voice...' : '🎬 Click "Start Demo" above to see how it works'}
                 </span>
-              )
-            })
-          ) : (
-            <span className="text-gray-400 text-xs italic">
-              {isSupported ? 'Listening...' : 'Demo mode - click Start Demo or say "Guten Morgen"'}
-            </span>
+              </div>
+            )}
+          </div>
+          
+          {/* Legend */}
+          {wordResults.length > 0 && (
+            <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded bg-green-500"></span>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Correct</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded bg-yellow-500"></span>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Similar</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded bg-red-500"></span>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Incorrect</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded bg-blue-500"></span>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Extra Word</span>
+              </div>
+            </div>
           )}
+        </div>
+      ) : (
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 text-center">
+          <p className="text-gray-500 dark:text-gray-400 text-base">
+            ⏸️ Click <strong>"Start Recording"</strong> to begin speech recognition
+          </p>
         </div>
       )}
     </div>

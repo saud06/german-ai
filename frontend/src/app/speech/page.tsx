@@ -1,7 +1,7 @@
 "use client"
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import RequireAuth from '@/components/RequireAuth'
-import LiveTranscriptionCard from '@/components/LiveTranscriptionCard'
+import MiniTranscriptionCard from '@/components/MiniTranscriptionCard'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useRouter } from 'next/navigation'
@@ -39,6 +39,25 @@ function similarity(a: string, b: string): number {
   const dist = dp[m][n]
   const maxLen = Math.max(m, n) || 1
   return Math.round((1 - dist / maxLen) * 100)
+}
+
+function calculateWordScore(expectedWord: string, spokenWord: string): number {
+  const exp = expectedWord.toLowerCase().trim()
+  const spoken = spokenWord.toLowerCase().trim()
+  
+  if (exp === spoken) return 100
+  if (exp.includes(spoken) || spoken.includes(exp)) return 75
+  
+  const maxLen = Math.max(exp.length, spoken.length)
+  if (maxLen === 0) return 100
+  
+  let matches = 0
+  const minLen = Math.min(exp.length, spoken.length)
+  for (let i = 0; i < minLen; i++) {
+    if (exp[i] === spoken[i]) matches++
+  }
+  
+  return Math.round((matches / maxLen) * 100)
 }
 
 export default function SpeechPage() {
@@ -436,41 +455,120 @@ export default function SpeechPage() {
           >
             ← Back to Dashboard
           </button>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+          <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-center gap-3">
             🎙️ Speech Practice
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
             Practice your German pronunciation with AI-powered feedback
           </p>
+          
+          {/* Paragraph Mode Toggle */}
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={toggleParagraphMode}
+              disabled={isGeneratingParagraph}
+              className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 ${
+                isParagraphMode
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              📖 {isParagraphMode ? 'Exit Paragraph Mode' : 'Paragraph Mode'}
+              {isGeneratingParagraph && <span className="animate-spin">⏳</span>}
+            </button>
+          </div>
+        </div>
         </div>
 
         {/* Main Practice Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-6">
           <div className="space-y-6">
-            {/* Target Sentence Input */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                🎯 Target Sentence (German)
-              </label>
-              <div className="flex gap-3">
-                <input 
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-200 dark:bg-gray-700 dark:text-white text-lg transition-all" 
-                  value={expected} 
-                  onChange={(e)=>setExpected(e.target.value)}
-                  placeholder="Enter a German sentence..."
-                />
-                <button 
-                  type="button" 
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
-                  onClick={speakExpected}
-                >
-                  🔊 Listen
-                </button>
+            {/* Paragraph Mode Info */}
+            {isParagraphMode && paragraph && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border-2 border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-blue-900 dark:text-blue-100">
+                    📖 {paragraph.title}
+                  </h3>
+                  <button
+                    onClick={generateNewParagraph}
+                    disabled={isGeneratingParagraph}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    🔄 New Paragraph
+                  </button>
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <button
+                    onClick={handlePrevSentence}
+                    disabled={currentSentenceIndex === 0}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ← Previous
+                  </button>
+                  <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                    Sentence {currentSentenceIndex + 1} of {paragraph.sentences.length}
+                  </span>
+                  <button
+                    onClick={handleNextSentence}
+                    disabled={currentSentenceIndex === paragraph.sentences.length - 1}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </button>
+                  <button
+                    onClick={speakParagraph}
+                    className="ml-auto px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-all"
+                  >
+                    🔊 Read Full Paragraph
+                  </button>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {paragraph.sentences.map((sentence, idx) => (
+                      <span
+                        key={idx}
+                        className={`${
+                          idx === currentSentenceIndex
+                            ? 'bg-yellow-200 dark:bg-yellow-700 font-bold'
+                            : ''
+                        }`}
+                      >
+                        {sentence}{' '}
+                      </span>
+                    ))}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
-                💡 Tip: Keep it short (3–8 words) for best recognition
-              </p>
-            </div>
+            )}
+
+            {/* Target Sentence Input - Only show in single sentence mode */}
+            {!isParagraphMode && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  🎯 Target Sentence (German)
+                </label>
+                <div className="flex gap-3">
+                  <input 
+                    className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-200 dark:bg-gray-700 dark:text-white text-lg transition-all" 
+                    value={expected} 
+                    onChange={(e)=>setExpected(e.target.value)}
+                    placeholder="Enter a German sentence..."
+                  />
+                  <button 
+                    type="button" 
+                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                    onClick={speakExpected}
+                  >
+                    🔊 Listen
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
+                  💡 Tip: Keep it short (3–8 words) for best recognition
+                </p>
+              </div>
+            )}
 
             {/* Recording Controls */}
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 space-y-4">
@@ -543,33 +641,68 @@ export default function SpeechPage() {
           </div>
         </div>
 
-        {/* Live Feedback Card */}
+        {/* Live Feedback Card with Word-by-Word Analysis */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">📊 Live Feedback</h3>
-            <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">Browser-based</span>
+            <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">Real-time</span>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Real-time transcription as you speak (if supported by your browser)
+            Real-time transcription and word-by-word analysis as you speak
           </p>
           
           <div className="space-y-4">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Expected:</p>
-              <p className="text-lg font-medium text-gray-900 dark:text-white">{expected}</p>
+            {/* Expected vs Spoken Comparison */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Expected:</p>
+                <p className="text-base font-medium text-gray-900 dark:text-white break-words">{expected}</p>
+              </div>
+              
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">You're Saying:</p>
+                {localTranscript ? (
+                  <div className="flex flex-wrap gap-2">
+                    {localTranscript.split(/\s+/).filter(w => w.length > 0).map((word, index) => {
+                      const expectedWords = expected.toLowerCase().split(/\s+/).filter(w => w.length > 0)
+                      const expectedWord = expectedWords[index]
+                      const cleanWord = word.toLowerCase().replace(/[.,!?]/g, '')
+                      
+                      let colorClass = 'bg-gray-100 text-gray-700 border-gray-300'
+                      if (expectedWord) {
+                        const score = calculateWordScore(expectedWord, cleanWord)
+                        if (score >= 90) {
+                          colorClass = 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700'
+                        } else if (score >= 70) {
+                          colorClass = 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700'
+                        } else {
+                          colorClass = 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700'
+                        }
+                      } else {
+                        colorClass = 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700'
+                      }
+                      
+                      return (
+                        <span
+                          key={index}
+                          className={`px-3 py-1.5 text-sm font-medium border-2 rounded-lg ${colorClass} transition-all duration-300`}
+                        >
+                          {word}
+                        </span>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-base font-medium text-gray-400 italic">Listening...</p>
+                )}
+              </div>
             </div>
             
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">What You Said:</p>
-              <p className="text-lg font-medium text-gray-900 dark:text-white">
-                {localTranscript || <span className="text-gray-400 italic">Waiting for speech...</span>}
-              </p>
-            </div>
-            
+            {/* Score Display */}
             {localScore !== null && (
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">Similarity Score:</p>
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">Accuracy Score:</p>
                   <span className={`text-2xl font-bold ${
                     localScore >= 80 ? 'text-green-600' : 
                     localScore >= 60 ? 'text-yellow-600' : 
@@ -588,13 +721,20 @@ export default function SpeechPage() {
                     style={{ width: `${localScore}%` }}
                   />
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
-                  💡 Tip: Aim for similar word order and endings. Try slower, clearer vowels and final consonants.
-                </p>
               </div>
             )}
           </div>
         </div>
+
+        {/* Mini Transcription Card */}
+        <MiniTranscriptionCard 
+          expected={expected}
+          isRecording={isRecording}
+          onTranscriptUpdate={(transcript, score) => {
+            setLocalTranscript(transcript)
+            setLocalScore(score)
+          }}
+        />
 
         {/* AI Coach Feedback */}
         {loading && (
