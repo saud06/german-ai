@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: german-ai
+  labels:
+    name: german-ai
+    environment: production

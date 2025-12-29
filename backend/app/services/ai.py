@@ -38,6 +38,89 @@ def _align_words(a: str, b: str) -> list[dict]:
 
 async def grammar_check(db, sentence: str) -> SentenceResult:
     settings = get_settings()
+    
+    # Try Ollama (Mistral 7B) first - local, fast, free
+    try:
+        from ..ollama_client import ollama_client
+        import json
+        
+        if ollama_client.is_available:
+            system_prompt = """You are a German grammar expert. Analyze the sentence and return ONLY valid JSON with these exact keys:
+{
+  "is_correct": true or false,
+  "corrected": "the corrected sentence",
+  "explanation": "brief explanation",
+  "suggested_variation": "alternative way to say it",
+  "tips": ["tip1"]
+}
+
+Rules:
+- Set is_correct to true if no errors, false if errors found
+- If correct, explanation should say "Perfect! No errors."
+- Keep explanations very brief (1 sentence)
+- Provide 1 practical tip
+- Return ONLY the JSON object, no other text"""
+
+            user_prompt = f"Analyze this German sentence for grammar errors:\n\n{sentence}"
+            
+            response = await ollama_client.chat(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.1,
+                max_tokens=150,
+                keep_alive="5m"
+            )
+            
+            content = response.get('message', {}).get('content', '{}')
+            
+            # Extract JSON from response
+            try:
+                data = json.loads(content)
+            except Exception:
+                # Try to extract JSON from markdown code blocks
+                if '```json' in content:
+                    json_str = content.split('```json')[1].split('```')[0].strip()
+                    data = json.loads(json_str)
+                elif '```' in content:
+                    json_str = content.split('```')[1].split('```')[0].strip()
+                    data = json.loads(json_str)
+                else:
+                    # Try to find JSON object
+                    s = content.find('{')
+                    e = content.rfind('}')
+                    if s != -1 and e != -1 and e > s:
+                        data = json.loads(content[s:e+1])
+                    else:
+                        raise RuntimeError("AI did not return valid JSON")
+            
+            is_correct = bool(data.get('is_correct', False))
+            corrected = str(data.get('corrected') or sentence)
+            explanation = str(data.get('explanation') or "AI grammar check completed")
+            suggested_variation = str(data.get('suggested_variation') or corrected)
+            tips = [str(t) for t in (data.get('tips') or []) if isinstance(t, (str, int, float))][:3]
+            highlights = _align_words(sentence, corrected)
+            
+            # Determine source based on correctness
+            result_source = "ok" if is_correct or (sentence.strip() == corrected.strip()) else "ai_mistral"
+            
+            return SentenceResult(
+                original=sentence,
+                corrected=corrected,
+                explanation=explanation,
+                suggested_variation=suggested_variation,
+                source=result_source,
+                highlights=highlights,
+                tips=tips or None,
+                rule_source="mistral_7b",
+            )
+    except Exception as e:
+        # Log but continue to fallback
+        import logging
+        logging.getLogger(__name__).warning(f"Ollama grammar check failed: {e}")
+    
+    # Fallback to OpenAI if configured
     if settings.OPENAI_API_KEY:
         try:
             try:

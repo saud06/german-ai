@@ -3,25 +3,35 @@ import React, { useEffect, useMemo, useState } from 'react'
 import RequireAuth from '@/components/RequireAuth'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
+import { useSearchParams } from 'next/navigation'
+import * as learningPathApi from '@/lib/learningPathApi'
 
 type SeedWord = { _id?: string, word: string, translation?: string, example?: string, level?: string }
 type UserVocab = { _id: string, word: string, translation?: string, example?: string, level?: string, status?: string, srs?: any }
 
+// Map CEFR levels to user-friendly names
+const getLevelName = (level?: string) => {
+  if (!level) return 'Beginner'
+  if (level === 'A1') return 'Beginner'
+  if (level === 'A2') return 'Beginner'
+  if (level === 'B1') return 'Intermediate'
+  if (level === 'B2') return 'Intermediate'
+  if (level === 'C1') return 'Advanced'
+  if (level === 'C2') return 'Advanced'
+  return 'Beginner'
+}
+
+const getLevelColor = (level?: string) => {
+  const name = getLevelName(level)
+  if (name === 'Beginner') return 'bg-green-100 text-green-800'
+  if (name === 'Intermediate') return 'bg-yellow-100 text-yellow-800'
+  return 'bg-red-100 text-red-800'
+}
+
 function SoundIcon() {
-  // Speaker with sound waves
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      className="h-4 w-4 mr-1"
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M3 10v4a1 1 0 001 1h2l4 3V6L6 9H4a1 1 0 00-1 1z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M16 8a5 5 0 010 8M19 5a9 9 0 010 14" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
     </svg>
   )
 }
@@ -40,7 +50,6 @@ function useSpeak() {
       u.lang = de?.lang || 'de-DE'
       u.onend = () => setSpeaking(prev => (prev === text ? null : prev))
       u.onerror = () => setSpeaking(prev => (prev === text ? null : prev))
-      // Cancel any ongoing speech so we don't queue
       synth.cancel()
       synth.speak(u)
     } catch {
@@ -52,39 +61,63 @@ function useSpeak() {
 
 export default function VocabPage() {
   const { userId } = useAuth()
+  const searchParams = useSearchParams()
+  const activityId = searchParams.get('activity_id')
   const [tab, setTab] = useState<'today'|'browse'|'saved'|'review'>('today')
   const [msg, setMsg] = useState<string | null>(null)
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(null), 2500) }
   const { speaking, speak } = useSpeak()
+  const [activityCompleted, setActivityCompleted] = useState(false)
 
-  // Today
-  const [today, setToday] = useState<SeedWord | null>(null)
+  // Today - with multiple words and navigation
+  const [todayWords, setTodayWords] = useState<SeedWord[]>([])
+  const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [tLoading, setTLoading] = useState(false)
   const [tSaving, setTSaving] = useState(false)
-  const loadToday = async () => {
+  
+  const loadTodayWords = async () => {
     try {
       setTLoading(true)
-      const r = await api.get('/vocab/today', { params: { user_id: userId || undefined } })
-      setToday(r.data)
-    } catch {}
+      // Load 10 AI-generated words for today
+      const r = await api.get('/vocab/today/batch', { 
+        params: { 
+          count: 10,
+          level: 'A1',
+          user_id: userId || undefined 
+        } 
+      })
+      setTodayWords(r.data || [])
+      setCurrentWordIndex(0)
+    } catch (err) {
+      console.error('Failed to load today words:', err)
+    }
     finally { setTLoading(false) }
   }
-  useEffect(() => { if (tab==='today') loadToday() }, [tab, userId])
-  const saveToday = async () => {
-    if (!userId || !today) return
+  
+  useEffect(() => { if (tab==='today') loadTodayWords() }, [tab, userId])
+  
+  const currentWord = todayWords[currentWordIndex]
+  
+  const nextWord = () => {
+    if (currentWordIndex < todayWords.length - 1) {
+      setCurrentWordIndex(currentWordIndex + 1)
+    }
+  }
+  
+  const prevWord = () => {
+    if (currentWordIndex > 0) {
+      setCurrentWordIndex(currentWordIndex - 1)
+    }
+  }
+  
+  const saveCurrentWord = async () => {
+    if (!userId || !currentWord) return
     try {
       setTSaving(true)
-      await api.post('/vocab/save', { word: today.word, status: 'learning' })
+      await api.post('/vocab/save', { word: currentWord.word, status: 'learning' })
       flash('Saved to your vocab')
-      // If user is on Saved tab, auto-refresh the list
-      if (tab === 'saved') {
-        await loadSaved()
-      }
-    } catch {
-      // Errors are emitted globally via interceptor; optional local hint
-    } finally {
-      setTSaving(false)
-    }
+    } catch {}
+    finally { setTSaving(false) }
   }
 
   // Browse
@@ -93,50 +126,54 @@ export default function VocabPage() {
   const [bLoading, setBLoading] = useState(false)
   const [results, setResults] = useState<SeedWord[]>([])
   const [bSavingId, setBSavingId] = useState<string | null>(null)
+  
   const search = async () => {
     try {
       setBLoading(true)
       const r = await api.get('/vocab/search', { params: { q, level: level || undefined, limit: 30 } })
       setResults(r.data || [])
-    } catch {}
+    } catch (err) {
+      console.error('Failed to search vocab:', err)
+    }
     finally { setBLoading(false) }
   }
+  
   useEffect(() => { if (tab==='browse') search() }, [tab])
+  
   const saveSeed = async (w: SeedWord) => {
     if (!userId) return
     try {
       setBSavingId(w.word)
       await api.post('/vocab/save', { word: w.word, status: 'learning' })
       flash(`Added "${w.word}"`)
-      if (tab === 'saved') {
-        await loadSaved()
-      }
-    } catch {
-      // handled globally
-    } finally {
-      setBSavingId(null)
-    }
+    } catch {}
+    finally { setBSavingId(null) }
   }
 
   // Saved
   const [status, setStatus] = useState('')
   const [sLoading, setSLoading] = useState(false)
   const [saved, setSaved] = useState<UserVocab[]>([])
+  
   const loadSaved = async () => {
     if (!userId) return
     try {
       setSLoading(true)
       const r = await api.get('/vocab/list', { params: { status: status || undefined, limit: 50 } })
       setSaved(r.data || [])
-    } catch {}
+    } catch (err) {
+      console.error('Failed to load saved vocab:', err)
+    }
     finally { setSLoading(false) }
   }
+  
   useEffect(() => { if (tab==='saved') loadSaved() }, [tab, status, userId])
 
   // Review
   const [rLoading, setRLoading] = useState(false)
   const [session, setSession] = useState<{items: any[], idx: number} | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  
   const startReview = async (size=10) => {
     try {
       setRLoading(true)
@@ -145,9 +182,11 @@ export default function VocabPage() {
     } catch {}
     finally { setRLoading(false) }
   }
+  
   const current = useMemo(() => session ? session.items[session.idx] : null, [session])
   const [showAns, setShowAns] = useState(false)
   const [grades, setGrades] = useState<{id:string, grade:number}[]>([])
+  
   const grade = (g: number) => {
     if (!session || !current) return
     const nextGrades = [...grades.filter(x=>x.id!==current.id), { id: current.id, grade: g }]
@@ -160,181 +199,515 @@ export default function VocabPage() {
       setShowAns(false)
     }
   }
+  
   const submitGrades = async (all: {id:string,grade:number}[]) => {
     try {
       setSubmitting(true)
       await api.post('/vocab/review/submit', { results: all })
+      
+      if (activityId && !activityCompleted) {
+        try {
+          await learningPathApi.completeActivity(activityId, 'vocabulary', 50)
+          setActivityCompleted(true)
+          flash('Review completed! +50 XP earned')
+        } catch (error) {
+          flash('Review submitted')
+        }
+      } else {
+        flash('Review submitted')
+      }
+      
       setSession(null)
       setGrades([])
-      flash('Review submitted')
-    } catch {
-    } finally { setSubmitting(false) }
+    } catch {}
+    finally { setSubmitting(false) }
   }
 
   return (
-    <main className="space-y-4">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
       <RequireAuth />
-      <h2 className="text-xl font-semibold">Vocab Coach</h2>
+      
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">📚 Vocabulary Builder</h1>
+          <p className="text-gray-600 dark:text-gray-400">Expand your German vocabulary with smart learning</p>
+        </div>
 
-      {msg && (
-        <div className="rounded-md border border-emerald-300 bg-emerald-50 p-2 text-sm text-emerald-700">{msg}</div>
-      )}
-
-      <div className="flex items-center gap-2">
-        <button className={`btn btn-sm ${tab==='today' ? 'bg-indigo-600 text-white' : ''}`} onClick={()=>setTab('today')}>Today</button>
-        <button className={`btn btn-sm ${tab==='browse' ? 'bg-indigo-600 text-white' : ''}`} onClick={()=>setTab('browse')}>Browse</button>
-        <button className={`btn btn-sm ${tab==='saved' ? 'bg-indigo-600 text-white' : ''}`} onClick={()=>setTab('saved')}>Saved</button>
-        <button className={`btn btn-sm ${tab==='review' ? 'bg-indigo-600 text-white' : ''}`} onClick={()=>setTab('review')}>Review</button>
-      </div>
-
-      {tab === 'today' && (
-        <section className="space-y-3">
-          {tLoading && (
-            <div className="rounded-md border p-4 animate-pulse">
-              <div className="h-6 w-40 rounded bg-gray-200 dark:bg-zinc-800" />
-              <div className="mt-2 h-4 w-56 rounded bg-gray-200 dark:bg-zinc-800" />
-              <div className="mt-4 h-4 w-5/6 rounded bg-gray-200 dark:bg-zinc-800" />
-            </div>
-          )}
-          {today && (
-            <div className="rounded-md border p-4">
-              <div className="flex items-center gap-3">
-                <div className="text-2xl font-bold">{today.word}</div>
-                <button className="btn btn-sm" onClick={()=>speak(today.word)} disabled={speaking===today.word}>
-                  {speaking===today.word ? (<><SoundIcon /> Playing…</>) : 'Listen'}
-                </button>
-                {today.level && <span className="text-xs rounded bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5">CEFR {today.level}</span>}
-              </div>
-              <div className="text-gray-600">{today.translation}</div>
-              <div className="mt-2 italic">{today.example}</div>
-              <div className="mt-3 flex items-center gap-2">
-                <button className="btn" onClick={saveToday} disabled={!userId || tSaving}>{tSaving ? 'Saving…' : 'Save'}</button>
-                <button className="btn" onClick={()=>startReview(10)} disabled={!userId}>Start review</button>
-              </div>
-              {!userId && <p className="mt-2 text-sm text-gray-600">Login to save & review.</p>}
-            </div>
-          )}
-          {!tLoading && !today && (
-            <div className="rounded-md border p-4 text-sm text-gray-600">
-              No word is available right now. Please try again later.
-            </div>
-          )}
-        </section>
-      )}
-
-      {tab === 'browse' && (
-        <section className="space-y-3">
-          <div className="flex items-center gap-2">
-            <input className="input" placeholder="Search word or translation" value={q} onChange={(e)=>setQ(e.target.value)} />
-            <select className="input" value={level} onChange={(e)=>setLevel(e.target.value)}>
-              <option value="">All levels</option>
-              <option value="A1">A1</option>
-              <option value="A2">A2</option>
-              <option value="B1">B1</option>
-              <option value="B2">B2</option>
-            </select>
-            <button className="btn" onClick={search} disabled={bLoading}>{bLoading ? 'Searching…' : 'Search'}</button>
+        {/* Success Message */}
+        {msg && (
+          <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+            <span className="text-xl">✓</span>
+            <span>{msg}</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {results.map((w, i) => (
-              <div key={i} className="rounded-md border p-3">
-                <div className="flex items-center gap-2">
-                  <div className="font-semibold">{w.word}</div>
-                  <button className="btn btn-sm" onClick={()=>speak(w.word)} disabled={speaking===w.word}>
-                    {speaking===w.word ? (<><SoundIcon /> Playing…</>) : 'Listen'}
-                  </button>
-                  {w.level && <span className="text-xs rounded bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5">{w.level}</span>}
-                </div>
-                <div className="text-sm text-gray-700">{w.translation}</div>
-                {w.example && <div className="text-xs italic mt-1">{w.example}</div>}
-                <div className="mt-2">
-                  <button className="btn btn-sm" disabled={!userId || bSavingId===w.word} onClick={()=>saveSeed(w)}>
-                    {bSavingId===w.word ? 'Adding…' : 'Add'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+        )}
 
-      {tab === 'saved' && (
-        <section className="space-y-3">
-          <div className="flex items-center gap-2">
-            <select className="input" value={status} onChange={(e)=>setStatus(e.target.value)}>
-              <option value="">All</option>
-              <option value="learning">Learning</option>
-              <option value="known">Known</option>
-              <option value="due">Due</option>
-            </select>
-            <button className="btn" onClick={loadSaved} disabled={!userId || sLoading}>{sLoading ? 'Loading…' : 'Refresh'}</button>
-          </div>
-          {!userId && <p className="text-sm text-gray-600">Login to view saved words.</p>}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {saved.map((w) => (
-              <div key={w._id} className="rounded-md border p-3">
-                <div className="flex items-center gap-2">
-                  <div className="font-semibold">{w.word}</div>
-                  <button className="btn btn-sm" onClick={()=>speak(w.word)} disabled={speaking===w.word}>
-                    {speaking===w.word ? (<><SoundIcon /> Playing…</>) : 'Listen'}
-                  </button>
-                  {w.level && <span className="text-xs rounded bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5">{w.level}</span>}
-                  {w.srs?.due && <span className="ml-auto text-xs text-gray-500">Due: {new Date(w.srs.due).toLocaleDateString()}</span>}
-                </div>
-                <div className="text-sm text-gray-700">{w.translation}</div>
-                {w.example && <div className="text-xs italic mt-1">{w.example}</div>}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-3 mb-8 overflow-x-auto">
+          <button 
+            className={`px-6 py-3 rounded-lg font-medium transition-all ${tab==='today' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`} 
+            onClick={()=>setTab('today')}
+          >
+            Today
+          </button>
+          <button 
+            className={`px-6 py-3 rounded-lg font-medium transition-all ${tab==='browse' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`} 
+            onClick={()=>setTab('browse')}
+          >
+            Browse
+          </button>
+          <button 
+            className={`px-6 py-3 rounded-lg font-medium transition-all ${tab==='saved' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`} 
+            onClick={()=>setTab('saved')}
+          >
+            Saved
+          </button>
+          <button 
+            className={`px-6 py-3 rounded-lg font-medium transition-all ${tab==='review' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`} 
+            onClick={()=>setTab('review')}
+          >
+            Review
+          </button>
+        </div>
 
-      {tab === 'review' && (
-        <section className="space-y-3">
-          {!session && (
-            <div className="flex items-center gap-2">
-              <button className="btn" onClick={()=>startReview(10)} disabled={!userId || rLoading}>{rLoading ? 'Starting…' : 'Start 10'}</button>
-              <button className="btn" onClick={()=>startReview(20)} disabled={!userId || rLoading}>Start 20</button>
-              {!userId && <p className="text-sm text-gray-600">Login to review.</p>}
-            </div>
-          )}
-          {session && current && (
-            <div className="rounded-md border p-4 space-y-3">
-              <div className="text-sm text-gray-500">{session.idx+1} / {session.items.length}</div>
-              <div className="text-xl font-semibold">{current.word}</div>
-              <button className="btn btn-sm" onClick={()=>speak(current.word)} disabled={speaking===current.word}>
-                {speaking===current.word ? (<><SoundIcon /> Playing…</>) : 'Listen'}
-              </button>
-              <div className="rounded border p-3">
-                {current.prompt.mode === 'fill_in' ? (
-                  <div>
-                    <div className="italic">{current.prompt.prompt}</div>
-                    {showAns && <div className="mt-2">Answer: <span className="font-semibold">{current.prompt.answer}</span></div>}
-                  </div>
-                ) : (
-                  <div>
-                    <div className="mb-2">{current.prompt.prompt}</div>
-                    <div className="flex flex-wrap gap-2">
-                      {current.prompt.options?.map((o: string) => (
-                        <button key={o} className="btn btn-sm" onClick={()=>setShowAns(true)}>{o}</button>
-                      ))}
+        {/* Today Tab */}
+        {tab === 'today' && (
+          <div className="space-y-6">
+            {tLoading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1,2,3,4,5,6].map((i) => (
+                  <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden animate-pulse">
+                    <div className="h-32 bg-gray-200 dark:bg-gray-700" />
+                    <div className="p-4">
+                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700 mb-2" />
+                      <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700" />
                     </div>
-                    {showAns && <div className="mt-2">Answer: <span className="font-semibold">{current.prompt.answer}</span></div>}
                   </div>
+                ))}
+              </div>
+            )}
+            
+            {!tLoading && todayWords.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {todayWords.map((word, index) => {
+                  const isRevealed = index <= currentWordIndex
+                  const isCurrent = index === currentWordIndex
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={`relative rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
+                        isRevealed ? 'opacity-100' : 'opacity-50'
+                      } ${isCurrent ? 'ring-4 ring-indigo-500 scale-105' : ''}`}
+                    >
+                      {/* Blur overlay for unrevealed cards */}
+                      {!isRevealed && (
+                        <div className="absolute inset-0 backdrop-blur-md bg-white/30 dark:bg-gray-900/30 z-10 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-4xl mb-2">🔒</div>
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Complete previous words</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Card Header */}
+                      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white relative">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(word.level)}`}>
+                            {getLevelName(word.level)}
+                          </span>
+                          <button 
+                            className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-all"
+                            onClick={()=>speak(word.word)} 
+                            disabled={speaking===word.word || !isRevealed}
+                          >
+                            <SoundIcon />
+                          </button>
+                        </div>
+                        <h3 className="text-2xl font-bold mb-1">{word.word}</h3>
+                        <p className="text-white text-opacity-90">{word.translation}</p>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="bg-white dark:bg-gray-800 p-4">
+                        <div className="mb-4">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 uppercase font-semibold mb-1">Example</p>
+                          <div className="flex items-start gap-2">
+                            <p className="text-sm italic text-gray-700 dark:text-gray-300 flex-1">
+                              {word.example || 'No example available'}
+                            </p>
+                            {word.example && (
+                              <button 
+                                className="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-all flex-shrink-0"
+                                onClick={()=>speak(word.example)} 
+                                disabled={speaking===word.example || !isRevealed}
+                                title="Listen to example"
+                              >
+                                <SoundIcon />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        {isCurrent && (
+                          <div className="space-y-2">
+                            <button 
+                              className="w-full px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-md"
+                              onClick={saveCurrentWord} 
+                              disabled={!userId || tSaving}
+                            >
+                              {tSaving ? 'Saving...' : '💾 Save Word'}
+                            </button>
+                            {index < todayWords.length - 1 && (
+                              <button 
+                                className="w-full px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
+                                onClick={nextWord}
+                              >
+                                Next →
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        
+                        {!isCurrent && isRevealed && (
+                          <div className="flex items-center justify-center py-2">
+                            <span className="text-green-600 dark:text-green-400 text-sm font-medium">✓ Learned</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {!tLoading && todayWords.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+                <p className="text-gray-600 dark:text-gray-400">No words available right now. Please try again later.</p>
+              </div>
+            )}
+            
+            {!userId && todayWords.length > 0 && (
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg text-center">
+                Login to save words and track your progress
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Browse Tab */}
+        {tab === 'browse' && (
+          <div className="space-y-6">
+            {/* Search Bar */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <input 
+                  className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white" 
+                  placeholder="Search word or translation..." 
+                  value={q} 
+                  onChange={(e)=>setQ(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && search()}
+                />
+                <select 
+                  className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white" 
+                  value={level} 
+                  onChange={(e)=>setLevel(e.target.value)}
+                >
+                  <option value="">All Levels</option>
+                  <option value="A1">Beginner (A1)</option>
+                  <option value="A2">Beginner (A2)</option>
+                  <option value="B1">Intermediate (B1)</option>
+                  <option value="B2">Intermediate (B2)</option>
+                  <option value="C1">Advanced (C1)</option>
+                  <option value="C2">Advanced (C2)</option>
+                </select>
+                <button 
+                  className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg"
+                  onClick={search} 
+                  disabled={bLoading}
+                >
+                  {bLoading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            </div>
+
+            {/* Results Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {results.map((w, i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 relative">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(w.level)}`}>
+                        {getLevelName(w.level)}
+                      </span>
+                      <button 
+                        className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-all"
+                        onClick={()=>speak(w.word)} 
+                        disabled={speaking===w.word}
+                      >
+                        <SoundIcon />
+                      </button>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white">{w.word}</h3>
+                  </div>
+                  
+                  <div className="p-4">
+                    <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">{w.translation}</p>
+                    {w.example && (
+                      <div className="flex items-start gap-2 mb-4">
+                        <p className="text-sm italic text-gray-500 dark:text-gray-400 flex-1">{w.example}</p>
+                        <button 
+                          className="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-all flex-shrink-0"
+                          onClick={()=>speak(w.example)} 
+                          disabled={speaking===w.example}
+                          title="Listen to example"
+                        >
+                          <SoundIcon />
+                        </button>
+                      </div>
+                    )}
+                    
+                    <button 
+                      className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all"
+                      disabled={!userId || bSavingId===w.word} 
+                      onClick={()=>saveSeed(w)}
+                    >
+                      {bSavingId===w.word ? 'Adding...' : '+ Add to Saved'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {results.length === 0 && !bLoading && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+                <p className="text-gray-600 dark:text-gray-400">No results found. Try a different search term.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Saved Tab */}
+        {tab === 'saved' && (
+          <div className="space-y-6">
+            {/* Filter Bar */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <div className="flex gap-4">
+                <select 
+                  className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white" 
+                  value={status} 
+                  onChange={(e)=>setStatus(e.target.value)}
+                >
+                  <option value="">All Words</option>
+                  <option value="learning">Learning</option>
+                  <option value="known">Known</option>
+                  <option value="due">Due for Review</option>
+                </select>
+                <button 
+                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all"
+                  onClick={loadSaved} 
+                  disabled={!userId || sLoading}
+                >
+                  {sLoading ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+            </div>
+
+            {!userId && (
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg">
+                Login to view your saved words
+              </div>
+            )}
+
+            {/* Saved Words Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {saved.map((w) => (
+                <div key={w._id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                  <div className="bg-gradient-to-r from-green-500 to-teal-600 p-4 relative">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(w.level)}`}>
+                        {getLevelName(w.level)}
+                      </span>
+                      <button 
+                        className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-all"
+                        onClick={()=>speak(w.word)} 
+                        disabled={speaking===w.word}
+                      >
+                        <SoundIcon />
+                      </button>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white">{w.word}</h3>
+                  </div>
+                  
+                  <div className="p-4">
+                    <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">{w.translation}</p>
+                    {w.example && (
+                      <div className="flex items-start gap-2 mb-3">
+                        <p className="text-sm italic text-gray-500 dark:text-gray-400 flex-1">{w.example}</p>
+                        <button 
+                          className="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-all flex-shrink-0"
+                          onClick={()=>speak(w.example)} 
+                          disabled={speaking===w.example}
+                          title="Listen to example"
+                        >
+                          <SoundIcon />
+                        </button>
+                      </div>
+                    )}
+                    {w.srs?.due && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Due: {new Date(w.srs.due).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {saved.length === 0 && !sLoading && userId && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+                <p className="text-gray-600 dark:text-gray-400">No saved words yet. Start adding words from the Browse tab!</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Review Tab */}
+        {tab === 'review' && (
+          <div className="space-y-6">
+            {!session && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Start a Review Session</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">Practice your saved vocabulary with spaced repetition</p>
+                
+                <div className="flex gap-4">
+                  <button 
+                    className="px-8 py-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg"
+                    onClick={()=>startReview(10)} 
+                    disabled={!userId || rLoading}
+                  >
+                    {rLoading ? 'Starting...' : 'Start 10 Words'}
+                  </button>
+                  <button 
+                    className="px-8 py-4 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 transition-all shadow-lg"
+                    onClick={()=>startReview(20)} 
+                    disabled={!userId || rLoading}
+                  >
+                    Start 20 Words
+                  </button>
+                </div>
+                
+                {!userId && (
+                  <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Login to start reviewing</p>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button className="btn btn-sm" onClick={()=>setShowAns(true)}>Show answer</button>
-                {/* SM-2 grades */}
-                {[0,1,2,3,4,5].map(n => (
-                  <button key={n} className="btn btn-sm" onClick={()=>grade(n)} disabled={submitting}>{n}</button>
-                ))}
-                {submitting && <span className="text-xs text-gray-500">Submitting…</span>}
+            )}
+            
+            {session && current && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Question {session.idx+1} of {session.items.length}
+                    </span>
+                    <div className="w-full max-w-xs bg-gray-200 dark:bg-gray-700 rounded-full h-2 ml-4">
+                      <div 
+                        className="bg-indigo-600 h-2 rounded-full transition-all"
+                        style={{width: `${((session.idx+1) / session.items.length) * 100}%`}}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 mb-4">
+                    <h3 className="text-3xl font-bold text-gray-900 dark:text-white">{current.word}</h3>
+                    <button 
+                      className="p-3 bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 rounded-full transition-all"
+                      onClick={()=>speak(current.word)} 
+                      disabled={speaking===current.word}
+                    >
+                      <SoundIcon />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 mb-6">
+                  {current.prompt.mode === 'fill_in' ? (
+                    <div>
+                      <p className="text-lg italic text-gray-700 dark:text-gray-300">{current.prompt.prompt}</p>
+                      {showAns && (
+                        <div className="mt-4 p-4 bg-green-100 dark:bg-green-900 rounded-lg">
+                          <p className="text-green-800 dark:text-green-200">
+                            Answer: <span className="font-bold">{current.prompt.answer}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">{current.prompt.prompt}</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {current.prompt.options?.map((o: string) => (
+                          <button 
+                            key={o} 
+                            className="px-4 py-3 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-all"
+                            onClick={()=>setShowAns(true)}
+                          >
+                            {o}
+                          </button>
+                        ))}
+                      </div>
+                      {showAns && (
+                        <div className="mt-4 p-4 bg-green-100 dark:bg-green-900 rounded-lg">
+                          <p className="text-green-800 dark:text-green-200">
+                            Answer: <span className="font-bold">{current.prompt.answer}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <button 
+                    className="w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
+                    onClick={()=>setShowAns(true)}
+                  >
+                    Show Answer
+                  </button>
+                  
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">How well did you know this?</p>
+                    <div className="grid grid-cols-6 gap-2">
+                      {[
+                        {grade: 0, label: 'Forgot', color: 'bg-red-500'},
+                        {grade: 1, label: 'Hard', color: 'bg-orange-500'},
+                        {grade: 2, label: 'OK', color: 'bg-yellow-500'},
+                        {grade: 3, label: 'Good', color: 'bg-lime-500'},
+                        {grade: 4, label: 'Easy', color: 'bg-green-500'},
+                        {grade: 5, label: 'Perfect', color: 'bg-emerald-500'}
+                      ].map(({grade: g, label, color}) => (
+                        <button 
+                          key={g} 
+                          className={`px-3 py-2 ${color} text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50 transition-all text-sm`}
+                          onClick={()=>grade(g)} 
+                          disabled={submitting}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {submitting && (
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400">Submitting results...</p>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </section>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </main>
   )
 }

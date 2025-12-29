@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Replace Admin Token</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        .token-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        button {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px 0;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        .info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .info h3 {
+            margin-top: 0;
+        }
+        ul {
+            line-height: 1.8;
+        }
+        .emoji {
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Admin Token Replacement</h1>
+        <p class="subtitle">Click the button below to get unlimited access!</p>
+
+        <div class="info">
+            <h3>📋 What This Does:</h3>
+            <ul>
+                <li><span class="emoji">✅</span> Replaces your current token with an admin token</li>
+                <li><span class="emoji">🚀</span> Gives you unlimited scenario access</li>
+                <li><span class="emoji">🎯</span> Removes all usage limits</li>
+                <li><span class="emoji">🔓</span> Unlocks all features</li>
+            </ul>
+        </div>
+
+        <div class="token-box">
+            <strong>Your New Admin Token:</strong><br><br>
+            eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGI5YjhkYWY1ZDQ4OWQwMzYyYjQ1MDYiLCJleHAiOjE3NjM0NzExNjMsInJvbGUiOiJhZG1pbiJ9.A9QgVFT3-olrOnMN_Awdv0SpGgyc3_k-iIN98GLu2uo
+        </div>
+
+        <button onclick="replaceToken()">
+            🔑 Replace Token & Get Unlimited Access
+        </button>
+
+        <div class="success" id="success">
+            <h2>✅ Success!</h2>
+            <p>Your token has been replaced with the admin token.</p>
+            <p>Redirecting to the app in 2 seconds...</p>
+        </div>
+
+        <div class="info">
+            <h3>⚠️ Important:</h3>
+            <ul>
+                <li>Make sure you're on <code>localhost:3000</code></li>
+                <li>This will reload the page automatically</li>
+                <li>You'll have unlimited access immediately</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OGI5YjhkYWY1ZDQ4OWQwMzYyYjQ1MDYiLCJleHAiOjE3NjM0NzExNjMsInJvbGUiOiJhZG1pbiJ9.A9QgVFT3-olrOnMN_Awdv0SpGgyc3_k-iIN98GLu2uo';
+
+        function replaceToken() {
+            // Replace the token in localStorage
+            localStorage.setItem('token', ADMIN_TOKEN);
+            
+            // Show success message
+            document.getElementById('success').style.display = 'block';
+            
+            // Redirect to the app after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3000';
+            }, 2000);
+        }
+
+        // Check if we're on localhost:3000
+        if (window.location.hostname === 'localhost' && window.location.port === '3000') {
+            // Auto-replace if on the app
+            console.log('On localhost:3000, ready to replace token');
+        }
+    </script>
+</body>
+</html>

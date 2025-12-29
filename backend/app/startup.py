@@ -213,6 +213,29 @@ async def seed_collections():
                     await with_timeout(db['grammar_rules'].insert_many(rules))
         except Exception:
             pass
+        
+        # Seed scenarios
+        try:
+            count_scenarios = await with_timeout(db['scenarios'].count_documents({}))
+            if count_scenarios == 0:
+                logger.info("🎭 Seeding scenarios...")
+                from .seed.scenarios_data import get_initial_scenarios
+                from .seed.new_scenarios_data import get_new_scenarios
+                
+                # Get all scenarios
+                initial_scenarios = get_initial_scenarios()
+                new_scenarios = get_new_scenarios()
+                all_scenarios = initial_scenarios + new_scenarios
+                
+                # Convert to dict and insert
+                for scenario in all_scenarios:
+                    scenario_dict = scenario.model_dump(by_alias=True)
+                    await with_timeout(db['scenarios'].insert_one(scenario_dict))
+                
+                logger.info(f"✅ Seeded {len(all_scenarios)} scenarios")
+        except Exception as e:
+            logger.warning(f"Failed to seed scenarios: {e}")
+            pass
     except Exception as e:
         # Most likely a DB connection error; proceed without blocking startup
         logger.warning("Database not available during startup seeding: %s", e)

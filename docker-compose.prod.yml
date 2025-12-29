@@ -1,0 +1,21 @@
+# Production Docker Compose with NVIDIA GPU Support
+# Use this for deployment to servers with NVIDIA GPUs
+
+version: '3.8'
+
+services:
+  ollama:
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'  # More CPUs for production
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_NUM_PARALLEL=4  # More parallel requests in production
+      - OLLAMA_MAX_LOADED_MODELS=2  # Can load more models with GPU

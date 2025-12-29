@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST="{\"components/ClientLayoutShell.tsx -> @/components/Navbar\":{\"id\":\"components/ClientLayoutShell.tsx -> @/components/Navbar\",\"files\":[\"static/chunks/_app-pages-browser_src_components_Navbar_tsx.js\"]}}"

@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import RequireAuth from '@/components/RequireAuth'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 type SpeechResult = {
   expected: string
@@ -285,171 +285,407 @@ export default function SpeechPage() {
   // Redirect unauthenticated users immediately
   // (RequireAuth performs the redirect on mount)
   
+  const router = useRouter()
+
   return (
-    <main className="space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
       <RequireAuth />
-      <h2 className="text-xl font-semibold">Pronunciation Coach</h2>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Target sentence (DE)</label>
-        <input className="input w-full" value={expected} onChange={(e)=>setExpected(e.target.value)} />
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-gray-500">Tip: Keep it short (3–8 words) for best recognition.</p>
-          <button type="button" className="btn btn-sm" onClick={speakExpected}>Listen (TTS)</button>
+      
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="mb-4 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 flex items-center font-medium transition-colors"
+          >
+            ← Back to Dashboard
+          </button>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            🎙️ Speech Practice
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            Practice your German pronunciation with AI-powered feedback
+          </p>
         </div>
-      </div>
 
-      {/* Recorder controls */}
-      <div className="rounded-md border p-3 space-y-3">
-        <div className="flex items-center gap-3">
-          {!isRecording ? (
-            <button className="btn" onClick={startRecording}>Start Recording</button>
-          ) : (
-            <button className="btn bg-red-600 hover:bg-red-700" onClick={stopRecording}>Stop</button>
-          )}
-          <span className="text-sm text-gray-600">{isRecording ? 'Recording…' : 'Not recording'}</span>
-          <span className="ml-auto text-sm tabular-nums">{Math.floor(elapsed/60)}:{String(elapsed%60).padStart(2,'0')}</span>
-        </div>
-        <canvas ref={canvasRef} width={360} height={10} className="w-full rounded bg-gray-100" />
-        <div className="flex items-center gap-3">
-          <button className="btn" onClick={resetAll} disabled={isRecording}>Reset</button>
-          <button className="btn" onClick={uploadForCheck} disabled={!audioUrl || isRecording}>Send to Coach</button>
-          {audioUrl && (
-            <audio className="ml-auto" controls src={audioUrl} />
-          )}
-        </div>
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-      </div>
-
-      {/* Local feedback */}
-      <div className="rounded-md border p-3 text-sm space-y-2">
-        <h3 className="font-medium">Live Feedback (Browser)</h3>
-        <p className="text-gray-600">If supported by your browser, you will see a live transcript while you speak.</p>
-        <div><span className="font-semibold">Expected:</span> {expected}</div>
-        <div><span className="font-semibold">Heard (local):</span> {localTranscript || <span className="text-gray-400">—</span>}</div>
-        <div><span className="font-semibold">Similarity:</span> {localScore !== null ? `${localScore}%` : <span className="text-gray-400">—</span>}</div>
-        {localScore !== null && (
-          <p className="text-gray-600">Hint: Aim for similar word order and endings. Try slower, clearer vowels and final consonants.</p>
-        )}
-      </div>
-
-      {/* Server feedback if available */}
-      {loading && (
-        <div className="rounded-md border p-3 animate-pulse">
-          <div className="h-4 w-1/3 rounded bg-gray-200 dark:bg-zinc-800" />
-          <div className="mt-2 h-4 w-2/3 rounded bg-gray-200 dark:bg-zinc-800" />
-          <div className="mt-2 h-20 rounded bg-gray-200 dark:bg-zinc-800" />
-        </div>
-      )}
-      {serverResult && (
-        <div className="rounded-md border p-3 text-sm space-y-2">
-          <div><span className="font-semibold">Coach expected:</span> {serverResult.expected}</div>
-          <div><span className="font-semibold">Coach heard:</span> {serverResult.transcribed}</div>
-          <div>Score: {serverResult.score}</div>
-          <div className="text-gray-600">{serverResult.feedback}</div>
-          <div className="flex items-center gap-2 pt-1">
-            <button className="btn btn-sm" onClick={saveAttempt} disabled={saving}>{saving ? 'Saving…' : 'Save attempt'}</button>
-          </div>
-          {serverResult.aligned && serverResult.aligned.length > 0 && (
-            <div className="mt-2">
-              <div className="text-xs text-gray-500 mb-1">Alignment</div>
-              <div className="flex flex-wrap gap-1">
-                {serverResult.aligned.map((t, i) => {
-                  let bg = 'bg-green-100 text-green-800'
-                  if (t.op === 'sub') bg = 'bg-amber-100 text-amber-800'
-                  if (t.op === 'del') bg = 'bg-red-100 text-red-800'
-                  if (t.op === 'ins') bg = 'bg-blue-100 text-blue-800'
-                  const label = t.op === 'ins' ? (t.heard || '') : (t.expected || '')
-                  return <span key={i} className={`px-2 py-0.5 rounded text-xs ${bg}`}>{label}</span>
-                })}
+        {/* Main Practice Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-6">
+          <div className="space-y-6">
+            {/* Target Sentence Input */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                🎯 Target Sentence (German)
+              </label>
+              <div className="flex gap-3">
+                <input 
+                  className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-200 dark:bg-gray-700 dark:text-white text-lg transition-all" 
+                  value={expected} 
+                  onChange={(e)=>setExpected(e.target.value)}
+                  placeholder="Enter a German sentence..."
+                />
+                <button 
+                  type="button" 
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                  onClick={speakExpected}
+                >
+                  🔊 Listen
+                </button>
               </div>
-              <div className="text-xs text-gray-500 mt-1">Legend: green=match, amber=substitution, red=missed, blue=extra.</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
+                💡 Tip: Keep it short (3–8 words) for best recognition
+              </p>
             </div>
-          )}
-        </div>
-      )}
 
-      {/* Practice deck */}
-      <div className="rounded-md border p-3 text-sm space-y-2">
-        <div className="flex items-center gap-2">
-          <h3 className="font-medium">Practice deck</h3>
-          <button
-            className="btn btn-sm inline-flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
-            onClick={loadSuggestions}
-            disabled={loadingSugg}
-            aria-busy={loadingSugg}
-            aria-label="Refresh practice suggestions"
-            title="Refresh practice suggestions"
-          >
-            {loadingSugg && (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-90 animate-spin" aria-hidden="true" focusable="false"><path d="M12 2a10 10 0 100 20 10 10 0 100-20Zm0 3a7 7 0 110 14 7 7 0 010-14Z" fill="#e5e7eb"/><path d="M12 2a10 10 0 00-7.07 2.93l2.12 2.12A7 7 0 0119 12h3A10 10 0 0012 2Z" fill="currentColor"/></svg>
-            )}
-            <span>{loadingSugg ? 'Refreshing' : 'Refresh'}</span>
-          </button>
-        </div>
-        <div className="flex items-center gap-3 text-xs">
-          <div className="flex items-center gap-1">
-            <span className="text-gray-500">Level</span>
-            <select className="input py-1" value={levelFilter} onChange={(e)=>setLevelFilter(e.target.value)}>
-              <option value="">Any</option>
-              <option value="A1">A1</option>
-              <option value="A2">A2</option>
-              <option value="B1">B1</option>
-              <option value="B2">B2</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-gray-500">Track</span>
-            <select className="input py-1" value={trackFilter} onChange={(e)=>setTrackFilter(e.target.value)}>
-              <option value="">Any</option>
-              <option value="articles">articles</option>
-              <option value="verbs">verbs</option>
-              <option value="nouns">nouns</option>
-              <option value="cases">cases</option>
-              <option value="pluralization">pluralization</option>
-            </select>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {suggestions.map((s, idx) => (
-            <button key={idx} className="px-2 py-1 rounded border hover:bg-gray-50" onClick={()=>setExpected(s.text)} title={s.source}>{s.text}</button>
-          ))}
-          {suggestions.length === 0 && <span className="text-gray-500">No suggestions yet.</span>}
-        </div>
-      </div>
-
-      {/* History */}
-      <div className="rounded-md border p-3 text-sm space-y-2">
-        <div className="flex items-center gap-2">
-          <h3 className="font-medium">History</h3>
-          <button
-            className="btn btn-sm inline-flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
-            onClick={loadHistory}
-            disabled={loadingHistory}
-            aria-busy={loadingHistory}
-            aria-label="Refresh history"
-            title="Refresh history"
-          >
-            {loadingHistory && (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="opacity-90 animate-spin" aria-hidden="true" focusable="false"><path d="M12 2a10 10 0 100 20 10 10 0 100-20Zm0 3a7 7 0 110 14 7 7 0 010-14Z" fill="#e5e7eb"/><path d="M12 2a10 10 0 00-7.07 2.93l2.12 2.12A7 7 0 0119 12h3A10 10 0 0012 2Z" fill="currentColor"/></svg>
-            )}
-            <span>{loadingHistory ? 'Refreshing' : 'Refresh'}</span>
-          </button>
-        </div>
-        <div className="space-y-1">
-          {history.length === 0 && <div className="text-gray-500">No attempts saved yet.</div>}
-          {history.map((h, i) => (
-            <div key={i} className="rounded border px-2 py-1">
+            {/* Recording Controls */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="font-medium">{h.score}%</div>
-                <div className="text-xs text-gray-500">{new Date(h.ts).toLocaleString()}</div>
+                <div className="flex items-center gap-4">
+                  {!isRecording ? (
+                    <button 
+                      className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 text-lg"
+                      onClick={startRecording}
+                    >
+                      🎤 Start Recording
+                    </button>
+                  ) : (
+                    <button 
+                      className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold hover:from-red-600 hover:to-red-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 text-lg animate-pulse"
+                      onClick={stopRecording}
+                    >
+                      ⏹️ Stop Recording
+                    </button>
+                  )}
+                  <div className="flex flex-col">
+                    <span className={`text-sm font-semibold ${isRecording ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                      {isRecording ? '🔴 Recording...' : '⚪ Ready'}
+                    </span>
+                    <span className="text-2xl font-mono font-bold text-gray-700 dark:text-gray-300 tabular-nums">
+                      {Math.floor(elapsed/60)}:{String(elapsed%60).padStart(2,'0')}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div><span className="font-semibold">Exp:</span> {h.expected}</div>
-              <div><span className="font-semibold">Heard:</span> {h.transcribed}</div>
+              
+              {/* Volume Meter */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Volume Level</p>
+                <canvas ref={canvasRef} width={360} height={16} className="w-full rounded-lg shadow-inner" />
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <button 
+                  className="px-6 py-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-bold hover:bg-gray-300 dark:hover:bg-gray-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={resetAll} 
+                  disabled={isRecording}
+                >
+                  🔄 Reset
+                </button>
+                <button 
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  onClick={uploadForCheck} 
+                  disabled={!audioUrl || isRecording}
+                >
+                  🎓 Send to AI Coach
+                </button>
+              </div>
+              
+              {/* Audio Playback */}
+              {audioUrl && (
+                <div className="pt-2">
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Your Recording:</p>
+                  <audio className="w-full" controls src={audioUrl} />
+                </div>
+              )}
+              
+              {error && (
+                <div className="bg-red-100 dark:bg-red-900 border-2 border-red-300 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-xl text-sm font-medium">
+                  ⚠️ {error}
+                </div>
+              )}
             </div>
-          ))}
+          </div>
+        </div>
+
+        {/* Live Feedback Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">📊 Live Feedback</h3>
+            <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">Browser-based</span>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Real-time transcription as you speak (if supported by your browser)
+          </p>
+          
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Expected:</p>
+              <p className="text-lg font-medium text-gray-900 dark:text-white">{expected}</p>
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">What You Said:</p>
+              <p className="text-lg font-medium text-gray-900 dark:text-white">
+                {localTranscript || <span className="text-gray-400 italic">Waiting for speech...</span>}
+              </p>
+            </div>
+            
+            {localScore !== null && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">Similarity Score:</p>
+                  <span className={`text-2xl font-bold ${
+                    localScore >= 80 ? 'text-green-600' : 
+                    localScore >= 60 ? 'text-yellow-600' : 
+                    'text-red-600'
+                  }`}>
+                    {localScore}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className={`h-3 rounded-full transition-all duration-500 ${
+                      localScore >= 80 ? 'bg-green-500' : 
+                      localScore >= 60 ? 'bg-yellow-500' : 
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${localScore}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
+                  💡 Tip: Aim for similar word order and endings. Try slower, clearer vowels and final consonants.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* AI Coach Feedback */}
+        {loading && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-6 animate-pulse">
+            <div className="h-6 w-1/3 rounded-lg bg-gray-200 dark:bg-gray-700 mb-4" />
+            <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700 mb-2" />
+            <div className="h-24 rounded-lg bg-gray-200 dark:bg-gray-700" />
+          </div>
+        )}
+        
+        {serverResult && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">🎓 AI Coach Feedback</h3>
+              <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">AI-Powered</span>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Score Display */}
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 text-center">
+                <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Your Score</p>
+                <div className={`text-6xl font-bold mb-2 ${
+                  serverResult.score >= 80 ? 'text-green-600' : 
+                  serverResult.score >= 60 ? 'text-yellow-600' : 
+                  'text-red-600'
+                }`}>
+                  {serverResult.score}%
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4 overflow-hidden max-w-md mx-auto">
+                  <div 
+                    className={`h-4 rounded-full transition-all duration-500 ${
+                      serverResult.score >= 80 ? 'bg-green-500' : 
+                      serverResult.score >= 60 ? 'bg-yellow-500' : 
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${serverResult.score}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Comparison */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-purple-50 dark:bg-gray-700 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Expected:</p>
+                  <p className="text-base font-medium text-gray-900 dark:text-white">{serverResult.expected}</p>
+                </div>
+                <div className="bg-blue-50 dark:bg-gray-700 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">What AI Heard:</p>
+                  <p className="text-base font-medium text-gray-900 dark:text-white">{serverResult.transcribed}</p>
+                </div>
+              </div>
+              
+              {/* Feedback */}
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">💬 Coach's Feedback:</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{serverResult.feedback}</p>
+              </div>
+              
+              {/* Word Alignment */}
+              {serverResult.aligned && serverResult.aligned.length > 0 && (
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">🔍 Word-by-Word Analysis</p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {serverResult.aligned.map((t, i) => {
+                      let bg = 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                      if (t.op === 'sub') bg = 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200'
+                      if (t.op === 'del') bg = 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                      if (t.op === 'ins') bg = 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                      const label = t.op === 'ins' ? (t.heard || '') : (t.expected || '')
+                      return <span key={i} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${bg}`}>{label}</span>
+                    })}
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-xs">
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500"></span> Match</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500"></span> Substitution</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500"></span> Missed</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-500"></span> Extra</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Save Button */}
+              <button 
+                className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                onClick={saveAttempt} 
+                disabled={saving}
+              >
+                {saving ? '💾 Saving...' : '💾 Save to History'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Practice Deck */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">📚 Practice Deck</h3>
+              <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-medium">Suggestions</span>
+            </div>
+            <button
+              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-bold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              onClick={loadSuggestions}
+              disabled={loadingSugg}
+            >
+              {loadingSugg && (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="animate-spin">
+                  <path d="M12 2a10 10 0 100 20 10 10 0 100-20Zm0 3a7 7 0 110 14 7 7 0 010-14Z" fill="#e5e7eb"/>
+                  <path d="M12 2a10 10 0 00-7.07 2.93l2.12 2.12A7 7 0 0119 12h3A10 10 0 0012 2Z" fill="currentColor"/>
+                </svg>
+              )}
+              <span>{loadingSugg ? 'Loading...' : '🔄 Refresh'}</span>
+            </button>
+          </div>
+          
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Level:</span>
+              <select 
+                className="px-3 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-200 dark:bg-gray-700 dark:text-white text-sm font-medium" 
+                value={levelFilter} 
+                onChange={(e)=>setLevelFilter(e.target.value)}
+              >
+                <option value="">All Levels</option>
+                <option value="A1">A1 - Beginner</option>
+                <option value="A2">A2 - Elementary</option>
+                <option value="B1">B1 - Intermediate</option>
+                <option value="B2">B2 - Upper Intermediate</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Topic:</span>
+              <select 
+                className="px-3 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-200 dark:bg-gray-700 dark:text-white text-sm font-medium" 
+                value={trackFilter} 
+                onChange={(e)=>setTrackFilter(e.target.value)}
+              >
+                <option value="">All Topics</option>
+                <option value="articles">Articles</option>
+                <option value="verbs">Verbs</option>
+                <option value="nouns">Nouns</option>
+                <option value="cases">Cases</option>
+                <option value="pluralization">Pluralization</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* Suggestions Grid */}
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map((s, idx) => (
+              <button 
+                key={idx} 
+                className="px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 border-2 border-purple-200 dark:border-purple-700 rounded-lg hover:from-purple-100 hover:to-pink-100 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all font-medium text-gray-900 dark:text-white text-sm" 
+                onClick={()=>setExpected(s.text)} 
+                title={s.source}
+              >
+                {s.text}
+              </button>
+            ))}
+            {suggestions.length === 0 && (
+              <div className="w-full text-center py-8 text-gray-500 dark:text-gray-400">
+                <p className="text-lg">📭 No suggestions available</p>
+                <p className="text-sm mt-1">Try adjusting the filters or click Refresh</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* History */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">📜 Practice History</h3>
+              <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">{history.length} attempts</span>
+            </div>
+            <button
+              className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              onClick={loadHistory}
+              disabled={loadingHistory}
+            >
+              {loadingHistory && (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="animate-spin">
+                  <path d="M12 2a10 10 0 100 20 10 10 0 100-20Zm0 3a7 7 0 110 14 7 7 0 010-14Z" fill="#e5e7eb"/>
+                  <path d="M12 2a10 10 0 00-7.07 2.93l2.12 2.12A7 7 0 0119 12h3A10 10 0 0012 2Z" fill="currentColor"/>
+                </svg>
+              )}
+              <span>{loadingHistory ? 'Loading...' : '🔄 Refresh'}</span>
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {history.length === 0 && (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <p className="text-lg">📭 No practice history yet</p>
+                <p className="text-sm mt-1">Your saved attempts will appear here</p>
+              </div>
+            )}
+            {history.map((h, i) => (
+              <div key={i} className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-600">
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`text-2xl font-bold ${
+                    h.score >= 80 ? 'text-green-600' : 
+                    h.score >= 60 ? 'text-yellow-600' : 
+                    'text-red-600'
+                  }`}>
+                    {h.score}%
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    🕐 {new Date(h.ts).toLocaleString()}
+                  </div>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-gray-600 dark:text-gray-400 min-w-[60px]">Expected:</span>
+                    <span className="text-gray-900 dark:text-white font-medium">{h.expected}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-gray-600 dark:text-gray-400 min-w-[60px]">You said:</span>
+                    <span className="text-gray-900 dark:text-white">{h.transcribed}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

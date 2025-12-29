@@ -56,6 +56,42 @@ async def speech_check(expected: str = Form(..., min_length=1), file: UploadFile
     if not file:
         raise HTTPException(status_code=400, detail="audio file is required")
     expected = expected.strip()
+    
+    # Try local Whisper service first
+    if settings.WHISPER_HOST:
+        try:
+            import httpx
+            data = await file.read()
+            
+            # Send to local Whisper service
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                files = {'audio_file': (file.filename or 'audio.webm', data, file.content_type or 'audio/webm')}
+                response = await client.post(
+                    f"{settings.WHISPER_HOST}/asr",
+                    files=files,
+                    params={'task': 'transcribe', 'language': 'de', 'output': 'txt'}
+                )
+                response.raise_for_status()
+                text = response.text.strip()
+                
+            if not text:
+                raise HTTPException(status_code=500, detail="Transcription returned empty")
+            
+            align = _alignment_score(expected, text)
+            return {
+                "expected": expected,
+                "transcribed": text,
+                "score": align["score"],
+                "feedback": align["feedback"],
+                "aligned": align["aligned"],
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            # Fall through to OpenAI if local Whisper fails
+            pass
+    
+    # Fallback to OpenAI Whisper if available
     if settings.OPENAI_API_KEY:
         try:
             try:
@@ -67,7 +103,6 @@ async def speech_check(expected: str = Form(..., min_length=1), file: UploadFile
             import io
             audio_file = io.BytesIO(data)
             audio_file.name = file.filename or 'audio.webm'
-            # Whisper v1 for transcription
             resp = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
@@ -88,8 +123,9 @@ async def speech_check(expected: str = Form(..., min_length=1), file: UploadFile
             raise
         except Exception as e:
             raise HTTPException(status_code=503, detail=f"Speech service error: {e}")
-    # No AI configured: return an explicit service-unavailable error to avoid fake results
-    raise HTTPException(status_code=503, detail="Speech AI not configured on server")
+    
+    # No speech service available
+    raise HTTPException(status_code=503, detail="Speech transcription service not configured")
 
 class SuggestionItem(BaseModel):
     text: str

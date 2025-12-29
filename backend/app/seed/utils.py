@@ -81,6 +81,17 @@ async def get_quiz_set(db, user_id: str, track: str | None = None, size: int = 5
             seen.add(qid)
             # ensure stable shape
             q.setdefault("id", qid)
+            
+            # Map database fields to API schema
+            if "correct_answer" in q and "answer" not in q:
+                q["answer"] = q["correct_answer"]
+            if "type" not in q:
+                # Infer type from question structure
+                if q.get("options"):
+                    q["type"] = "mcq"
+                else:
+                    q["type"] = "fill_in"
+            
             deduped.append(q)
 
         used_ai = False

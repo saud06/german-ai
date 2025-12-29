@@ -1,0 +1,10 @@
+{
+  "/voice-chat/page": "app/voice-chat/page.js",
+  "/icon.svg/route": "app/icon.svg/route.js",
+  "/learning-path/page": "app/learning-path/page.js",
+  "/learning-path/[id]/map/page": "app/learning-path/[id]/map/page.js",
+  "/learning-path/locations/[id]/page": "app/learning-path/locations/[id]/page.js",
+  "/activities/[id]/page": "app/activities/[id]/page.js",
+  "/scenarios/[id]/page": "app/scenarios/[id]/page.js",
+  "/vocab/page": "app/vocab/page.js"
+}

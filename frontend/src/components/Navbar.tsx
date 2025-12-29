@@ -72,15 +72,67 @@ const MicIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14a3 3 0 003-3V7a3 3 0 10-6 0v4a3 3 0 003 3zm0 0v4m0 0H9m3 0h3M5 11a7 7 0 0014 0"/>
   </svg>
 )
+const ChatIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+  </svg>
+)
+const CardIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+  </svg>
+)
+const TrophyIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+  </svg>
+)
+const LeaderboardIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+  </svg>
+)
+const MapIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+  </svg>
+)
+const GameIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
+  </svg>
+)
+const UsersIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+  </svg>
+)
+const CreditCardIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+  </svg>
+)
+const GiftIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+  </svg>
+)
+const VoiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+  </svg>
+)
 
 export default function Navbar() {
   const { token, userId, name, email, logout } = useAuth()
   const [dark, setDark] = useState(false)
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const profileRef = useRef<HTMLDivElement | null>(null)
+  const moreRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(()=>{
     const saved = localStorage.getItem('theme')
@@ -125,15 +177,18 @@ export default function Navbar() {
     if (e.key === 'Escape') {
       setOpen(false)
       setProfileOpen(false)
+      setMoreOpen(false)
     }
   }
 
-  // Close profile menu on outside click
+  // Close menus on outside click
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
-      if (!profileRef.current) return
-      if (!profileRef.current.contains(e.target as Node)) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setProfileOpen(false)
+      }
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false)
       }
     }
     document.addEventListener('mousedown', onDocClick)
@@ -142,21 +197,102 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 mb-6 border-b bg-white/70 dark:bg-zinc-900/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 header-gradient">
-      <div className="flex h-12 items-center justify-between" onKeyDown={onKeyDown}>
-        <Link href="/" className="flex items-center gap-2">
-          <img src="/logo.svg" alt="Logo" className="h-9 w-9 md:h-10 md:w-10" />
-          <span className="hidden sm:inline text-lg md:text-2xl font-semibold leading-none">German AI Learner</span>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex h-16 items-center justify-between" onKeyDown={onKeyDown}>
+        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+          <img src="/logo.svg" alt="Logo" className="h-8 w-8 md:h-10 md:w-10" />
+          <span className="hidden sm:inline text-base md:text-xl font-semibold leading-none">German AI Learner</span>
         </Link>
+        
+        {/* Desktop nav - centered */}
+        <nav className="hidden lg:flex items-center gap-2 xl:gap-3 text-sm flex-1 justify-center mx-4">
+          <NavLink
+            href="/dashboard"
+            starts="/dashboard"
+            label={<span className="inline-flex items-center gap-1.5"><HomeIcon className="h-4 w-4 text-rose-500"/>Dashboard</span>}
+          />
+          <NavLink
+            href="/vocab"
+            starts="/vocab"
+            label={<span className="inline-flex items-center gap-1.5"><BookIcon className="h-4 w-4 text-emerald-500"/>Vocab</span>}
+          />
+          <NavLink
+            href="/grammar"
+            starts="/grammar"
+            label={<span className="inline-flex items-center gap-1.5"><CapIcon className="h-4 w-4 text-indigo-500"/>Grammar</span>}
+          />
+          <NavLink
+            href="/quiz"
+            starts="/quiz"
+            label={<span className="inline-flex items-center gap-1.5"><PuzzleIcon className="h-4 w-4 text-amber-500"/>Quiz</span>}
+          />
+          <NavLink
+            href="/scenarios"
+            starts="/scenarios"
+            label={<span className="inline-flex items-center gap-1.5"><ChatIcon className="h-4 w-4 text-cyan-500"/>Scenarios</span>}
+          />
+          <NavLink
+            href="/speech"
+            starts="/speech"
+            label={<span className="inline-flex items-center gap-1.5"><MicIcon className="h-4 w-4 text-fuchsia-500"/>Speech</span>}
+          />
+          
+          {/* More dropdown */}
+          <div className="relative" ref={moreRef}>
+            <button
+              onClick={() => setMoreOpen(v => !v)}
+              className={clsx(
+                'inline-flex items-center gap-1.5 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors',
+                moreOpen && 'bg-zinc-100 dark:bg-zinc-800'
+              )}
+            >
+              <span className="text-sm">More</span>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {moreOpen && (
+              <div className="absolute left-0 mt-2 w-56 origin-top-left rounded-md border bg-white dark:bg-zinc-900 shadow-lg backdrop-blur p-1 z-50">
+                <Link href="/learning-path" onClick={() => setMoreOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">
+                  <MapIcon className="h-4 w-4 text-purple-500" />
+                  <span>Learning Path</span>
+                </Link>
+                <Link href="/voice-chat" onClick={() => setMoreOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">
+                  <VoiceIcon className="h-4 w-4 text-pink-500" />
+                  <span>Voice Chat</span>
+                </Link>
+                <Link href="/reviews" onClick={() => setMoreOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">
+                  <CardIcon className="h-4 w-4 text-violet-500" />
+                  <span>Reviews</span>
+                </Link>
+                <div className="my-1 h-px bg-zinc-200 dark:bg-zinc-800" />
+                <Link href="/achievements" onClick={() => setMoreOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">
+                  <TrophyIcon className="h-4 w-4 text-yellow-500" />
+                  <span>Achievements</span>
+                </Link>
+                <Link href="/leaderboard" onClick={() => setMoreOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">
+                  <LeaderboardIcon className="h-4 w-4 text-orange-500" />
+                  <span>Leaderboard</span>
+                </Link>
+                <Link href="/friends" onClick={() => setMoreOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">
+                  <UsersIcon className="h-4 w-4 text-blue-500" />
+                  <span>Friends</span>
+                </Link>
+              </div>
+            )}
+          </div>
+        </nav>
         {/* Right controls */}
-        <div className="flex items-center gap-2 md:gap-3">
-          {/* Theme toggle: icon-only on small screens, with text on md+ via tooltip/title */}
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          {/* Theme toggle */}
           <button
             aria-label="Toggle theme"
             title={dark ? 'Light mode' : 'Dark mode'}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-indigo-300 hover:bg-indigo-50 dark:hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
             onClick={toggleTheme}
           >
-            {dark ? <SunIcon className="h-5 w-5"/> : <MoonIcon className="h-5 w-5"/>}
+            {dark ? <SunIcon className="h-4 w-4 md:h-5 md:w-5"/> : <MoonIcon className="h-4 w-4 md:h-5 md:w-5"/>}
           </button>
           <div className="relative" ref={profileRef}>
             <button
@@ -165,18 +301,18 @@ export default function Navbar() {
               aria-label={token ? 'User menu' : 'Guest menu'}
               title={token ? 'Account' : 'Sign in'}
               className={clsx(
-                'inline-flex h-10 w-10 items-center justify-center rounded-full border border-indigo-300 focus:outline-none focus-visible:ring-2',
-                token ? 'bg-indigo-50 dark:bg-zinc-800 focus-visible:ring-indigo-500' : 'hover:bg-indigo-50 dark:hover:bg-zinc-800 focus-visible:ring-indigo-500'
+                'inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full border border-zinc-300 dark:border-zinc-700 focus:outline-none focus-visible:ring-2 transition-colors',
+                token ? 'bg-indigo-50 dark:bg-zinc-800 focus-visible:ring-indigo-500' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 focus-visible:ring-indigo-500'
               )}
               onClick={() => setProfileOpen(v => !v)}
             >
               {/* Simple avatar circle with initials or icon */}
               {token ? (
-                <span className="select-none font-semibold text-indigo-700 dark:text-indigo-200">
+                <span className="select-none text-xs md:text-sm font-semibold text-indigo-700 dark:text-indigo-200">
                   {(name || email || userId || 'U').slice(0, 2).toUpperCase()}
                 </span>
               ) : (
-                <LoginIcon className="h-5 w-5" />
+                <LoginIcon className="h-4 w-4 md:h-5 md:w-5" />
               )}
             </button>
 
@@ -195,13 +331,39 @@ export default function Navbar() {
                     </div>
                     <div className="my-1 h-px bg-zinc-200 dark:bg-zinc-800" />
                     <Link
+                      href="/account"
+                      className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <CreditCardIcon className="h-4 w-4 text-green-500" />
+                      <span>Subscription & Billing</span>
+                    </Link>
+                    <Link
                       href="/settings"
                       className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm"
                       onClick={() => setProfileOpen(false)}
                     >
-                      <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+                      <SettingsIcon className="h-4 w-4 text-indigo-500" />
                       <span>Settings</span>
                     </Link>
+                    <div className="my-1 h-px bg-zinc-200 dark:bg-zinc-800" />
+                    <Link
+                      href="/test-ai"
+                      className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm text-zinc-600 dark:text-zinc-400"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-purple-500"></span>
+                      <span className="text-xs">Test AI Models</span>
+                    </Link>
+                    <Link
+                      href="/test-websocket"
+                      className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm text-zinc-600 dark:text-zinc-400"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-orange-500"></span>
+                      <span className="text-xs">Test WebSocket</span>
+                    </Link>
+                    <div className="my-1 h-px bg-zinc-200 dark:bg-zinc-800" />
                     <div className="flex items-center justify-between px-3 py-2 text-xs text-zinc-600 dark:text-zinc-400">
                       <span className="inline-flex items-center gap-2">
                         <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-teal-500"></span>
@@ -251,55 +413,43 @@ export default function Navbar() {
           {/* Hamburger for mobile */}
           <button
             aria-label={open ? 'Close menu' : 'Open menu'}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-indigo-300 md:hidden hover:bg-indigo-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-700 lg:hidden hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
             onClick={()=> setOpen(o=>!o)}
           >
-            {open ? <CloseIcon className="h-5 w-5"/> : <MenuIcon className="h-5 w-5"/>}
+            {open ? <CloseIcon className="h-4 w-4 md:h-5 md:w-5"/> : <MenuIcon className="h-4 w-4 md:h-5 md:w-5"/>}
           </button>
         </div>
       </div>
+      </div>
 
-      {/* Desktop nav */}
-      <nav className="mt-3 hidden md:flex items-center gap-2 text-sm">
-        <NavLink
-          href="/dashboard"
-          starts="/dashboard"
-          label={<span className="inline-flex items-center gap-1.5"><HomeIcon className="h-4 w-4 text-rose-500"/>Dashboard</span>}
-        />
-        <NavLink
-          href="/vocab"
-          starts="/vocab"
-          label={<span className="inline-flex items-center gap-1.5"><BookIcon className="h-4 w-4 text-emerald-500"/>Vocab</span>}
-        />
-        <NavLink
-          href="/grammar"
-          starts="/grammar"
-          label={<span className="inline-flex items-center gap-1.5"><CapIcon className="h-4 w-4 text-indigo-500"/>Grammar</span>}
-        />
-        <NavLink
-          href="/quiz"
-          starts="/quiz"
-          label={<span className="inline-flex items-center gap-1.5"><PuzzleIcon className="h-4 w-4 text-amber-500"/>Quiz</span>}
-        />
-        <NavLink
-          href="/speech"
-          starts="/speech"
-          label={<span className="inline-flex items-center gap-1.5"><MicIcon className="h-4 w-4 text-fuchsia-500"/>Pronunciation</span>}
-        />
-      </nav>
-
-      {/* Mobile collapse */}
+      {/* Mobile/Tablet collapse */}
       <div className={clsx(
-        'md:hidden transition-[max-height] duration-300 overflow-hidden',
-        open ? 'max-h-96 mt-2' : 'max-h-0'
+        'lg:hidden transition-all duration-300 ease-in-out',
+        open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
       )}>
-        <nav className="flex flex-col rounded-md border p-2 text-sm bg-white/95 dark:bg-zinc-900/95 shadow-sm">
-          <NavLink href="/dashboard" starts="/dashboard" label={<span className="inline-flex items-center gap-1.5"><HomeIcon className="h-4 w-4 text-rose-500"/>Dashboard</span>} />
-          <NavLink href="/vocab" starts="/vocab" label={<span className="inline-flex items-center gap-1.5"><BookIcon className="h-4 w-4 text-emerald-500"/>Vocab</span>} />
-          <NavLink href="/grammar" starts="/grammar" label={<span className="inline-flex items-center gap-1.5"><CapIcon className="h-4 w-4 text-indigo-500"/>Grammar</span>} />
-          <NavLink href="/quiz" starts="/quiz" label={<span className="inline-flex items-center gap-1.5"><PuzzleIcon className="h-4 w-4 text-amber-500"/>Quiz</span>} />
-          <NavLink href="/speech" starts="/speech" label={<span className="inline-flex items-center gap-1.5"><MicIcon className="h-4 w-4 text-fuchsia-500"/>Pronunciation</span>} />
+        <div className="container mx-auto px-4 sm:px-6">
+        <nav className="flex flex-col rounded-lg border border-zinc-200 dark:border-zinc-800 my-3 p-2 text-sm bg-white dark:bg-zinc-900 shadow-lg">
+          <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Learn</div>
+          <NavLink href="/dashboard" starts="/dashboard" label={<span className="inline-flex items-center gap-2"><HomeIcon className="h-4 w-4 text-rose-500"/>Dashboard</span>} />
+          <NavLink href="/vocab" starts="/vocab" label={<span className="inline-flex items-center gap-2"><BookIcon className="h-4 w-4 text-emerald-500"/>Vocabulary</span>} />
+          <NavLink href="/grammar" starts="/grammar" label={<span className="inline-flex items-center gap-2"><CapIcon className="h-4 w-4 text-indigo-500"/>Grammar</span>} />
+          <NavLink href="/learning-path" starts="/learning-path" label={<span className="inline-flex items-center gap-2"><MapIcon className="h-4 w-4 text-purple-500"/>Learning Path</span>} />
+          
+          <div className="my-1.5 h-px bg-zinc-200 dark:bg-zinc-800" />
+          <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Practice</div>
+          <NavLink href="/quiz" starts="/quiz" label={<span className="inline-flex items-center gap-2"><PuzzleIcon className="h-4 w-4 text-amber-500"/>Quiz</span>} />
+          <NavLink href="/speech" starts="/speech" label={<span className="inline-flex items-center gap-2"><MicIcon className="h-4 w-4 text-fuchsia-500"/>Speech</span>} />
+          <NavLink href="/scenarios" starts="/scenarios" label={<span className="inline-flex items-center gap-2"><ChatIcon className="h-4 w-4 text-cyan-500"/>Scenarios</span>} />
+          <NavLink href="/voice-chat" starts="/voice-chat" label={<span className="inline-flex items-center gap-2"><VoiceIcon className="h-4 w-4 text-pink-500"/>Voice Chat</span>} />
+          <NavLink href="/reviews" starts="/reviews" label={<span className="inline-flex items-center gap-2"><CardIcon className="h-4 w-4 text-violet-500"/>Reviews</span>} />
+          
+          <div className="my-1.5 h-px bg-zinc-200 dark:bg-zinc-800" />
+          <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Social</div>
+          <NavLink href="/leaderboard" starts="/leaderboard" label={<span className="inline-flex items-center gap-2"><LeaderboardIcon className="h-4 w-4 text-orange-500"/>Leaderboard</span>} />
+          <NavLink href="/achievements" starts="/achievements" label={<span className="inline-flex items-center gap-2"><TrophyIcon className="h-4 w-4 text-yellow-500"/>Achievements</span>} />
+          <NavLink href="/friends" starts="/friends" label={<span className="inline-flex items-center gap-2"><UsersIcon className="h-4 w-4 text-blue-500"/>Friends</span>} />
         </nav>
+        </div>
       </div>
     </header>
   )

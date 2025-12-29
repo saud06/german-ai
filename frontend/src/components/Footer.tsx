@@ -3,15 +3,20 @@ import Link from 'next/link'
 import { APP_VERSION } from '@/lib/appInfo'
 import { useAuth } from '@/store/auth'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function Footer() {
   const year = new Date().getFullYear()
   const { token } = useAuth()
   const pathname = usePathname()
-  // Be aware of persisted token pre-hydration
-  let hasAuth = !!token
-  try { if (!hasAuth && typeof window !== 'undefined') hasAuth = !!localStorage.getItem('token') } catch {}
-
+  const [mounted, setMounted] = useState(false)
+  
+  // Prevent hydration mismatch by only checking auth after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  
+  const hasAuth = mounted && !!token
   const gate = (href: string) => (hasAuth ? href : '/login')
 
   // Decide layout: full only on home
