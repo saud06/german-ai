@@ -1,329 +1,362 @@
 # 🇩🇪 German AI Language Learning Platform
 
-A comprehensive, self-hosted AI-powered German language learning platform with voice conversation capabilities.
+A comprehensive, AI-powered German language learning platform featuring interactive lessons, real-time speech practice, gamification, and immersive life simulation scenarios.
 
-## ✨ Features
+## ✨ Key Features
 
-- 🤖 **AI Conversation**: Real-time German conversation with Mistral 7B
-- 🎤 **Voice Chat**: Speak German and get audio responses (Whisper + Piper)
-- 📚 **Vocabulary**: Learn and practice German words
-- 📖 **Grammar**: Interactive grammar lessons
-- 🎯 **Quizzes**: Test your knowledge
-- 📊 **Progress Tracking**: Monitor your learning journey
-- 🔒 **Self-Hosted**: Complete privacy, zero API costs
-- ⚡ **GPU Accelerated**: Fast responses with local GPU
+### 🎓 **Learning System**
+- **Integrated Learning Path**: Structured curriculum with chapters, locations, and activities
+- **Vocabulary Builder**: 1000+ German words with spaced repetition (SM-2 algorithm)
+- **Grammar Lessons**: Interactive grammar exercises with AI-powered feedback
+- **Quiz System**: Dynamic quizzes with AI-generated questions (Mistral 7B)
+- **Progress Tracking**: Detailed analytics and learning statistics
+
+### 🎤 **Speech & Voice**
+- **Speech Practice**: Real-time pronunciation feedback with word-by-word color-coded analysis
+- **Voice Conversations**: Natural German conversations with AI (Whisper + Ollama + Piper)
+- **Paragraph Mode**: Practice reading full paragraphs with sentence-by-sentence navigation
+- **Live Transcription**: Browser-based speech recognition with accuracy scoring
+
+### 🎮 **Life Simulation**
+- **10 Real-Life Scenarios**: Restaurant, Hotel, Supermarket, Doctor, Train Station, Bank, Pharmacy, Post Office, Apartment Viewing, Job Interview
+- **AI-Powered NPCs**: Dynamic character interactions with personalities
+- **Objective System**: Keyword-based completion tracking with hints
+- **Streaming Responses**: Real-time AI conversation via Server-Sent Events
+
+### 🏆 **Gamification**
+- **Achievement System**: Unlock badges and milestones
+- **Leaderboard**: Compete with other learners
+- **Friends System**: Connect and learn together
+- **XP & Levels**: Track your progress and level up
+- **Daily Streaks**: Maintain learning consistency
+
+### 💳 **Monetization**
+- **Subscription Plans**: Free, Basic, Premium, and Lifetime tiers
+- **Payment Integration**: Stripe-powered checkout
+- **Referral Program**: Earn rewards for inviting friends
+- **Admin Dashboard**: User management and analytics
 
 ## 🚀 Quick Start
 
-### Development Mode (GPU - Recommended for Local)
+### Prerequisites
+- Docker and Docker Compose
+- MongoDB Atlas account (free tier works)
+- 8GB RAM minimum
+- (Optional) GPU for faster AI responses
 
-Uses native backend with GPU Ollama for maximum performance.
+### Installation
 
+1. **Clone the repository**
 ```bash
-# One-time setup
-./setup-gpu.sh
-
-# Start development environment
-./dev-start.sh
+git clone https://github.com/saud06/german-ai.git
+cd german-ai
 ```
 
-**Performance:**
-- AI Response: 1-3s (GPU accelerated)
-- Voice Transcription: 0.5-1.5s
-- Total: ~5-7s per conversation
-
-### Production Mode (Docker)
-
-Uses Docker for all services.
-
-```bash
-# Start production environment
-./prod-start.sh
-```
-
-## 📋 Prerequisites
-
-### For Development (GPU Mode)
-- macOS with Apple Silicon (M1/M2/M3)
-- Python 3.11+
-- Ollama installed
-- Docker and Docker Compose
-
-### For Production (Docker Mode)
-- Docker and Docker Compose
-- MongoDB Atlas URI (or local MongoDB)
-
-## 🔧 Configuration
-
-### 1. Environment Variables
-
-Copy the environment template:
+2. **Set up environment variables**
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your settings:
-
+Edit `.env` with your configuration:
 ```bash
 # Database
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/
 MONGODB_DB_NAME=german_ai
 
 # Security
-JWT_SECRET=your-secure-random-string-32-chars
+JWT_SECRET=your-secure-random-string-min-32-chars
 
-# Ollama (auto-configured)
-OLLAMA_MODEL=llama3.2:1b
-OLLAMA_TEMPERATURE=0.7
+# AI Models
+OLLAMA_MODEL=mistral:7b
+ENABLE_AI_QUIZ_TOPUP=true
 
 # Voice Features
 ENABLE_VOICE_FEATURES=true
 WHISPER_MODEL=tiny
 PIPER_VOICE=de_DE-thorsten-high
+
+# Optional: OpenAI (for enhanced features)
+OPENAI_API_KEY=sk-...
 ```
 
-### 2. MongoDB Setup
-
-Get a free MongoDB Atlas account:
-1. Go to [MongoDB Atlas](https://cloud.mongodb.com/)
-2. Create a free cluster
-3. Get your connection string
-4. Add it to `.env` as `MONGODB_URI`
-
-## 📊 Services
-
-### Development Mode
-```
-Frontend:   http://localhost:3000
-Backend:    http://localhost:8000
-API Docs:   http://localhost:8000/docs
-Voice Chat: http://localhost:3000/voice-chat
-
-Backend:    Native (GPU)
-Ollama:     Native GPU (port 11435)
-Whisper:    Docker (port 9000)
-Piper:      Docker (port 10200)
+3. **Start the application**
+```bash
+./START_PROJECT.sh
 ```
 
-### Production Mode
-```
-Frontend:   http://localhost:3000
-Backend:    http://localhost:8000
-API Docs:   http://localhost:8000/docs
-Voice Chat: http://localhost:3000/voice-chat
+The application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
 
-All services: Docker
-Ollama:       Docker (port 11434)
-```
-
-## 🎯 Usage
-
-### Demo Login
+### Demo Account
 ```
 Email:    saud@gmail.com
 Password: password
 ```
 
-### Voice Chat
-1. Go to http://localhost:3000/voice-chat
-2. Click the microphone button
-3. Speak in German
-4. AI responds with audio
+## 📊 Architecture
 
-### AI Conversation
-1. Go to http://localhost:3000/test-ai
-2. Type or speak German
-3. Get instant AI responses
+### Tech Stack
 
-## 🛠️ Management
+**Backend:**
+- FastAPI (Python)
+- MongoDB (Database)
+- Redis (Caching)
+- Ollama (Local LLM - Mistral 7B)
+- Whisper (Speech-to-Text)
+- Piper (Text-to-Speech)
 
-### Development Mode
+**Frontend:**
+- Next.js 14 (React)
+- TypeScript
+- Tailwind CSS
+- Zustand (State Management)
+- Lucide Icons
 
-**Check Status:**
-```bash
-./test-system.sh
+**Infrastructure:**
+- Docker & Docker Compose
+- Nginx (Production)
+- Fly.io (Deployment)
+
+### Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Frontend | 3000 | Next.js web application |
+| Backend | 8000 | FastAPI REST API |
+| MongoDB | 27017 | Database (external) |
+| Redis | 6379 | Cache & sessions |
+| Ollama | 11434 | Local LLM inference |
+| Whisper | 9000 | Speech recognition |
+| Piper | 10200 | Text-to-speech |
+
+## 🎯 Core Features
+
+### 1. Learning Path
+Navigate through structured German lessons:
+- **Chapters**: Organized learning modules
+- **Locations**: Themed learning environments (Café, Park, Library, etc.)
+- **Activities**: Interactive exercises (vocabulary, grammar, scenarios)
+- **Progress Tracking**: Visual progress indicators and completion stats
+
+### 2. Speech Practice
+Advanced pronunciation training:
+- Real-time word-by-word feedback
+- Color-coded accuracy (Green/Yellow/Red)
+- Similarity scoring algorithm
+- Paragraph reading mode
+- AI coach feedback with suggestions
+
+### 3. Vocabulary System
+Comprehensive word learning:
+- 1000+ German words across multiple categories
+- Spaced Repetition (SM-2 algorithm)
+- Audio pronunciations
+- Example sentences
+- Progress tracking per word set
+
+### 4. Grammar Exercises
+Interactive grammar learning:
+- AI-powered error detection (Mistral 7B)
+- Detailed explanations
+- Alternative phrasings
+- Learning tips
+- Fallback to rule-based checking
+
+### 5. Quiz System
+Dynamic assessment:
+- Database of 84+ pre-made questions
+- AI-generated questions (Mistral 7B)
+- Multiple difficulty levels (A1-C2)
+- Topic-based quizzes
+- Instant feedback
+
+### 6. Life Simulation Scenarios
+Immersive real-world practice:
+- 10 unique scenarios with multiple characters
+- AI-driven conversations
+- Objective-based progression
+- Hint system
+- Completion tracking
+
+## 🛠️ Development
+
+### Project Structure
+```
+german-ai/
+├── backend/
+│   ├── app/
+│   │   ├── routers/          # API endpoints
+│   │   ├── services/         # Business logic
+│   │   ├── models/           # Data models
+│   │   ├── middleware/       # Auth, rate limiting
+│   │   └── main.py           # FastAPI app
+│   ├── scripts/              # Database seeding
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── app/              # Next.js pages
+│   │   ├── components/       # React components
+│   │   ├── lib/              # Utilities
+│   │   └── store/            # State management
+│   └── package.json
+├── k8s/                      # Kubernetes configs
+├── docker-compose.yml        # Development setup
+├── docker-compose.production.yml
+├── START_PROJECT.sh          # Start script
+└── STOP_PROJECT.sh           # Stop script
 ```
 
-**View Logs:**
-```bash
-# Backend
-tail -f /tmp/backend-dev.log
+### Local Development
 
-# Docker services
-docker compose logs -f whisper
-docker compose logs -f piper
+**Start services:**
+```bash
+./START_PROJECT.sh
 ```
 
-**Stop Services:**
-```bash
-# Stop backend
-ps aux | grep uvicorn | grep -v grep | awk '{print $2}' | xargs kill
-
-# Stop Docker services
-docker compose down
-```
-
-### Production Mode
-
-**View Logs:**
+**View logs:**
 ```bash
 docker compose logs -f backend
 docker compose logs -f frontend
 ```
 
-**Stop Services:**
+**Stop services:**
 ```bash
-docker compose down
+./STOP_PROJECT.sh
 ```
 
-**Restart Services:**
+**Rebuild after code changes:**
 ```bash
+docker compose build backend
 docker compose restart backend
 ```
 
-## 📁 Project Structure
+### Database Seeding
 
-```
-german-ai/
-├── backend/              # FastAPI backend
-│   ├── app/
-│   │   ├── routers/     # API endpoints
-│   │   ├── services/    # Business logic
-│   │   ├── models/      # Data models
-│   │   └── clients/     # External service clients
-│   └── requirements.txt
-├── frontend/            # Next.js frontend
-│   ├── src/
-│   │   ├── app/        # Pages
-│   │   ├── components/ # React components
-│   │   └── lib/        # Utilities
-│   └── package.json
-├── docs/               # Documentation
-│   ├── planning/       # Master plans
-│   ├── tasks/          # Task documentation
-│   └── archive/        # Old docs
-├── docker-compose.yml  # Docker configuration
-├── dev-start.sh       # Development startup
-├── prod-start.sh      # Production startup
-├── setup-gpu.sh       # GPU setup
-└── test-system.sh     # System tests
-```
-
-## 🧪 Testing
-
-### System Test
+Seed the database with initial data:
 ```bash
-./test-system.sh
-```
+# Seed learning path
+docker compose exec backend python scripts/seed_complete_learning_path.py
 
-### Voice Pipeline Test
-```bash
-# Start dev environment
-./dev-start.sh
+# Seed vocabulary
+docker compose exec backend python scripts/import_seed_words.py
 
-# Test voice chat
-# Go to http://localhost:3000/voice-chat
-# Speak: "Hallo, wie geht's?"
-```
+# Seed achievements
+docker compose exec backend python scripts/seed_achievements.py
 
-### API Test
-```bash
-# Health check
-curl http://localhost:8000/
-
-# Voice status
-curl http://localhost:8000/api/v1/voice/status
-
-# Backend info (dev mode only)
-curl http://localhost:8000/api/v1/debug/backend-info
+# Create admin user
+docker compose exec backend python scripts/set_admin.py
 ```
 
 ## 📈 Performance
 
-<<<<<<< HEAD
-### Development Mode (GPU)
-- Transcription: 0.5-1.5s (Whisper tiny)
-- AI Generation: 1-3s (GPU Ollama)
-- Synthesis: 2-3s (Piper)
-- **Total: ~5-7s**
+### AI Response Times
+- **Mistral 7B (GPU)**: 1-3 seconds
+- **Mistral 7B (CPU)**: 5-10 seconds
+- **Whisper (tiny model)**: 0.5-1.5 seconds
+- **Piper TTS**: 2-3 seconds
 
-### Production Mode (Docker)
-- Transcription: 1-2s
-- AI Generation: 5-10s (CPU)
-- Synthesis: 2-3s
-- **Total: ~8-15s**
+### Optimization Features
+- Model keep-alive (30 minutes)
+- Redis caching
+- Lazy service initialization
+- Efficient database indexing
+- Spaced repetition algorithm
 
-## 🐛 Troubleshooting
+## 🔒 Security
 
-### Backend not starting
+- JWT-based authentication
+- Password hashing (bcrypt)
+- Rate limiting
+- CORS configuration
+- Environment variable protection
+- Secure session management
+
+## 🌐 Deployment
+
+### Production Deployment
+
+The application is configured for deployment on Fly.io:
+
 ```bash
-# Check logs
-tail -f /tmp/backend-dev.log
+# Deploy backend
+fly deploy -c fly.toml
 
-# Check if port is in use
-lsof -i :8000
-
-# Kill existing process
-ps aux | grep uvicorn | grep -v grep | awk '{print $2}' | xargs kill
+# Deploy frontend
+cd frontend && fly deploy
 ```
 
-### GPU Ollama not working
-```bash
-# Check if running
-lsof -i :11435
+### Environment Variables (Production)
 
-# Restart GPU Ollama
-./setup-gpu.sh
+Ensure these are set in your production environment:
+- `MONGODB_URI`
+- `JWT_SECRET`
+- `REDIS_URL`
+- `FRONTEND_ORIGIN`
+- `OPENAI_API_KEY` (optional)
 
-# Check models
-curl http://localhost:11435/api/tags
-```
+## 🧪 API Documentation
 
-### Voice features not working
-```bash
-# Check services
-docker compose ps
+Interactive API documentation is available at:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
 
-# Restart voice services
-docker compose restart whisper piper
+### Key Endpoints
 
-# Check voice status
-curl http://localhost:8000/api/v1/voice/status
-```
+**Authentication:**
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/login` - Login
+- `POST /api/v1/auth/refresh` - Refresh token
 
-## 📚 Documentation
+**Learning:**
+- `GET /api/v1/learning-paths` - Get learning paths
+- `GET /api/v1/vocab` - Get vocabulary
+- `POST /api/v1/grammar/check` - Check grammar
+- `GET /api/v1/quiz/start-public` - Start quiz
 
-- **Planning**: `docs/planning/MASTER_PLAN_EXECUTIVE_SUMMARY.md`
-- **Tasks**: `docs/tasks/TASK3_COMPLETION_SUMMARY.md`
-- **Testing**: `docs/tasks/TASK3_VOICE_TESTING.md`
+**Speech:**
+- `POST /api/v1/speech/check` - Check pronunciation
+- `GET /api/v1/paragraph/generate` - Generate practice paragraph
 
-## 🏗️ Development Roadmap
-
-- ✅ **Phase 1-2**: Foundation & AI (Complete)
-- ✅ **Phase 3**: Voice Pipeline (Complete)
-- 🔄 **Phase 4**: Life Simulation (Current)
-- ⏳ **Phase 5**: Mobile Apps
-- ⏳ **Phase 6**: Scale & Expansion
+**Scenarios:**
+- `GET /api/v1/scenarios` - List scenarios
+- `POST /api/v1/scenarios/{id}/start` - Start scenario
+- `POST /api/v1/scenarios/{id}/message` - Send message
 
 ## 🤝 Contributing
 
-This is a portfolio project. Contributions are welcome!
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-MIT License
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- **Ollama**: Local LLM runtime
-- **Whisper**: Speech-to-text
-- **Piper**: Text-to-speech
-- **FastAPI**: Backend framework
-- **Next.js**: Frontend framework
+- **Ollama** - Local LLM runtime
+- **Mistral AI** - Open-source language model
+- **OpenAI Whisper** - Speech recognition
+- **Piper TTS** - Text-to-speech synthesis
+- **FastAPI** - Modern Python web framework
+- **Next.js** - React framework
+- **MongoDB** - Database
+- **Stripe** - Payment processing
+
+## 📞 Support
+
+For issues and questions:
+- GitHub Issues: [github.com/saud06/german-ai/issues](https://github.com/saud06/german-ai/issues)
+- Email: saud06@example.com
 
 ---
 
 **Made with ❤️ for German language learners**
-=======
-https://german-ai.fly.dev
->>>>>>> 1b470bdba034e8d6a8e159ae8e2290296e6ca80e
+
+**Live Demo**: https://german-ai.fly.dev
