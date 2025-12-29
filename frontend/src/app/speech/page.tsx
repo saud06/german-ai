@@ -1,6 +1,7 @@
 "use client"
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import RequireAuth from '@/components/RequireAuth'
+import LiveTranscriptionCard from '@/components/LiveTranscriptionCard'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useRouter } from 'next/navigation'
@@ -12,6 +13,9 @@ type SpeechResult = {
   feedback: string
   aligned?: { expected?: string | null; heard?: string | null; op: 'ok'|'sub'|'del'|'ins' }[]
 }
+
+// Fallback minimal BlobEvent type for browsers where TypeScript lib lacks it
+type BlobEvent = { data: Blob }
 
 // Simple Levenshtein similarity [0..100]
 function similarity(a: string, b: string): number {
@@ -52,6 +56,15 @@ export default function SpeechPage() {
   const [saving, setSaving] = useState(false)
   const [history, setHistory] = useState<{expected:string,transcribed:string,score:number,feedback:string,ts:string}[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [isParagraphMode, setIsParagraphMode] = useState(false)
+  const [paragraph, setParagraph] = useState<{title: string; sentences: string[]} | null>(null)
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)
+  const [isGeneratingParagraph, setIsGeneratingParagraph] = useState(false)
+  // TTS paragraph progress
+  const [ttsSpeaking, setTtsSpeaking] = useState(false)
+  const [ttsWordIndex, setTtsWordIndex] = useState<number>(-1)
+  const ttsTokensRef = useRef<{text:string; start:number; end:number; isWord:boolean}[]>([])
+  const ttsUttRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   // Recording state
   const mediaStreamRef = useRef<MediaStream | null>(null)
@@ -69,8 +82,7 @@ export default function SpeechPage() {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const rafRef = useRef<number | null>(null)
 
-  // Optional browser speech recognition (Chrome/WebKit)
-  const recognitionRef = useRef<any>(null)
+  // Speech recognition is now handled by LiveTranscriptionCard
 
   const stopMeter = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
@@ -145,6 +157,80 @@ export default function SpeechPage() {
   }
   useEffect(() => { loadHistory() }, [])
 
+  // Paragraph mode helpers
+  const generateNewParagraph = async () => {
+    if (isGeneratingParagraph) return
+    setIsGeneratingParagraph(true)
+    try {
+      const r = await api.get('/paragraph/generate')
+      const data = r.data as { title: string; sentences: string[] }
+      setParagraph(data)
+      setCurrentSentenceIndex(0)
+      // In paragraph mode, expected should be the entire paragraph
+      setExpected((data.sentences || []).join(' '))
+      // reset feedback state when switching content
+      setServerResult(null)
+      setLocalTranscript('')
+      setLocalScore(null)
+    } catch (e) {
+      setError('Failed to generate paragraph. Please try again.')
+    } finally {
+      setIsGeneratingParagraph(false)
+    }
+  }
+
+  const handleNextSentence = () => {
+    if (!paragraph) return
+    const next = currentSentenceIndex + 1
+    if (next < paragraph.sentences.length) {
+      setCurrentSentenceIndex(next)
+      setExpected(paragraph.sentences[next] || '')
+      setServerResult(null)
+      setLocalTranscript('')
+      setLocalScore(null)
+    }
+  }
+
+  const handlePrevSentence = () => {
+    if (!paragraph) return
+    const prev = currentSentenceIndex - 1
+    if (prev >= 0) {
+      setCurrentSentenceIndex(prev)
+      setExpected(paragraph.sentences[prev] || '')
+      setServerResult(null)
+      setLocalTranscript('')
+      setLocalScore(null)
+    }
+  }
+
+  const toggleParagraphMode = async () => {
+    const newMode = !isParagraphMode
+    setIsParagraphMode(newMode)
+    if (newMode) {
+      await generateNewParagraph()
+    } else {
+      setParagraph(null)
+      setCurrentSentenceIndex(0)
+      // keep current expected or reset to a simple default
+      if (!expected) setExpected('Ich gehe zur Schule.')
+      // stop paragraph TTS if any
+      try { window.speechSynthesis?.cancel(); } catch {}
+      setTtsSpeaking(false)
+      setTtsWordIndex(-1)
+      setServerResult(null)
+      setLocalTranscript('')
+      setLocalScore(null)
+    }
+  }
+
+  // If user toggles into paragraph mode with no data yet, fetch one
+  useEffect(() => {
+    if (isParagraphMode && !paragraph && !isGeneratingParagraph) {
+      generateNewParagraph()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isParagraphMode])
+
   // TTS playback for expected sentence
   const speakExpected = () => {
     try {
@@ -161,6 +247,80 @@ export default function SpeechPage() {
     } catch {}
   }
 
+  // Build token map for paragraph TTS highlighting
+  const buildParagraphTokens = useCallback((text: string) => {
+    const tokens: {text:string; start:number; end:number; isWord:boolean}[] = []
+    let idx = 0
+    const re = /[\wÄÖÜäöüß]+|[^\w\s]+|\s+/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(text)) !== null) {
+      const t = m[0]
+      const start = idx
+      const end = idx + t.length
+      const isWord = /[\wÄÖÜäöüß]/.test(t[0] || '')
+      tokens.push({ text: t, start, end, isWord })
+      idx = end
+    }
+    return tokens
+  }, [])
+
+  const speakParagraph = () => {
+    if (!paragraph) return
+    try {
+      const synth: SpeechSynthesis | undefined = window.speechSynthesis
+      if (!synth) return
+      // Cancel any ongoing
+      try { synth.cancel() } catch {}
+      setTtsWordIndex(-1)
+
+      const fullText = (paragraph.sentences || []).join(' ')
+      const tokens = buildParagraphTokens(fullText)
+      ttsTokensRef.current = tokens
+
+      const utter = new SpeechSynthesisUtterance(fullText)
+      // Set German
+      const voices = synth.getVoices()
+      const de = voices.find(v => /de(-|_)?DE/i.test(v.lang))
+      if (de) utter.voice = de
+      utter.lang = de?.lang || 'de-DE'
+
+      utter.onstart = () => {
+        setTtsSpeaking(true)
+      }
+      utter.onend = () => {
+        setTtsSpeaking(false)
+        setTtsWordIndex(-1)
+        ttsUttRef.current = null
+      }
+      utter.onerror = () => {
+        setTtsSpeaking(false)
+        setTtsWordIndex(-1)
+        ttsUttRef.current = null
+      }
+      utter.onboundary = (ev: any) => {
+        // ev.charIndex is where current spoken fragment starts
+        const ci = ev.charIndex as number
+        const toks = ttsTokensRef.current
+        // find the first word token with start <= ci < end
+        let idx = -1
+        for (let i = 0; i < toks.length; i++) {
+          const tk = toks[i]
+          if (!tk.isWord) continue
+          if (ci >= tk.start && ci < tk.end) { idx = i; break }
+        }
+        if (idx !== -1) setTtsWordIndex(idx)
+      }
+      ttsUttRef.current = utter
+      synth.speak(utter)
+    } catch {}
+  }
+
+  const stopParagraphTTS = () => {
+    try { window.speechSynthesis?.cancel() } catch {}
+    setTtsSpeaking(false)
+    setTtsWordIndex(-1)
+  }
+
   const setupMeter = async (stream: MediaStream) => {
     audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
     const source = audioCtxRef.current.createMediaStreamSource(stream)
@@ -172,36 +332,14 @@ export default function SpeechPage() {
 
   const startTimer = () => {
     setElapsed(0)
-    timerRef.current = window.setInterval(() => setElapsed((e) => e + 1), 1000) as unknown as number
+    timerRef.current = window.setInterval(() => setElapsed((e: number) => e + 1), 1000) as unknown as number
   }
   const stopTimer = () => {
     if (timerRef.current) window.clearInterval(timerRef.current)
     timerRef.current = null
   }
 
-  const startRecognition = () => {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SR) return
-    const rec = new SR()
-    rec.lang = 'de-DE'
-    rec.continuous = true
-    rec.interimResults = true
-    rec.onresult = (evt: any) => {
-      let txt = ''
-      for (let i = evt.resultIndex; i < evt.results.length; i++) {
-        txt += evt.results[i][0].transcript + ' '
-      }
-      setLocalTranscript(txt.trim())
-      setLocalScore(similarity(expected, txt))
-    }
-    rec.onerror = () => {}
-    rec.start()
-    recognitionRef.current = rec
-  }
-  const stopRecognition = () => {
-    try { recognitionRef.current?.stop?.() } catch {}
-    recognitionRef.current = null
-  }
+  // Speech recognition moved to LiveTranscriptionCard component
 
   const startRecording = async () => {
     setError(null)
@@ -214,7 +352,7 @@ export default function SpeechPage() {
       mediaStreamRef.current = stream
       const rec = new MediaRecorder(stream)
       recorderRef.current = rec
-      rec.ondataavailable = (e) => { if (e.data?.size) chunksRef.current.push(e.data) }
+      rec.ondataavailable = (e: BlobEvent) => { if ((e as BlobEvent).data?.size) chunksRef.current.push((e as BlobEvent).data) }
       rec.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: rec.mimeType || 'audio/webm' })
         if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
@@ -225,7 +363,6 @@ export default function SpeechPage() {
       await setupMeter(stream)
       rec.start()
       startTimer()
-      startRecognition()
       setIsRecording(true)
     } catch (e: any) {
       setError('Microphone permission denied or unsupported in this browser.')
@@ -234,10 +371,9 @@ export default function SpeechPage() {
 
   const stopRecording = () => {
     stopTimer()
-    stopRecognition()
     try { recorderRef.current?.stop() } catch {}
     recorderRef.current = null
-    mediaStreamRef.current?.getTracks().forEach(t => t.stop())
+    mediaStreamRef.current?.getTracks().forEach((t: MediaStreamTrack) => t.stop())
     mediaStreamRef.current = null
     stopMeter()
     setIsRecording(false)
@@ -261,7 +397,8 @@ export default function SpeechPage() {
     try {
       const blob = await fetch(audioUrl).then(r => r.blob())
       const fd = new FormData()
-      fd.append('expected', expected)
+      const expectedForCheck = isParagraphMode && paragraph ? (paragraph.sentences || []).join(' ') : expected
+      fd.append('expected', expectedForCheck)
       fd.append('file', blob, 'recording.webm')
       const r = await api.post('/speech/check', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
       setServerResult(r.data)
@@ -275,11 +412,10 @@ export default function SpeechPage() {
 
   useEffect(() => () => {
     // cleanup on unmount
-    stopRecognition()
     stopMeter()
     stopTimer()
     if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
-    mediaStreamRef.current?.getTracks().forEach(t => t.stop())
+    mediaStreamRef.current?.getTracks().forEach((t: MediaStreamTrack) => t.stop())
   }, [])
 
   // Redirect unauthenticated users immediately

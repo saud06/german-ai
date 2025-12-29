@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
+import LiveTranscriptionCard from '@/components/LiveTranscriptionCard'
 
 type ProgressDTO = {
   user_id: string
@@ -22,10 +23,23 @@ export default function ClientDashboard() {
   // Mini Pronunciation widget state
   const [recording, setRecording] = useState(false)
   const [score, setScore] = useState<number | null>(null)
-  const [recError, setRecError] = useState<string | null>(null)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
+  const [transcript, setTranscript] = useState('')
   const [confetti, setConfetti] = useState(false)
+  const [currentSentence, setCurrentSentence] = useState('')
+
+  // German sentences pool for mini pronunciation practice
+  const sentencePool = [
+    'Guten Morgen!',
+    'Wie geht es dir?',
+    'Ich bin müde.',
+    'Das Wetter ist schön.',
+    'Wo ist der Bahnhof?',
+    'Ich hätte gern einen Kaffee.',
+    'Entschuldigung, sprechen Sie Englisch?',
+    'Vielen Dank für Ihre Hilfe.',
+    'Ich verstehe nicht.',
+    'Können Sie das wiederholen?'
+  ]
   const [reduceMotion, setReduceMotion] = useState(false)
   const [lastPath, setLastPath] = useState<string | null>(null)
   const [weeklyData, setWeeklyData] = useState<number[] | null>(null)
@@ -100,39 +114,28 @@ export default function ClientDashboard() {
     }
   }, [data?.streak])
 
-  const startRecording = async () => {
-    setRecError(null)
-    setScore(null)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mr = new MediaRecorder(stream)
-      audioChunksRef.current = []
-      mr.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data)
-      }
-      mr.onstop = async () => {
-        // For portfolio, we compute a playful mock score based on audio length
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        const dur = await estimateDuration(blob).catch(() => 1)
-        const mock = Math.min(100, Math.max(35, Math.round(60 + (dur % 5) * 8)))
-        setScore(mock)
-      }
-      mr.start()
-      mediaRecorderRef.current = mr
-      setRecording(true)
-    } catch (e: any) {
-      setRecError('Microphone permission denied or unavailable')
-    }
+  const handleTranscriptUpdate = (newTranscript: string, newScore: number) => {
+    setTranscript(newTranscript)
+    setScore(newScore)
   }
 
-  const stopRecording = () => {
-    const mr = mediaRecorderRef.current
-    if (mr && mr.state !== 'inactive') {
-      mr.stop()
-      mr.stream.getTracks().forEach((t) => t.stop())
-    }
-    setRecording(false)
+  const getRandomSentence = () => {
+    const randomIndex = Math.floor(Math.random() * sentencePool.length)
+    return sentencePool[randomIndex]
   }
+
+  const handleNewSentence = () => {
+    setCurrentSentence(getRandomSentence())
+    setScore(null)
+    setTranscript('')
+  }
+
+  // Initialize with a random sentence on mount
+  useEffect(() => {
+    if (mounted && !currentSentence) {
+      setCurrentSentence(getRandomSentence())
+    }
+  }, [mounted, currentSentence])
 
   if (!mounted) return null
 
@@ -215,33 +218,59 @@ export default function ClientDashboard() {
         <div className="rounded-xl border p-4">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="font-medium">Mini Pronunciation</h3>
-            <span className="text-xs text-gray-500">beta</span>
+            <span className="text-xs text-green-600 font-medium">live</span>
           </div>
-          <p className="mb-3 text-sm text-gray-600 dark:text-zinc-400">
-            Say: <span className="font-medium">Guten Morgen!</span>
-          </p>
-          <div className="flex items-center gap-2">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm text-gray-600 dark:text-zinc-400">
+              Say: <span className="font-medium">{currentSentence}</span>
+            </p>
+            <button 
+              onClick={handleNewSentence}
+              className="text-xs text-blue-600 hover:text-blue-800 underline"
+              disabled={recording}
+            >
+              New
+            </button>
+          </div>
+          
+          {/* Recording Controls */}
+          <div className="flex items-center gap-2 mb-3">
             {!recording ? (
-              <button onClick={startRecording} className="btn-outline inline-flex items-center gap-2 btn-sm">
+              <button 
+                onClick={() => setRecording(true)} 
+                className="btn-outline inline-flex items-center gap-2 btn-sm"
+              >
                 <span className="inline-block h-2 w-2 rounded-full bg-red-500"></span>
                 Record
               </button>
             ) : (
-              <button onClick={stopRecording} className="inline-flex items-center gap-2 rounded-md bg-red-500 px-3 py-1.5 text-white shadow hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50">
+              <button 
+                onClick={() => setRecording(false)} 
+                className="inline-flex items-center gap-2 rounded-md bg-red-500 px-3 py-1.5 text-white shadow hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+              >
                 Stop
               </button>
             )}
-            {recError && <span className="text-xs text-red-600">{recError}</span>}
           </div>
-          <div className="mt-4">
-            <WaveformPlaceholder active={recording && !reduceMotion} />
-            <div className="mt-3 text-sm text-gray-700 dark:text-zinc-300" aria-live="polite" aria-atomic="true">
-              {score !== null ? (
-                <span>Your score: <span className="font-semibold">{score}</span>/100</span>
-              ) : (
-                <span className="text-gray-500">Record to get an instant mock score</span>
-              )}
+
+          {/* Live Transcription - Mini Version */}
+          {currentSentence && (
+            <div className="mb-3">
+              <LiveTranscriptionCard 
+                expected={currentSentence}
+                isRecording={recording}
+                onTranscriptUpdate={handleTranscriptUpdate}
+              />
             </div>
+          )}
+          
+          {/* Score Display */}
+          <div className="text-sm text-gray-700 dark:text-zinc-300" aria-live="polite" aria-atomic="true">
+            {score !== null ? (
+              <span>Your score: <span className="font-semibold">{Math.round(score)}%</span>{score >= 90 ? ' 🎉' : score >= 70 ? ' 👍' : ' 💪'}</span>
+            ) : (
+              <span className="text-gray-500">Record to get live pronunciation feedback</span>
+            )}
           </div>
         </div>
 
@@ -324,38 +353,6 @@ function KpiCard({ title, hint, children }: { title: string; hint?: string; chil
   )
 }
 
-function WaveformPlaceholder({ active }: { active: boolean }) {
-  // Simple animated bars using inline SVG; no external libs
-  const bars = new Array(24).fill(0)
-  return (
-    <svg viewBox="0 0 120 24" className="h-10 w-full overflow-visible">
-      {bars.map((_, i) => {
-        const h = 6 + ((i * 7) % 14)
-        return (
-          <rect
-            key={i}
-            x={i * 5}
-            y={12 - h / 2}
-            width="3"
-            height={h}
-            rx="1"
-            fill={active ? '#ef4444' : '#9ca3af'}
-            opacity={active ? 0.9 : 0.6}
-          >
-            {active && (
-              <animate
-                attributeName="height"
-                values={`${h};${Math.max(4, h - 4)};${h}`}
-                dur={`${0.8 + (i % 5) * 0.05}s`}
-                repeatCount="indefinite"
-              />
-            )}
-          </rect>
-        )
-      })}
-    </svg>
-  )
-}
 
 function levelToColor(level: number) {
   // 0..4
@@ -363,16 +360,6 @@ function levelToColor(level: number) {
   return map[Math.max(0, Math.min(4, level))]
 }
 
-async function estimateDuration(blob: Blob): Promise<number> {
-  // Estimate duration by decoding audio – supported in modern browsers
-  const arrayBuffer = await blob.arrayBuffer()
-  // @ts-ignore - AudioContext exists in browsers
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
-  const buffer = await ctx.decodeAudioData(arrayBuffer)
-  const dur = buffer.duration
-  ctx.close()
-  return dur
-}
 
 function buildInsight(data: ProgressDTO | null): string {
   if (!data) return 'Loading your stats...'
