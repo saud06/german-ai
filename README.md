@@ -240,6 +240,7 @@ curl http://localhost:8000/api/v1/debug/backend-info
 
 ## 📈 Performance
 
+<<<<<<< HEAD
 ### Development Mode (GPU)
 - Transcription: 0.5-1.5s (Whisper tiny)
 - AI Generation: 1-3s (GPU Ollama)
@@ -323,3 +324,6 @@ MIT License
 ---
 
 **Made with ❤️ for German language learners**
+=======
+https://german-ai.fly.dev
+>>>>>>> 1b470bdba034e8d6a8e159ae8e2290296e6ca80e
