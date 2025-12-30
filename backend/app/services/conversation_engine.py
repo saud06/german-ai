@@ -34,25 +34,21 @@ class ConversationEngine:
             if objective and not obj_progress.completed:
                 uncompleted_objectives.append(objective.description)
         
-        prompt = f"""Du bist {character.name}, ein {character.role}.
+        prompt = f"""Du bist {character.name}, {character.role}.
 Persönlichkeit: {character.personality}
-{character.description}
 
-SZENARIO: {scenario.name}
+Szenario: {scenario.name}
 {scenario.context}
 
-WICHTIG:
-- Sprich NUR auf Deutsch
-- Antworte SEHR KURZ (maximal 1 Satz, 10-15 Wörter)
-- Bleibe in deiner Rolle als {character.role}
+Regeln:
+- Antworte NUR auf Deutsch
+- Maximal 1-2 kurze Sätze (15-20 Wörter)
+- Bleibe in deiner Rolle
 - Sei {character.personality}
-- Hilf dem Lernenden, diese Ziele zu erreichen: {', '.join(uncompleted_objectives)}
+- Verstehe auch fehlerhafte Sätze
+- Reagiere natürlich auf Begrüßungen (Guten Tag, Hallo, etc.)
 
-WICHTIG:
-- Antworte natürlich und realistisch
-- Wenn der Lernende Fehler macht, verstehe trotzdem die Absicht
-- Ermutige den Lernenden
-- Bleibe im Kontext des Szenarios"""
+Ziele: {', '.join(uncompleted_objectives[:2])}"""
         
         return prompt
     
@@ -99,7 +95,7 @@ BISHERIGE KONVERSATION:
 Gast: {user_message}
 {character.name}:"""
         
-        # Use chat API with minimal context for faster responses
+        # Use chat API with optimized settings for faster responses
         response = await self.ollama.client.chat(
             model=self.ollama.model,
             messages=[
@@ -108,11 +104,11 @@ Gast: {user_message}
             ],
             options={
                 'temperature': 0.7,
-                'num_predict': 30,  # Short response
+                'num_predict': 50,  # Allow slightly longer responses
                 'top_p': 0.9,
                 'top_k': 40,
                 'repeat_penalty': 1.1,
-                'num_ctx': 512,
+                'num_ctx': 1024,  # Increased context window
             }
         )
         
@@ -145,7 +141,7 @@ Gast: {user_message}
             for msg in history
         ])
         
-        # Use chat API with streaming
+        # Use chat API with streaming and optimized settings
         stream = await self.ollama.client.chat(
             model=self.ollama.model,
             messages=[
@@ -154,11 +150,11 @@ Gast: {user_message}
             ],
             options={
                 'temperature': 0.7,
-                'num_predict': 30,
+                'num_predict': 50,  # Allow slightly longer responses
                 'top_p': 0.9,
                 'top_k': 40,
                 'repeat_penalty': 1.1,
-                'num_ctx': 512,
+                'num_ctx': 1024,  # Increased context window
             },
             stream=True
         )

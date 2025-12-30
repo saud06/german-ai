@@ -527,6 +527,24 @@ export default function ScenarioDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Progress Bar - Top */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Progress</h3>
+            <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{getCompletionPercentage()}%</span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div
+              className="bg-indigo-600 h-3 rounded-full transition-all"
+              style={{ width: `${getCompletionPercentage()}%` }}
+            ></div>
+          </div>
+          <div className="flex items-center justify-between mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <span>Score: <strong className="text-indigo-600 dark:text-indigo-400">{conversationState.score}</strong></span>
+            <span>Completed: <strong>{conversationState.objectives_progress.filter(p => p.completed).length}/{scenario.objectives.length}</strong></span>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Sidebar - Objectives */}
           <div className="lg:col-span-1">
@@ -557,28 +575,6 @@ export default function ScenarioDetailPage() {
                     )}
                   </div>
                 ))}
-              </div>
-
-              {/* Progress */}
-              <div className="mt-6 pt-6 border-t dark:border-gray-700">
-                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <span>Progress</span>
-                  <span>{getCompletionPercentage()}%</span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-indigo-600 h-2 rounded-full transition-all"
-                    style={{ width: `${getCompletionPercentage()}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Score */}
-              <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-indigo-900 dark:text-indigo-200">Score</span>
-                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-300">{conversationState.score}</span>
-                </div>
               </div>
             </div>
           </div>
