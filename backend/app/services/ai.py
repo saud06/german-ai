@@ -45,65 +45,101 @@ async def grammar_check(db, sentence: str) -> SentenceResult:
         import json
         
         if ollama_client.is_available:
-            system_prompt = """You are a German grammar expert. Analyze the sentence and return ONLY valid JSON with these exact keys:
-{
-  "is_correct": true or false,
-  "corrected": "the corrected sentence",
-  "explanation": "brief explanation",
-  "suggested_variation": "alternative way to say it",
-  "tips": ["tip1"]
-}
+            prompt = f"""You are a German grammar expert. Analyze this sentence:
 
-Rules:
-- Set is_correct to true if no errors, false if errors found
-- If correct, explanation should say "Perfect! No errors."
-- Keep explanations very brief (1 sentence)
-- Provide 1 practical tip
-- Return ONLY the JSON object, no other text"""
+"{sentence}"
 
-            user_prompt = f"Analyze this German sentence for grammar errors:\n\n{sentence}"
+Check for:
+1. Article gender errors (der/die/das, ein/eine, zum/zur)
+2. Verb conjugation
+3. Case endings
+4. Word order
+
+Respond with ONLY this JSON (no extra text, no markdown):
+{{
+  "is_correct": true_or_false,
+  "corrected": "the_corrected_sentence",
+  "explanation": "brief_explanation",
+  "suggested_variation": "alternative_phrasing",
+  "tips": ["one_helpful_tip"]
+}}
+
+IMPORTANT:
+- If NO errors found: is_correct=true, corrected=original sentence, explanation="Perfect! No errors detected."
+- If errors found: is_correct=false, corrected=fixed sentence, explanation=what was wrong
+- Keep explanation under 50 words
+- Provide exactly 1 tip
+
+JSON only:"""
             
             response = await ollama_client.chat(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.1,
-                max_tokens=150,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
                 keep_alive="5m"
             )
             
-            content = response.get('message', {}).get('content', '{}')
+            content = response.get('message', {}).get('content', '').strip()
             
-            # Extract JSON from response
+            # Extract JSON from response - try multiple methods
+            data = None
+            
+            # Method 1: Direct JSON parse
             try:
                 data = json.loads(content)
-            except Exception:
-                # Try to extract JSON from markdown code blocks
-                if '```json' in content:
-                    json_str = content.split('```json')[1].split('```')[0].strip()
-                    data = json.loads(json_str)
-                elif '```' in content:
-                    json_str = content.split('```')[1].split('```')[0].strip()
-                    data = json.loads(json_str)
-                else:
-                    # Try to find JSON object
+            except:
+                pass
+            
+            # Method 2: Extract from markdown code blocks
+            if not data:
+                try:
+                    if '```json' in content:
+                        json_str = content.split('```json')[1].split('```')[0].strip()
+                        data = json.loads(json_str)
+                    elif '```' in content:
+                        json_str = content.split('```')[1].split('```')[0].strip()
+                        data = json.loads(json_str)
+                except:
+                    pass
+            
+            # Method 3: Find JSON object in text
+            if not data:
+                try:
                     s = content.find('{')
                     e = content.rfind('}')
                     if s != -1 and e != -1 and e > s:
-                        data = json.loads(content[s:e+1])
-                    else:
-                        raise RuntimeError("AI did not return valid JSON")
+                        json_str = content[s:e+1]
+                        # Clean up common issues
+                        json_str = json_str.replace('\n', ' ').replace('\r', '')
+                        data = json.loads(json_str)
+                except:
+                    pass
+            
+            # Method 4: Try to parse line by line for key-value pairs
+            if not data:
+                try:
+                    # Build JSON from text response
+                    data = {
+                        "is_correct": "correct" not in content.lower() and "error" not in content.lower() and "wrong" not in content.lower(),
+                        "corrected": sentence,
+                        "explanation": content[:200] if content else "Could not parse AI response",
+                        "suggested_variation": sentence,
+                        "tips": ["Review German grammar rules"]
+                    }
+                except:
+                    raise RuntimeError(f"AI did not return valid JSON. Response: {content[:200]}")
             
             is_correct = bool(data.get('is_correct', False))
-            corrected = str(data.get('corrected') or sentence)
-            explanation = str(data.get('explanation') or "AI grammar check completed")
-            suggested_variation = str(data.get('suggested_variation') or corrected)
-            tips = [str(t) for t in (data.get('tips') or []) if isinstance(t, (str, int, float))][:3]
-            highlights = _align_words(sentence, corrected)
+            corrected = str(data.get('corrected') or sentence).strip()
+            explanation = str(data.get('explanation') or "AI grammar check completed").strip()
+            suggested_variation = str(data.get('suggested_variation') or corrected).strip()
+            tips = [str(t).strip() for t in (data.get('tips') or []) if isinstance(t, (str, int, float))][:3]
             
-            # Determine source based on correctness
-            result_source = "ok" if is_correct or (sentence.strip() == corrected.strip()) else "ai_mistral"
+            # If corrected differs from original, it's not correct
+            if corrected.lower().strip() != sentence.lower().strip():
+                is_correct = False
+            
+            highlights = _align_words(sentence, corrected)
+            result_source = "ok" if is_correct else "ai_mistral"
             
             return SentenceResult(
                 original=sentence,
