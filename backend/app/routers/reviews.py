@@ -359,43 +359,69 @@ async def add_quiz_mistakes(
     }).limit(50).to_list(length=50)
     
     for session in sessions:
+        # Get questions and answers from session
+        questions = session.get("questions", [])
         answers = session.get("answers", [])
-        for answer in answers:
-            if not answer.get("correct", False):
-                # Create card from wrong answer
-                question_id = answer.get("question_id")
-                if not question_id:
-                    continue
-                
-                # Get question details
-                question = await db["quiz_questions"].find_one({"_id": question_id})
-                if not question:
-                    continue
-                
-                card_id = f"quiz_{user_id}_{question_id}"
-                
-                # Check if exists
-                existing = await db["review_cards"].find_one({"card_id": card_id})
-                if existing:
-                    continue
-                
-                # Create review card
-                from ..services.spaced_repetition import ReviewCard
-                card = ReviewCard(
-                    card_id=card_id,
-                    card_type="quiz_mistake",
-                    content={
-                        "question": question.get("question", ""),
-                        "correct_answer": question.get("answer", ""),
-                        "user_answer": answer.get("answer", ""),
-                        "explanation": question.get("explanation", ""),
-                        "skill": question.get("skill", "")
-                    },
-                    user_id=user_id
-                )
-                
-                await db["review_cards"].insert_one(card.to_dict())
-                added_count += 1
+        
+        # Create lookup map for answers
+        answer_map = {a.get("question_id"): a for a in answers}
+        
+        # Process each question
+        for question in questions:
+            question_id = question.get("id")
+            if not question_id:
+                continue
+            
+            # Get user's answer for this question
+            user_answer_obj = answer_map.get(question_id)
+            if not user_answer_obj:
+                continue
+            
+            user_answer = user_answer_obj.get("user_answer", "")
+            correct_answer = question.get("answer", "")
+            
+            # Check if answer was wrong
+            is_correct = False
+            if question.get("type") == "translation":
+                acceptable = question.get("acceptable_answers", [correct_answer])
+                is_correct = any(user_answer.lower() == acc.lower() for acc in acceptable)
+            else:
+                is_correct = user_answer == correct_answer
+            
+            # Only add if wrong
+            if is_correct:
+                continue
+            
+            card_id = f"quiz_{user_id}_{question_id}"
+            
+            # Check if exists
+            existing = await db["review_cards"].find_one({"card_id": card_id})
+            if existing:
+                continue
+            
+            # Create review card
+            from ..services.spaced_repetition import ReviewCard
+            
+            # Get question text based on type
+            question_text = question.get("question") or question.get("sentence") or question.get("english") or "Question"
+            skills = question.get("skills", [])
+            skill_text = ", ".join(skills) if skills else "general"
+            
+            card = ReviewCard(
+                card_id=card_id,
+                card_type="quiz_mistake",
+                content={
+                    "question": question_text,
+                    "correct_answer": correct_answer,
+                    "user_answer": user_answer,
+                    "explanation": question.get("explanation", ""),
+                    "skill": skill_text
+                },
+                user_id=user_id
+            )
+            
+            await db["review_cards"].insert_one(card.to_dict())
+            added_count += 1
     
     return {
         "message": f"Added {added_count} quiz mistake cards",
@@ -421,48 +447,58 @@ async def add_scenario_objectives(
         scenario_id = state.get("scenario_id")
         objectives_progress = state.get("objectives_progress", [])
         
-        # Get scenario details
-        scenario = await db["scenarios"].find_one({"_id": scenario_id})
+        # Get scenario details - handle both ObjectId and string
+        from bson import ObjectId
+        try:
+            if isinstance(scenario_id, str):
+                scenario = await db["scenarios"].find_one({"_id": ObjectId(scenario_id)})
+            else:
+                scenario = await db["scenarios"].find_one({"_id": scenario_id})
+        except:
+            continue
+        
         if not scenario:
             continue
         
         # Find incomplete objectives
         for obj_progress in objectives_progress:
-            if not obj_progress.get("completed", False):
-                objective_id = obj_progress.get("objective_id")
-                objective = next(
-                    (obj for obj in scenario.get("objectives", []) 
-                     if obj.get("id") == objective_id),
-                    None
-                )
+            if obj_progress.get("completed", False):
+                continue
                 
-                if not objective:
-                    continue
-                
-                card_id = f"scenario_{user_id}_{scenario_id}_{objective_id}"
-                
-                # Check if exists
-                existing = await db["review_cards"].find_one({"card_id": card_id})
-                if existing:
-                    continue
-                
-                # Create review card
-                from ..services.spaced_repetition import ReviewCard
-                card = ReviewCard(
-                    card_id=card_id,
-                    card_type="scenario",
-                    content={
-                        "scenario_name": scenario.get("name", ""),
-                        "objective": objective.get("description", ""),
-                        "hint": objective.get("hint", ""),
-                        "keywords": objective.get("keywords", []),
-                        "scenario_id": str(scenario_id)
-                    },
-                    user_id=user_id
-                )
-                
-                await db["review_cards"].insert_one(card.to_dict())
-                added_count += 1
+            objective_id = obj_progress.get("objective_id")
+            objective = next(
+                (obj for obj in scenario.get("objectives", []) 
+                 if obj.get("id") == objective_id),
+                None
+            )
+            
+            if not objective:
+                continue
+            
+            card_id = f"scenario_{user_id}_{scenario_id}_{objective_id}"
+            
+            # Check if exists
+            existing = await db["review_cards"].find_one({"card_id": card_id})
+            if existing:
+                continue
+            
+            # Create review card
+            from ..services.spaced_repetition import ReviewCard
+            card = ReviewCard(
+                card_id=card_id,
+                card_type="scenario",
+                content={
+                    "scenario_name": scenario.get("name", ""),
+                    "objective": objective.get("description", ""),
+                    "hint": objective.get("hint", ""),
+                    "keywords": objective.get("keywords", []),
+                    "scenario_id": str(scenario_id)
+                },
+                user_id=user_id
+            )
+            
+            await db["review_cards"].insert_one(card.to_dict())
+            added_count += 1
     
     return {
         "message": f"Added {added_count} scenario objective cards",
