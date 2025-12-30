@@ -4,6 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
       target: backend
+      cache_from:
+        - german-ai-backend:latest
+    image: german-ai-backend:latest
     container_name: german_backend
     env_file:
       - .env
@@ -17,12 +20,18 @@ services:
       - piper
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: unless-stopped
   
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
       target: frontend
+      cache_from:
+        - german-ai-frontend:latest
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+    image: german-ai-frontend:latest
     container_name: german_frontend
     env_file:
       - .env
@@ -30,6 +39,7 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+    restart: unless-stopped
   
   redis:
     image: redis:7-alpine
@@ -51,6 +61,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
+    restart: unless-stopped
   
   ollama:
     image: ollama/ollama:latest
@@ -98,6 +109,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    restart: unless-stopped
   
   piper:
     image: rhasspy/wyoming-piper:latest
@@ -117,6 +129,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    restart: unless-stopped
 
 volumes:
   redis_data:

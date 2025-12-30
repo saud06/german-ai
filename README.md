@@ -121,15 +121,35 @@ Password: password
 
 ### Services
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Frontend | 3000 | Next.js web application |
-| Backend | 8000 | FastAPI REST API |
-| MongoDB | 27017 | Database (external) |
-| Redis | 6379 | Cache & sessions |
-| Ollama | 11434 | Local LLM inference |
-| Whisper | 9000 | Speech recognition |
-| Piper | 10200 | Text-to-speech |
+| Service | Port | Description | Location |
+|---------|------|-------------|----------|
+| Frontend | 3000 | Next.js web application | Docker |
+| Backend | 8000 | FastAPI REST API | Docker |
+| MongoDB | 27017 | Database | MongoDB Atlas |
+| Redis | 6379 | Cache & sessions | Docker |
+| **Ollama (GPU)** | **11435** | **Local LLM inference (Mistral 7B)** | **Native (Host)** |
+| Whisper | 9000 | Speech recognition | Docker |
+| Piper | 10200 | Text-to-speech (Thorsten voice) | Docker |
+
+### 🎯 AI Routing Strategy (PERMANENT)
+
+**Heavy AI Features → Local GPU Ollama (Port 11435)**
+- ✅ Grammar checking (Mistral 7B)
+- ✅ Quiz generation (Mistral 7B)
+- ✅ Scenario conversations (Mistral 7B)
+- ✅ Voice chat responses (Llama 3.2 1B for speed)
+
+**Light Services → Docker**
+- ✅ Speech-to-text (Whisper tiny model)
+- ✅ Text-to-speech (Piper with Thorsten voice)
+- ✅ Caching (Redis)
+- ✅ Frontend & Backend containers
+
+**Why This Setup?**
+- **Performance**: GPU Ollama provides 10-15x faster AI responses (1-2s vs 10-15s)
+- **Quality**: Mistral 7B produces natural, grammatically correct German
+- **Cost**: $0 per request vs OpenAI API costs
+- **Privacy**: All AI processing happens locally
 
 ## 🎯 Core Features
 
