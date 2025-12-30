@@ -78,7 +78,6 @@ export default function VocabPage() {
   const loadTodayWords = async () => {
     try {
       setTLoading(true)
-      // Load 10 AI-generated words for today
       const r = await api.get('/vocab/today/batch', { 
         params: { 
           count: 10,
@@ -89,8 +88,11 @@ export default function VocabPage() {
       setTodayWords(r.data || [])
       setCurrentWordIndex(0)
     } catch (err) {
+      setTodayWords([])
+      flash('Failed to load vocabulary words')
+    } finally { 
+      setTLoading(false) 
     }
-    finally { setTLoading(false) }
   }
   
   useEffect(() => { if (tab==='today') loadTodayWords() }, [tab, userId])
@@ -126,17 +128,20 @@ export default function VocabPage() {
   const [results, setResults] = useState<SeedWord[]>([])
   const [bSavingId, setBSavingId] = useState<string | null>(null)
   
-  const search = async () => {
+  const browseVocab = async () => {
     try {
       setBLoading(true)
       const r = await api.get('/vocab/search', { params: { q, level: level || undefined, limit: 30 } })
       setResults(r.data || [])
     } catch (err) {
+      setResults([])
+      flash('Failed to load vocabulary results')
+    } finally { 
+      setBLoading(false) 
     }
-    finally { setBLoading(false) }
   }
   
-  useEffect(() => { if (tab==='browse') search() }, [tab])
+  useEffect(() => { if (tab==='browse') browseVocab() }, [tab])
   
   const saveSeed = async (w: SeedWord) => {
     if (!userId) return
@@ -144,8 +149,11 @@ export default function VocabPage() {
       setBSavingId(w.word)
       await api.post('/vocab/save', { word: w.word, status: 'learning' })
       flash(`Added "${w.word}"`)
-    } catch {}
-    finally { setBSavingId(null) }
+    } catch (err) {
+      flash('Failed to add word')
+    } finally { 
+      setBSavingId(null) 
+    }
   }
 
   // Saved
@@ -160,8 +168,11 @@ export default function VocabPage() {
       const r = await api.get('/vocab/list', { params: { status: status || undefined, limit: 50 } })
       setSaved(r.data || [])
     } catch (err) {
+      setSaved([])
+      flash('Failed to load saved vocabulary')
+    } finally { 
+      setSLoading(false) 
     }
-    finally { setSLoading(false) }
   }
   
   useEffect(() => { if (tab==='saved') loadSaved() }, [tab, status, userId])
@@ -404,7 +415,7 @@ export default function VocabPage() {
                   placeholder="Search word or translation..." 
                   value={q} 
                   onChange={(e)=>setQ(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && search()}
+                  onKeyPress={(e) => e.key === 'Enter' && browseVocab()}
                 />
                 <select 
                   className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white" 
@@ -421,7 +432,7 @@ export default function VocabPage() {
                 </select>
                 <button 
                   className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg"
-                  onClick={search} 
+                  onClick={browseVocab} 
                   disabled={bLoading}
                 >
                   {bLoading ? 'Searching...' : 'Search'}
