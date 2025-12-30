@@ -56,17 +56,22 @@ class AddCardRequest(BaseModel):
 @router.get('/due', response_model=List[CardResponse])
 async def get_due_cards(
     limit: int = 20,
+    card_type: Optional[str] = None,
     user_id: str = Depends(auth_dep),
     db = Depends(get_db)
 ):
     """
     Get cards due for review
+    Supports filtering by card_type: vocabulary, grammar, quiz_mistake, scenario
     """
     
+    # Build query
+    query = {"user_id": user_id}
+    if card_type:
+        query["card_type"] = card_type
+    
     # Fetch user's cards from database
-    cards_data = await db["review_cards"].find(
-        {"user_id": user_id}
-    ).to_list(length=1000)
+    cards_data = await db["review_cards"].find(query).to_list(length=1000)
     
     # Convert to ReviewCard objects
     cards = [
@@ -169,17 +174,22 @@ async def submit_review(
 
 @router.get('/stats', response_model=DailyStatsResponse)
 async def get_daily_stats(
+    card_type: Optional[str] = None,
     user_id: str = Depends(auth_dep),
     db = Depends(get_db)
 ):
     """
     Get daily review statistics
+    Supports filtering by card_type: vocabulary, grammar, quiz_mistake, scenario
     """
     
+    # Build query
+    query = {"user_id": user_id}
+    if card_type:
+        query["card_type"] = card_type
+    
     # Fetch all user's cards
-    cards_data = await db["review_cards"].find(
-        {"user_id": user_id}
-    ).to_list(length=10000)
+    cards_data = await db["review_cards"].find(query).to_list(length=10000)
     
     # Convert to ReviewCard objects
     cards = [
@@ -329,6 +339,133 @@ async def bulk_add_cards(
     
     return {
         "message": f"Added {added_count} {card_type} cards",
+        "count": added_count
+    }
+
+@router.post('/add-quiz-mistakes')
+async def add_quiz_mistakes(
+    user_id: str = Depends(auth_dep),
+    db = Depends(get_db)
+):
+    """
+    Add quiz mistakes as review cards
+    """
+    added_count = 0
+    
+    # Get user's quiz sessions with wrong answers
+    sessions = await db["quiz_sessions"].find({
+        "user_id": user_id,
+        "completed": True
+    }).limit(50).to_list(length=50)
+    
+    for session in sessions:
+        answers = session.get("answers", [])
+        for answer in answers:
+            if not answer.get("correct", False):
+                # Create card from wrong answer
+                question_id = answer.get("question_id")
+                if not question_id:
+                    continue
+                
+                # Get question details
+                question = await db["quiz_questions"].find_one({"_id": question_id})
+                if not question:
+                    continue
+                
+                card_id = f"quiz_{user_id}_{question_id}"
+                
+                # Check if exists
+                existing = await db["review_cards"].find_one({"card_id": card_id})
+                if existing:
+                    continue
+                
+                # Create review card
+                from ..services.spaced_repetition import ReviewCard
+                card = ReviewCard(
+                    card_id=card_id,
+                    card_type="quiz_mistake",
+                    content={
+                        "question": question.get("question", ""),
+                        "correct_answer": question.get("answer", ""),
+                        "user_answer": answer.get("answer", ""),
+                        "explanation": question.get("explanation", ""),
+                        "skill": question.get("skill", "")
+                    },
+                    user_id=user_id
+                )
+                
+                await db["review_cards"].insert_one(card.to_dict())
+                added_count += 1
+    
+    return {
+        "message": f"Added {added_count} quiz mistake cards",
+        "count": added_count
+    }
+
+@router.post('/add-scenario-objectives')
+async def add_scenario_objectives(
+    user_id: str = Depends(auth_dep),
+    db = Depends(get_db)
+):
+    """
+    Add incomplete scenario objectives as review cards
+    """
+    added_count = 0
+    
+    # Get user's conversation states
+    states = await db["conversation_states"].find({
+        "user_id": user_id
+    }).limit(50).to_list(length=50)
+    
+    for state in states:
+        scenario_id = state.get("scenario_id")
+        objectives_progress = state.get("objectives_progress", [])
+        
+        # Get scenario details
+        scenario = await db["scenarios"].find_one({"_id": scenario_id})
+        if not scenario:
+            continue
+        
+        # Find incomplete objectives
+        for obj_progress in objectives_progress:
+            if not obj_progress.get("completed", False):
+                objective_id = obj_progress.get("objective_id")
+                objective = next(
+                    (obj for obj in scenario.get("objectives", []) 
+                     if obj.get("id") == objective_id),
+                    None
+                )
+                
+                if not objective:
+                    continue
+                
+                card_id = f"scenario_{user_id}_{scenario_id}_{objective_id}"
+                
+                # Check if exists
+                existing = await db["review_cards"].find_one({"card_id": card_id})
+                if existing:
+                    continue
+                
+                # Create review card
+                from ..services.spaced_repetition import ReviewCard
+                card = ReviewCard(
+                    card_id=card_id,
+                    card_type="scenario",
+                    content={
+                        "scenario_name": scenario.get("name", ""),
+                        "objective": objective.get("description", ""),
+                        "hint": objective.get("hint", ""),
+                        "keywords": objective.get("keywords", []),
+                        "scenario_id": str(scenario_id)
+                    },
+                    user_id=user_id
+                )
+                
+                await db["review_cards"].insert_one(card.to_dict())
+                added_count += 1
+    
+    return {
+        "message": f"Added {added_count} scenario objective cards",
         "count": added_count
     }
 
