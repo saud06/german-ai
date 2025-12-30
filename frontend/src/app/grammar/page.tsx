@@ -190,7 +190,7 @@ export default function GrammarCoach() {
 
           {/* Result Card */}
           {res && (
-            res.source === 'ok' ? (
+            (res.source === 'ok' || res.original?.trim().toLowerCase() === res.corrected?.trim().toLowerCase()) ? (
               <div className="bg-gradient-to-r from-green-500 to-teal-600 rounded-xl shadow-lg p-6 text-white">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="text-4xl">✅</div>
