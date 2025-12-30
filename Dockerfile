@@ -30,8 +30,8 @@ ENV MONGODB_URI="mongodb://localhost:27017" \
     JWT_SECRET="change-me" \
     DEV_MODE=false
 
-# Run backend API
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run backend API with reduced logging
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "warning"]
 
 # =============================================================================
 # Frontend Dependencies Stage
