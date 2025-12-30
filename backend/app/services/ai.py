@@ -45,32 +45,27 @@ async def grammar_check(db, sentence: str) -> SentenceResult:
         import json
         
         if ollama_client.is_available:
-            prompt = f"""You are a German grammar expert. Analyze this sentence:
+            prompt = f"""Analyze this German sentence for grammar errors:
 
 "{sentence}"
 
-Check for:
-1. Article gender errors (der/die/das, ein/eine, zum/zur)
-2. Verb conjugation
-3. Case endings
-4. Word order
-
-Respond with ONLY this JSON (no extra text, no markdown):
+Return ONLY valid JSON with NO extra text:
 {{
-  "is_correct": true_or_false,
-  "corrected": "the_corrected_sentence",
-  "explanation": "brief_explanation",
-  "suggested_variation": "alternative_phrasing",
-  "tips": ["one_helpful_tip"]
+  "is_correct": true,
+  "corrected": "corrected German sentence here",
+  "explanation": "what was wrong",
+  "suggested_variation": "alternative German phrasing",
+  "tips": ["one tip"]
 }}
 
-IMPORTANT:
-- If NO errors found: is_correct=true, corrected=original sentence, explanation="Perfect! No errors detected."
-- If errors found: is_correct=false, corrected=fixed sentence, explanation=what was wrong
-- Keep explanation under 50 words
-- Provide exactly 1 tip
+Rules:
+- Keep ALL text in GERMAN (do not translate to English)
+- If sentence is correct: is_correct=true, corrected=same as original, explanation="Perfect! No errors."
+- If sentence has errors: is_correct=false, corrected=fixed German sentence, explanation=brief error description
+- Check: articles (der/die/das, zum/zur), verb conjugation, case endings, word order
+- Return ONLY the JSON object
 
-JSON only:"""
+JSON:"""
             
             response = await ollama_client.chat(
                 messages=[{"role": "user", "content": prompt}],
@@ -130,9 +125,27 @@ JSON only:"""
             
             is_correct = bool(data.get('is_correct', False))
             corrected = str(data.get('corrected') or sentence).strip()
-            explanation = str(data.get('explanation') or "AI grammar check completed").strip()
+            
+            # Clean explanation - remove any JSON artifacts
+            explanation_raw = str(data.get('explanation') or "AI grammar check completed").strip()
+            # If explanation contains JSON, it means parsing failed - extract just the text
+            if explanation_raw.startswith('{') or '"is_correct"' in explanation_raw:
+                # Mistral returned malformed JSON - provide a clean fallback
+                if corrected.lower() != sentence.lower():
+                    explanation = "Grammar error detected and corrected"
+                else:
+                    explanation = "Perfect! No errors detected."
+            else:
+                explanation = explanation_raw
+            
             suggested_variation = str(data.get('suggested_variation') or corrected).strip()
+            # Clean suggested_variation too
+            if suggested_variation.startswith('{') or '"is_correct"' in suggested_variation:
+                suggested_variation = corrected
+            
             tips = [str(t).strip() for t in (data.get('tips') or []) if isinstance(t, (str, int, float))][:3]
+            # Clean tips
+            tips = [t for t in tips if not t.startswith('{') and '"is_correct"' not in t]
             
             # If corrected differs from original, it's not correct
             if corrected.lower().strip() != sentence.lower().strip():
