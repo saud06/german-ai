@@ -74,19 +74,12 @@ export default function VocabPage() {
   const [tLoading, setTLoading] = useState(false)
   const [tSaving, setTSaving] = useState(false)
   
-  // Load user's vocab progress from backend
   const loadVocabProgress = async () => {
-    if (!userId) {
-      console.log('[Vocab] No userId, skipping progress load')
-      return new Set<string>()
-    }
+    if (!userId) return new Set<string>()
     try {
-      console.log('[Vocab] Loading progress for user:', userId)
       const r = await api.get('/vocab/progress/today')
-      console.log('[Vocab] Progress loaded:', r.data)
       return new Set(r.data.completed_words || [])
-    } catch (err) {
-      console.error('[Vocab] Failed to load progress:', err)
+    } catch {
       return new Set<string>()
     }
   }
@@ -136,15 +129,11 @@ export default function VocabPage() {
     // Save progress to backend
     if (userId) {
       try {
-        console.log('[Vocab] Marking word complete:', currentWord.word)
         await api.post('/vocab/progress/mark-complete', { 
           word: currentWord.word,
           date: new Date().toISOString().split('T')[0]
         })
-        console.log('[Vocab] Word marked complete successfully')
-      } catch (err) {
-        console.error('[Vocab] Failed to mark word complete:', err)
-      }
+      } catch {}
     }
     
     // Move to next word
