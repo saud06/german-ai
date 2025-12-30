@@ -198,7 +198,7 @@ export default function ReviewsPage() {
       case 'vocabulary':
         return (
           <>
-            <div className="text-sm text-gray-500 mb-2">📖 Vocabulary</div>
+            <div className="text-sm text-gray-500 mb-2">📖 Vocab</div>
             <div className="text-4xl font-bold mb-4">{currentCard.content.word}</div>
             <div className="text-xl text-gray-600 dark:text-gray-400">{currentCard.content.translation}</div>
           </>
@@ -214,7 +214,7 @@ export default function ReviewsPage() {
       case 'quiz_mistake':
         return (
           <>
-            <div className="text-sm text-gray-500 mb-2">❌ Quiz Mistake - {currentCard.content.skill}</div>
+            <div className="text-sm text-gray-500 mb-2">❌ Quiz - {currentCard.content.skill}</div>
             <div className="text-xl font-bold mb-4">{currentCard.content.question}</div>
             <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg mb-3">
               <div className="text-sm text-red-700 dark:text-red-300 mb-1">Your answer:</div>
@@ -264,10 +264,10 @@ export default function ReviewsPage() {
     switch (activeTab) {
       case 'vocabulary':
         return {
-          title: 'No Vocabulary Cards',
+          title: 'No Vocab Cards',
           description: 'Add vocabulary words to start reviewing',
           action: addVocabularyCards,
-          buttonText: 'Add Vocabulary Cards'
+          buttonText: 'Add Vocab Cards'
         }
       case 'grammar':
         return {
@@ -278,7 +278,7 @@ export default function ReviewsPage() {
         }
       case 'quiz_mistake':
         return {
-          title: 'No Quiz Mistakes',
+          title: 'No Quiz Cards',
           description: 'Take some quizzes to generate review cards from your mistakes',
           action: addQuizMistakes,
           buttonText: 'Import Quiz Mistakes'
@@ -318,7 +318,7 @@ export default function ReviewsPage() {
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
         >
-          📖 Vocabulary
+          📖 Vocab
         </button>
         <button
           onClick={() => { setActiveTab('grammar'); setReviewedInSession(new Set()) }}
@@ -338,7 +338,7 @@ export default function ReviewsPage() {
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
         >
-          ❌ Quiz Mistakes
+          ❌ Quiz
         </button>
         <button
           onClick={() => { setActiveTab('scenario'); setReviewedInSession(new Set()) }}
@@ -469,9 +469,9 @@ export default function ReviewsPage() {
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
         <h3 className="font-semibold mb-2">💡 How it works</h3>
         <p className="text-sm text-gray-700 dark:text-gray-300">
-          This uses the SM-2 spaced repetition algorithm to optimize your learning. 
-          Rate each card honestly - the algorithm will adjust review intervals based on your performance.
-          Cards you find difficult will appear more frequently, while easy cards will have longer intervals.
+          Review cards at the perfect time to maximize retention. Rate each card honestly based on how well you remembered it.
+          Cards you find difficult will show up more often, while cards you know well will appear less frequently.
+          This helps you focus on what needs practice most!
         </p>
       </div>
     </div>
