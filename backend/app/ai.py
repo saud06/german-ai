@@ -265,6 +265,7 @@ Rules:
                             "type": "speaking",
                             "prompt": prompt,
                             "expected_text": expected,
+                            "answer": expected,  # Add answer field for validation
                             "explanation": explanation,
                             "skills": skills,
                         })
