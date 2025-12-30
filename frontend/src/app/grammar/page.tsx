@@ -306,10 +306,9 @@ export default function GrammarCoach() {
                   onChange={(e)=>setLevelFilter(e.target.value)}
                 >
                   <option value="">All Levels</option>
-                  <option value="A1">A1 - Beginner</option>
-                  <option value="A2">A2 - Elementary</option>
-                  <option value="B1">B1 - Intermediate</option>
-                  <option value="B2">B2 - Upper Intermediate</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
                 </select>
               </div>
               <div className="flex items-center gap-2">
