@@ -342,6 +342,7 @@ def _create_fallback_questions(topic: Optional[str], level: str, size: int) -> L
             "type": "speaking",
             "prompt": "Say: 'Guten Tag'",
             "expected_text": "Guten Tag",
+            "answer": "Guten Tag",
             "explanation": "This is a common German greeting meaning 'Good day'",
             "skills": ["speaking", "pronunciation"]
         }
