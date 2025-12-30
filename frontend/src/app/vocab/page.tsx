@@ -448,14 +448,12 @@ export default function VocabPage() {
                             >
                               {tSaving ? 'Saving...' : '💾 Save Word'}
                             </button>
-                            {index < todayWords.length - 1 && (
-                              <button 
-                                className="w-full px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
-                                onClick={nextWord}
-                              >
-                                Next →
-                              </button>
-                            )}
+                            <button 
+                              className="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all shadow-md"
+                              onClick={nextWord}
+                            >
+                              {index < todayWords.length - 1 ? 'Next →' : '✓ Done'}
+                            </button>
                           </div>
                         )}
                         
