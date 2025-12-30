@@ -41,6 +41,11 @@ class SaveRequest(BaseModel):
     status: Optional[str] = "learning"  # learning|known
 
 
+class MarkCompleteRequest(BaseModel):
+    word: str
+    date: str
+
+
 @router.get("/today")
 async def vocab_today(db=Depends(get_db), user_id: Optional[str] = None):
     """
@@ -95,15 +100,26 @@ async def vocab_today(db=Depends(get_db), user_id: Optional[str] = None):
 async def vocab_today_batch(
     count: int = Query(default=10, ge=1, le=20),
     level: str = Query(default="A1"),
+    force_new: bool = Query(default=False),
     db=Depends(get_db),
     user_id: Optional[str] = None
 ):
     """
     Get multiple vocabulary words for today - AI-powered with smart caching
     This is the new endpoint for the redesigned Today tab
+    force_new: Skip completed words and generate fresh batch
     """
     try:
         vocab_ai = VocabAIService(db)
+        
+        # If force_new, clear today's cache to get fresh words
+        if force_new and user_id:
+            today = dt.datetime.utcnow().date().isoformat()
+            await db["vocab_progress"].delete_many({
+                "user_id": user_id,
+                "date": today
+            })
+        
         words = await vocab_ai.generate_daily_words(level=level, count=count, user_id=user_id)
         
         # Format for frontend
@@ -145,6 +161,62 @@ async def vocab_search(q: str = "", level: Optional[str] = None, limit: int = 25
             "example": ((it.get("examples") or [None])[0]),
         })
     return out
+
+
+@router.get("/progress/today")
+async def get_vocab_progress(
+    db=Depends(get_db),
+    user_id: str = Depends(auth_dep)
+):
+    """
+    Get today's vocabulary progress - which words have been completed
+    """
+    try:
+        today = dt.datetime.utcnow().date().isoformat()
+        progress_docs = await db["vocab_progress"].find({
+            "user_id": user_id,
+            "date": today
+        }).to_list(length=100)
+        
+        completed_words = [doc.get("word") for doc in progress_docs if doc.get("word")]
+        
+        return JSONResponse(content={
+            "date": today,
+            "completed_words": completed_words,
+            "count": len(completed_words)
+        })
+    except Exception as e:
+        print(f"Error in get_vocab_progress: {e}")
+        return JSONResponse(content={"completed_words": [], "count": 0})
+
+
+@router.post("/progress/mark-complete")
+async def mark_word_complete(
+    payload: MarkCompleteRequest,
+    db=Depends(get_db),
+    user_id: str = Depends(auth_dep)
+):
+    """
+    Mark a vocabulary word as completed for today
+    """
+    try:
+        doc = {
+            "user_id": user_id,
+            "word": payload.word,
+            "date": payload.date,
+            "completed_at": _iso_now()
+        }
+        
+        await db["vocab_progress"].update_one(
+            {"user_id": user_id, "word": payload.word, "date": payload.date},
+            {"$set": doc},
+            upsert=True
+        )
+        
+        return JSONResponse(content={"status": "ok", "word": payload.word})
+    except Exception as e:
+        print(f"Error in mark_word_complete: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save progress")
 
 
 @router.post("/save")

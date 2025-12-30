@@ -72,12 +72,29 @@ export default function VocabPage() {
   // Today - with multiple words and navigation
   const [todayWords, setTodayWords] = useState<SeedWord[]>([])
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [completedWords, setCompletedWords] = useState<Set<string>>(new Set())
   const [tLoading, setTLoading] = useState(false)
   const [tSaving, setTSaving] = useState(false)
+  
+  // Load user's vocab progress from backend
+  const loadVocabProgress = async () => {
+    if (!userId) return new Set<string>()
+    try {
+      const r = await api.get('/vocab/progress/today')
+      return new Set(r.data.completed_words || [])
+    } catch {
+      return new Set<string>()
+    }
+  }
   
   const loadTodayWords = async () => {
     try {
       setTLoading(true)
+      
+      // Load progress first
+      const progress = await loadVocabProgress()
+      setCompletedWords(progress as Set<string>)
+      
       const r = await api.get('/vocab/today/batch', { 
         params: { 
           count: 10,
@@ -85,11 +102,42 @@ export default function VocabPage() {
           user_id: userId || undefined 
         } 
       })
-      setTodayWords(r.data || [])
-      setCurrentWordIndex(0)
+      const words = r.data || []
+      setTodayWords(words)
+      
+      // Set current index to first incomplete word
+      const firstIncomplete = words.findIndex((w: SeedWord) => !progress.has(w.word))
+      setCurrentWordIndex(firstIncomplete >= 0 ? firstIncomplete : words.length - 1)
+      
+      // If all words completed, load new batch automatically
+      if (firstIncomplete === -1 && words.length > 0) {
+        flash('Great job! Loading new words...')
+        setTimeout(() => loadNewBatch(), 1500)
+      }
     } catch (err) {
       setTodayWords([])
       flash('Failed to load vocabulary words')
+    } finally { 
+      setTLoading(false) 
+    }
+  }
+  
+  const loadNewBatch = async () => {
+    try {
+      setTLoading(true)
+      const r = await api.get('/vocab/today/batch', { 
+        params: { 
+          count: 10,
+          level: 'A1',
+          user_id: userId || undefined,
+          force_new: true
+        } 
+      })
+      setTodayWords(r.data || [])
+      setCurrentWordIndex(0)
+      setCompletedWords(new Set())
+    } catch (err) {
+      flash('Failed to load new words')
     } finally { 
       setTLoading(false) 
     }
@@ -99,9 +147,31 @@ export default function VocabPage() {
   
   const currentWord = todayWords[currentWordIndex]
   
-  const nextWord = () => {
+  const nextWord = async () => {
+    if (!currentWord) return
+    
+    // Mark current word as completed
+    const newCompleted = new Set(completedWords)
+    newCompleted.add(currentWord.word)
+    setCompletedWords(newCompleted)
+    
+    // Save progress to backend
+    if (userId) {
+      try {
+        await api.post('/vocab/progress/mark-complete', { 
+          word: currentWord.word,
+          date: new Date().toISOString().split('T')[0]
+        })
+      } catch {}
+    }
+    
+    // Move to next word
     if (currentWordIndex < todayWords.length - 1) {
       setCurrentWordIndex(currentWordIndex + 1)
+    } else {
+      // All words completed - load new batch
+      flash('🎉 All words completed! Loading new words...')
+      setTimeout(() => loadNewBatch(), 2000)
     }
   }
   
@@ -116,7 +186,7 @@ export default function VocabPage() {
     try {
       setTSaving(true)
       await api.post('/vocab/save', { word: currentWord.word, status: 'learning' })
-      flash('Saved to your vocab')
+      flash('💾 Saved to your vocab')
     } catch {}
     finally { setTSaving(false) }
   }
@@ -298,8 +368,9 @@ export default function VocabPage() {
             {!tLoading && todayWords.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {todayWords.map((word, index) => {
-                  const isRevealed = index <= currentWordIndex
-                  const isCurrent = index === currentWordIndex
+                  const isCompleted = completedWords.has(word.word)
+                  const isRevealed = index <= currentWordIndex || isCompleted
+                  const isCurrent = index === currentWordIndex && !isCompleted
                   
                   return (
                     <div 
@@ -380,7 +451,9 @@ export default function VocabPage() {
                         
                         {!isCurrent && isRevealed && (
                           <div className="flex items-center justify-center py-2">
-                            <span className="text-green-600 dark:text-green-400 text-sm font-medium">✓ Learned</span>
+                            <span className="text-green-600 dark:text-green-400 text-sm font-medium">
+                              {isCompleted ? '✓ Completed' : '✓ Unlocked'}
+                            </span>
                           </div>
                         )}
                       </div>
