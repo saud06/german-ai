@@ -13,7 +13,7 @@ class VocabAIService:
         self.db = db
         self.ollama = ollama_client
     
-    async def generate_daily_words(self, level: str = "A1", count: int = 10, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def generate_daily_words(self, level: str = "beginner", count: int = 10, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Generate daily vocabulary words - same words for the entire day, new words tomorrow
         
@@ -26,6 +26,9 @@ class VocabAIService:
         """
         today = dt.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
         today_str = today.date().isoformat()
+        
+        # Normalize level to lowercase
+        level = level.lower()
         
         # Check cache first - same words all day
         cache_key = f"daily_{level}_{count}_{today_str}"
@@ -82,12 +85,16 @@ class VocabAIService:
             exclude_words = set()
         
         level_description = {
-            "A1": "absolute beginner level - very basic everyday words",
-            "A2": "elementary level - common everyday words and phrases",
-            "B1": "intermediate level - more complex vocabulary for daily situations",
-            "B2": "upper intermediate level - abstract concepts and specialized vocabulary",
-            "C1": "advanced level - sophisticated vocabulary and nuanced expressions",
-            "C2": "mastery level - native-like vocabulary including idioms and rare words"
+            "beginner": "beginner level (A1-A2) - very basic everyday words and common phrases",
+            "intermediate": "intermediate level (B1-B2) - more complex vocabulary for daily situations and abstract concepts",
+            "advanced": "advanced level (C1-C2) - sophisticated vocabulary, nuanced expressions and idioms",
+            # Legacy CEFR support
+            "a1": "absolute beginner level - very basic everyday words",
+            "a2": "elementary level - common everyday words and phrases",
+            "b1": "intermediate level - more complex vocabulary for daily situations",
+            "b2": "upper intermediate level - abstract concepts and specialized vocabulary",
+            "c1": "advanced level - sophisticated vocabulary and nuanced expressions",
+            "c2": "mastery level - native-like vocabulary including idioms and rare words"
         }
         
         exclude_text = ""
@@ -162,7 +169,17 @@ Return ONLY the JSON array, no additional text."""
         if exclude_words is None:
             exclude_words = set()
         
-        match_criteria = {"level": level}
+        # Convert difficulty level to CEFR for database query
+        level_lower = level.lower()
+        if level_lower == "beginner":
+            match_criteria = {"level": {"$in": ["A1", "A2"]}}
+        elif level_lower == "intermediate":
+            match_criteria = {"level": {"$in": ["B1", "B2"]}}
+        elif level_lower == "advanced":
+            match_criteria = {"level": {"$in": ["C1", "C2"]}}
+        else:
+            match_criteria = {"level": level}
+        
         if exclude_words:
             match_criteria["word"] = {"$nin": list(exclude_words)}
         

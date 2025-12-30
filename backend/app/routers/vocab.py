@@ -137,7 +137,16 @@ async def vocab_search(q: str = "", level: Optional[str] = None, limit: int = 25
     if rx:
         criteria["$or"] = [{"word": rx}, {"translation": rx}, {"examples": rx}]
     if level:
-        criteria["level"] = level
+        # Convert difficulty level to CEFR for database query
+        level_lower = level.lower()
+        if level_lower == "beginner":
+            criteria["level"] = {"$in": ["A1", "A2"]}
+        elif level_lower == "intermediate":
+            criteria["level"] = {"$in": ["B1", "B2"]}
+        elif level_lower == "advanced":
+            criteria["level"] = {"$in": ["C1", "C2"]}
+        else:
+            criteria["level"] = level
     cur = db["seed_words"].find(criteria or {}).limit(int(limit))
     items = await cur.to_list(length=limit)
     out = []

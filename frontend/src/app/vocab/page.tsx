@@ -9,15 +9,13 @@ import * as learningPathApi from '@/lib/learningPathApi'
 type SeedWord = { _id?: string, word: string, translation?: string, example?: string, level?: string }
 type UserVocab = { _id: string, word: string, translation?: string, example?: string, level?: string, status?: string, srs?: any }
 
-// Map CEFR levels to user-friendly names
+// Map difficulty levels
 const getLevelName = (level?: string) => {
   if (!level) return 'Beginner'
-  if (level === 'A1') return 'Beginner'
-  if (level === 'A2') return 'Beginner'
-  if (level === 'B1') return 'Intermediate'
-  if (level === 'B2') return 'Intermediate'
-  if (level === 'C1') return 'Advanced'
-  if (level === 'C2') return 'Advanced'
+  const normalized = level.toLowerCase()
+  if (normalized === 'beginner' || normalized === 'a1' || normalized === 'a2') return 'Beginner'
+  if (normalized === 'intermediate' || normalized === 'b1' || normalized === 'b2') return 'Intermediate'
+  if (normalized === 'advanced' || normalized === 'c1' || normalized === 'c2') return 'Advanced'
   return 'Beginner'
 }
 
@@ -104,7 +102,7 @@ export default function VocabPage() {
       const r = await api.get('/vocab/today/batch', { 
         params: { 
           count: 10,
-          level: 'A1',
+          level: 'beginner',
           user_id: userId || undefined 
         } 
       })
@@ -486,12 +484,9 @@ export default function VocabPage() {
                   onChange={(e)=>setLevel(e.target.value)}
                 >
                   <option value="">All Levels</option>
-                  <option value="A1">Beginner (A1)</option>
-                  <option value="A2">Beginner (A2)</option>
-                  <option value="B1">Intermediate (B1)</option>
-                  <option value="B2">Intermediate (B2)</option>
-                  <option value="C1">Advanced (C1)</option>
-                  <option value="C2">Advanced (C2)</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
                 </select>
                 <button 
                   className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg"
