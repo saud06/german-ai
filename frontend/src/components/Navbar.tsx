@@ -258,10 +258,6 @@ export default function Navbar() {
                   <MapIcon className="h-4 w-4 text-purple-500" />
                   <span>Learning Path</span>
                 </Link>
-                <Link href="/voice-chat" onClick={() => setMoreOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">
-                  <VoiceIcon className="h-4 w-4 text-pink-500" />
-                  <span>Voice Chat</span>
-                </Link>
                 <Link href="/reviews" onClick={() => setMoreOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">
                   <CardIcon className="h-4 w-4 text-violet-500" />
                   <span>Reviews</span>
@@ -440,7 +436,6 @@ export default function Navbar() {
           <NavLink href="/quiz" starts="/quiz" label={<span className="inline-flex items-center gap-2"><PuzzleIcon className="h-4 w-4 text-amber-500"/>Quiz</span>} />
           <NavLink href="/speech" starts="/speech" label={<span className="inline-flex items-center gap-2"><MicIcon className="h-4 w-4 text-fuchsia-500"/>Speech</span>} />
           <NavLink href="/scenarios" starts="/scenarios" label={<span className="inline-flex items-center gap-2"><ChatIcon className="h-4 w-4 text-cyan-500"/>Scenarios</span>} />
-          <NavLink href="/voice-chat" starts="/voice-chat" label={<span className="inline-flex items-center gap-2"><VoiceIcon className="h-4 w-4 text-pink-500"/>Voice Chat</span>} />
           <NavLink href="/reviews" starts="/reviews" label={<span className="inline-flex items-center gap-2"><CardIcon className="h-4 w-4 text-violet-500"/>Reviews</span>} />
           
           <div className="my-1.5 h-px bg-zinc-200 dark:bg-zinc-800" />

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from .config import settings
 from .routers import auth, vocab, grammar, quiz, progress, speech, quiz_v2, paragraph
-from .routers import users, ai_conversation, voice, scenarios, analytics, reviews, achievements, grammar_rules, payments
+from .routers import users, ai_conversation, scenarios, analytics, reviews, achievements, grammar_rules, payments
 from .routers import grammar_exercises, writing_practice, reading_practice, organizations, api_keys, webhooks, admin_dashboard, gdpr, referrals, marketing_analytics, gamification, friends, leaderboard, learning_paths, integrated_learning
 from .startup import seed_collections
 from .redis_client import redis_client
@@ -103,7 +103,6 @@ app.include_router(speech.router, prefix=API_PREFIX, tags=["speech"])
 app.include_router(paragraph.router, prefix=API_PREFIX, tags=["paragraph"])
 app.include_router(users.router, prefix=API_PREFIX, tags=["users"])
 app.include_router(ai_conversation.router, prefix=API_PREFIX, tags=["ai"])
-app.include_router(voice.router, prefix=API_PREFIX + "/voice", tags=["voice"])
 app.include_router(scenarios.router, tags=["scenarios"])
 app.include_router(analytics.router, prefix=API_PREFIX, tags=["analytics"])
 app.include_router(reviews.router, prefix=API_PREFIX, tags=["reviews"])
