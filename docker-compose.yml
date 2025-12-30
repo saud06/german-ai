@@ -7,13 +7,16 @@ services:
     container_name: german_backend
     env_file:
       - .env
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11435
     ports:
       - "8000:8000"
     depends_on:
       - redis
-      - ollama
       - whisper
       - piper
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   
   frontend:
     build:
