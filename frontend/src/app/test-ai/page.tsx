@@ -91,7 +91,6 @@ export default function TestAIPage() {
         }));
       }
     } catch (error) {
-      console.error('Failed to fetch status:', error);
     } finally {
       setLoading(false);
     }
@@ -114,7 +113,6 @@ export default function TestAIPage() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch system metrics:', error);
     }
   };
 
@@ -140,7 +138,6 @@ export default function TestAIPage() {
       mediaRecorder.start();
       setIsRecording(true);
     } catch (error) {
-      console.error('Failed to start recording:', error);
       alert('Failed to access microphone. Please check permissions.');
     }
   };
@@ -188,7 +185,6 @@ export default function TestAIPage() {
         }
       };
     } catch (error) {
-      console.error('Voice message error:', error);
       setVoiceResponse('Error: Failed to process voice message');
     } finally {
       setIsProcessing(false);

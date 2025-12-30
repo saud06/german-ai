@@ -96,7 +96,6 @@ export default function AchievementsPage() {
         setUserRank(leaderboardData.user_rank);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }

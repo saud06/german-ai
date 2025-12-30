@@ -76,7 +76,6 @@ export default function FriendsPage() {
 
       setLoading(false);
     } catch (err) {
-      console.error('Failed to load friends data:', err);
       setLoading(false);
     }
   };
@@ -94,7 +93,6 @@ export default function FriendsPage() {
         setActiveTab('search');
       }
     } catch (err) {
-      console.error('Failed to search users:', err);
     }
   };
 
@@ -120,7 +118,6 @@ export default function FriendsPage() {
         alert(error.detail || 'Failed to send friend request');
       }
     } catch (err) {
-      console.error('Failed to send friend request:', err);
       alert('Failed to send friend request');
     } finally {
       setActionLoading(null);
@@ -145,7 +142,6 @@ export default function FriendsPage() {
         await fetchData();
       }
     } catch (err) {
-      console.error('Failed to respond to request:', err);
     } finally {
       setActionLoading(null);
     }
@@ -167,7 +163,6 @@ export default function FriendsPage() {
         await fetchData();
       }
     } catch (err) {
-      console.error('Failed to remove friend:', err);
     } finally {
       setActionLoading(null);
     }

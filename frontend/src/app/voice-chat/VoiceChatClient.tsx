@@ -46,7 +46,6 @@ export default function VoiceChatClient() {
       }
     } catch (err) {
       setError('Failed to check voice service status. Please ensure the backend is running.');
-      console.error(err);
     }
   };
 
@@ -79,7 +78,6 @@ export default function VoiceChatClient() {
       setIsRecording(true);
     } catch (err) {
       setError('Failed to access microphone. Please grant permission.');
-      console.error(err);
     }
   };
 
@@ -152,7 +150,6 @@ export default function VoiceChatClient() {
       };
     } catch (err: any) {
       setError(err.message || 'Failed to process audio');
-      console.error(err);
     } finally {
       setIsProcessing(false);
     }
@@ -174,7 +171,6 @@ export default function VoiceChatClient() {
         };
       }
     } catch (err) {
-      console.error('Failed to play audio:', err);
     }
   };
 

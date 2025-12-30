@@ -56,7 +56,6 @@ export default function ReviewsPage() {
         setStats(data)
       }
     } catch (err) {
-      console.error('Failed to fetch stats:', err)
     }
   }
 
@@ -74,7 +73,6 @@ export default function ReviewsPage() {
         }
       }
     } catch (err) {
-      console.error('Failed to fetch due cards:', err)
     } finally {
       setLoading(false)
     }
@@ -107,7 +105,6 @@ export default function ReviewsPage() {
         fetchStats()
       }
     } catch (err) {
-      console.error('Failed to submit review:', err)
     } finally {
       setReviewing(false)
     }
@@ -124,7 +121,6 @@ export default function ReviewsPage() {
         fetchDueCards()
       }
     } catch (err) {
-      console.error('Failed to add cards:', err)
     }
   }
 

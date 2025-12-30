@@ -241,7 +241,6 @@ export default function ScenarioDetailPage() {
                   throw new Error(data.message);
                 }
               } catch (e) {
-                console.error('Error parsing SSE data:', e);
               }
             }
           }
@@ -336,7 +335,6 @@ export default function ScenarioDetailPage() {
           const audio = new Audio(`data:audio/wav;base64,${data.character_audio}`);
           audio.play();
         } catch (audioErr) {
-          console.error('Failed to play audio:', audioErr);
         }
       }
 

@@ -101,7 +101,6 @@ export default function ScenariosPage() {
         setUserProgress(data.progress || {});
       }
     } catch (err) {
-      console.error('Failed to fetch user progress:', err);
     }
   };
 

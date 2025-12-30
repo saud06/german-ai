@@ -59,7 +59,6 @@ export default function MiniTranscriptionCard({ expected, isRecording, onTranscr
       try {
         recognitionRef.current.stop()
       } catch (e) {
-        console.warn('Error stopping recognition:', e)
       }
       recognitionRef.current = null
     }
@@ -141,13 +140,11 @@ export default function MiniTranscriptionCard({ expected, isRecording, onTranscr
       }
 
       recognition.onerror = (event: any) => {
-        console.warn('Speech recognition error:', event.error)
       }
 
       recognition.start()
       recognitionRef.current = recognition
     } catch (error) {
-      console.error('Error starting speech recognition:', error)
       setIsSupported(false)
       startDemoMode()
     }

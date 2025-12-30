@@ -100,7 +100,6 @@ export default function QuizPage() {
           if (state.weaknesses) setWeaknesses(state.weaknesses)
         }
       } catch (e) {
-        console.error('Failed to restore quiz state:', e)
       }
     }
   }, [])
@@ -132,7 +131,6 @@ export default function QuizPage() {
       setLevels(r.data.levels || [])
       setQuestionTypes(r.data.question_types || [])
     } catch (e) {
-      console.error('Failed to load topics:', e)
     }
   }
 
@@ -149,7 +147,6 @@ export default function QuizPage() {
       setQuestions(r.data.questions || [])
       setStage('quiz')
     } catch (e) {
-      console.error('Failed to start quiz:', e)
       setStage('setup')
       alert('Failed to start quiz. Please try again.')
     }
@@ -220,11 +217,9 @@ export default function QuizPage() {
           const xp = Math.round(r.data.percentage)
           await learningPathApi.completeActivity(activityId, 'quiz', xp)
         } catch (error) {
-          console.error('Failed to mark activity complete:', error)
         }
       }
     } catch (e) {
-      console.error('Failed to submit quiz:', e)
       setStage('quiz')
       alert('Failed to submit quiz. Please try again.')
     }

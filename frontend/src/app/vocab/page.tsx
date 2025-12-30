@@ -89,7 +89,6 @@ export default function VocabPage() {
       setTodayWords(r.data || [])
       setCurrentWordIndex(0)
     } catch (err) {
-      console.error('Failed to load today words:', err)
     }
     finally { setTLoading(false) }
   }
@@ -133,7 +132,6 @@ export default function VocabPage() {
       const r = await api.get('/vocab/search', { params: { q, level: level || undefined, limit: 30 } })
       setResults(r.data || [])
     } catch (err) {
-      console.error('Failed to search vocab:', err)
     }
     finally { setBLoading(false) }
   }
@@ -162,7 +160,6 @@ export default function VocabPage() {
       const r = await api.get('/vocab/list', { params: { status: status || undefined, limit: 50 } })
       setSaved(r.data || [])
     } catch (err) {
-      console.error('Failed to load saved vocab:', err)
     }
     finally { setSLoading(false) }
   }

@@ -56,7 +56,6 @@ export default function GrammarCoach() {
           await learningPathApi.completeActivity(activityId, 'grammar', 60)
           setActivityCompleted(true)
         } catch (error) {
-          console.error('Failed to mark activity complete:', error)
         }
       }
     } catch {}

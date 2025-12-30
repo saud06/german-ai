@@ -113,7 +113,6 @@ export default function AccountPage() {
         setReferralStats(refData);
       }
     } catch (error) {
-      console.error('Failed to fetch account data:', error);
     } finally {
       setLoading(false);
     }
@@ -149,7 +148,6 @@ export default function AccountPage() {
         window.location.href = data.checkout_url;
       }
     } catch (error: any) {
-      console.error('Upgrade error:', error);
       const message = error.message || 'Failed to start checkout';
       if (message.includes('Stripe')) {
         alert('Payment system is not fully configured. Please contact support.');
@@ -177,7 +175,6 @@ export default function AccountPage() {
         await fetchAccountData();
       }
     } catch (error) {
-      console.error('Failed to generate referral code:', error);
       alert('Failed to generate referral code');
     } finally {
       setActionLoading(false);
