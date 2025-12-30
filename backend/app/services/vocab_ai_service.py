@@ -15,42 +15,50 @@ class VocabAIService:
     
     async def generate_daily_words(self, level: str = "A1", count: int = 10, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Generate daily vocabulary words using AI with smart caching
+        Generate daily vocabulary words - same words for the entire day, new words tomorrow
         
         Strategy:
-        1. Check if we have cached AI-generated words for today (in ai_vocab_cache collection)
-        2. If cache exists and is fresh (< 24 hours), return from cache
-        3. If not, generate new words using AI and cache them
-        4. For user-specific requests, check user's learning history to avoid duplicates
+        1. Check user's completed words for today
+        2. Check if we have cached words for today
+        3. If cache exists, return those same words (user sees their progress)
+        4. If no cache, generate new words and cache them for the day
+        5. Tomorrow = new cache = new words automatically
         """
         today = dt.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_str = today.date().isoformat()
         
-        # Check cache first
-        cache_key = f"daily_{level}_{count}"
+        # Check cache first - same words all day
+        cache_key = f"daily_{level}_{count}_{today_str}"
         cached = await self.db["ai_vocab_cache"].find_one({
-            "cache_key": cache_key,
-            "created_at": {"$gte": today}
+            "cache_key": cache_key
         })
         
         if cached and cached.get("words"):
-            # Cache hit - return cached words
-            words = cached["words"]
-            
-            # If user_id provided, filter out words they've already saved
-            if user_id:
-                user_words = await self.db["user_vocab"].find(
-                    {"user_id": user_id},
-                    {"word": 1}
-                ).to_list(length=1000)
-                user_word_set = {w["word"] for w in user_words}
-                words = [w for w in words if w["word"] not in user_word_set]
-            
-            return words[:count]
+            # Return same words for the entire day
+            return cached["words"][:count]
         
-        # Cache miss - generate new words using AI
-        words = await self._generate_words_with_ai(level, count)
+        # No cache - generate new words
+        # Get words user has already learned (from all time, not just today)
+        learned_words = set()
+        if user_id:
+            user_vocab = await self.db["user_vocab"].find(
+                {"user_id": user_id},
+                {"word": 1}
+            ).to_list(length=10000)
+            learned_words = {w["word"] for w in user_vocab}
         
-        # Cache the generated words
+        # Generate words, excluding already learned ones
+        words = await self._generate_words_with_ai(level, count * 3, learned_words)  # Generate extra to filter
+        
+        # Filter out learned words
+        words = [w for w in words if w["word"] not in learned_words][:count]
+        
+        # If not enough words, fill from database
+        if len(words) < count:
+            db_words = await self._fallback_to_db(level, count - len(words), learned_words)
+            words.extend(db_words)
+        
+        # Cache for the entire day
         await self.db["ai_vocab_cache"].update_one(
             {"cache_key": cache_key},
             {
@@ -59,6 +67,7 @@ class VocabAIService:
                     "level": level,
                     "words": words,
                     "created_at": dt.datetime.utcnow(),
+                    "date": today_str,
                     "expires_at": today + dt.timedelta(days=1)
                 }
             },
@@ -67,8 +76,10 @@ class VocabAIService:
         
         return words
     
-    async def _generate_words_with_ai(self, level: str, count: int) -> List[Dict[str, Any]]:
-        """Generate vocabulary words using AI model"""
+    async def _generate_words_with_ai(self, level: str, count: int, exclude_words: set = None) -> List[Dict[str, Any]]:
+        """Generate vocabulary words using AI model, excluding already learned words"""
+        if exclude_words is None:
+            exclude_words = set()
         
         level_description = {
             "A1": "absolute beginner level - very basic everyday words",
@@ -79,7 +90,12 @@ class VocabAIService:
             "C2": "mastery level - native-like vocabulary including idioms and rare words"
         }
         
-        prompt = f"""Generate {count} German vocabulary words at {level} level ({level_description.get(level, 'beginner level')}).
+        exclude_text = ""
+        if exclude_words:
+            exclude_list = list(exclude_words)[:50]  # Limit to avoid huge prompts
+            exclude_text = f"\n\nDo NOT include these words (user already knows them): {', '.join(exclude_list)}"
+        
+        prompt = f"""Generate {count} German vocabulary words at {level} level ({level_description.get(level, 'beginner level')}).{exclude_text}
 
 For each word, provide:
 1. The German word
@@ -141,10 +157,17 @@ Return ONLY the JSON array, no additional text."""
         # Fallback: return from seed_words database
         return await self._fallback_to_db(level, count)
     
-    async def _fallback_to_db(self, level: str, count: int) -> List[Dict[str, Any]]:
+    async def _fallback_to_db(self, level: str, count: int, exclude_words: set = None) -> List[Dict[str, Any]]:
         """Fallback to database seed words if AI generation fails"""
+        if exclude_words is None:
+            exclude_words = set()
+        
+        match_criteria = {"level": level}
+        if exclude_words:
+            match_criteria["word"] = {"$nin": list(exclude_words)}
+        
         pipeline = [
-            {"$match": {"level": level}},
+            {"$match": match_criteria},
             {"$sample": {"size": count}},
             {"$project": {
                 "_id": 0,

@@ -100,26 +100,15 @@ async def vocab_today(db=Depends(get_db), user_id: Optional[str] = None):
 async def vocab_today_batch(
     count: int = Query(default=10, ge=1, le=20),
     level: str = Query(default="A1"),
-    force_new: bool = Query(default=False),
     db=Depends(get_db),
     user_id: Optional[str] = None
 ):
     """
-    Get multiple vocabulary words for today - AI-powered with smart caching
-    This is the new endpoint for the redesigned Today tab
-    force_new: Skip completed words and generate fresh batch
+    Get vocabulary words for today - same words all day, new words tomorrow
+    Words are cached per day and exclude already learned vocabulary
     """
     try:
         vocab_ai = VocabAIService(db)
-        
-        # If force_new, clear today's cache to get fresh words
-        if force_new and user_id:
-            today = dt.datetime.utcnow().date().isoformat()
-            await db["vocab_progress"].delete_many({
-                "user_id": user_id,
-                "date": today
-            })
-        
         words = await vocab_ai.generate_daily_words(level=level, count=count, user_id=user_id)
         
         # Format for frontend
