@@ -114,12 +114,6 @@ export default function VocabPage() {
       // Set current index to first incomplete word
       const firstIncomplete = words.findIndex((w: SeedWord) => !progress.has(w.word))
       setCurrentWordIndex(firstIncomplete >= 0 ? firstIncomplete : words.length - 1)
-      
-      // If all words completed, load new batch automatically
-      if (firstIncomplete === -1 && words.length > 0) {
-        flash('Great job! Loading new words...')
-        setTimeout(() => loadNewBatch(), 1500)
-      }
     } catch (err) {
       setTodayWords([])
       flash('Failed to load vocabulary words')
@@ -179,9 +173,8 @@ export default function VocabPage() {
     if (currentWordIndex < todayWords.length - 1) {
       setCurrentWordIndex(currentWordIndex + 1)
     } else {
-      // All words completed - load new batch
-      flash('🎉 All words completed! Loading new words...')
-      setTimeout(() => loadNewBatch(), 2000)
+      // All words completed for today!
+      flash('🎉 All words completed for today! Great job!')
     }
   }
   
@@ -468,6 +461,21 @@ export default function VocabPage() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+
+            {!tLoading && todayWords.length > 0 && completedWords.size === todayWords.length && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-8 text-center border-2 border-green-200 dark:border-green-800">
+                <div className="text-5xl mb-4">🎉</div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">All Words Completed!</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">Great job! You've completed all {todayWords.length} words for today.</p>
+                <button
+                  className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg"
+                  onClick={loadNewBatch}
+                  disabled={tLoading}
+                >
+                  {tLoading ? 'Loading...' : '📚 Load More Words'}
+                </button>
               </div>
             )}
 
