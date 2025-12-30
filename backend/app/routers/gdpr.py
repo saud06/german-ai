@@ -169,8 +169,6 @@ async def generate_data_export(
             }
         )
         
-        # TODO: Send email notification
-        
     except Exception as e:
         # Update status to failed
         await db["data_export_requests"].update_one(

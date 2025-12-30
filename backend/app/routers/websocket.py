@@ -169,11 +169,7 @@ async def voice_websocket(
                     })
             
             elif "bytes" in message:
-                # Audio data received
                 audio_data = message["bytes"]
-                
-                # TODO: Process audio with Whisper STT
-                # For now, just acknowledge receipt
                 await websocket.send_json({
                     "type": "audio_received",
                     "size": len(audio_data)

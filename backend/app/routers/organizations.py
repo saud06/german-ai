@@ -327,8 +327,6 @@ async def invite_member(
         invitation.dict(by_alias=True, exclude={"id"})
     )
     
-    # TODO: Send invitation email
-    
     return {
         "invitation_id": str(result.inserted_id),
         "invitation_token": token,

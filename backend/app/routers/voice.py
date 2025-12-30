@@ -121,7 +121,7 @@ async def synthesize_speech(
         
         return SynthesizeResponse(
             audio_base64=audio_base64,
-            duration=None  # TODO: Calculate duration
+            duration=None
         )
     except Exception as e:
         logger.error(f"Synthesis error: {e}")
@@ -294,7 +294,7 @@ async def voice_conversation(
             transcribed_text=transcribed_text,
             ai_response_text=ai_response,
             ai_response_audio=audio_base64,
-            corrected_text=None  # TODO: Add grammar correction
+            corrected_text=None
         )
         
     except HTTPException:

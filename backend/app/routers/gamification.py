@@ -174,7 +174,6 @@ async def create_challenge(
     db = Depends(get_db)
 ):
     """Create a new weekly challenge (admin only)"""
-    # TODO: Add admin check
     service = GamificationService(db)
     challenge = await service.create_weekly_challenge(
         title=request.title,

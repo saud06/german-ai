@@ -81,7 +81,7 @@ async def get_location_activities(
             estimated_minutes=vocab_set.get("estimated_minutes", 10),
             icon="📚",
             difficulty=vocab_set.get("level", "A1"),
-            completed=False  # TODO: Check if user completed
+            completed=False
         ))
     
     # 2. Add scenarios

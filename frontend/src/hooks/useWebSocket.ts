@@ -62,7 +62,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       const ws = new WebSocket(getWebSocketUrl());
       
       ws.onopen = () => {
-        console.log('✅ WebSocket connected');
         setIsConnected(true);
         setConnectionStatus('connected');
         reconnectAttemptsRef.current = 0;
@@ -75,18 +74,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           setLastMessage(message);
           onMessage?.(message);
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
         }
       };
 
       ws.onerror = (error) => {
-        console.error('❌ WebSocket error:', error);
         setConnectionStatus('error');
         onError?.(error);
       };
 
       ws.onclose = () => {
-        console.log('🔌 WebSocket disconnected');
         setIsConnected(false);
         setConnectionStatus('disconnected');
         wsRef.current = null;
@@ -95,19 +91,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // Attempt reconnection
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current++;
-          console.log(`Reconnecting... (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, reconnectInterval);
-        } else {
-          console.log('Max reconnection attempts reached');
         }
       };
 
       wsRef.current = ws;
     } catch (error) {
-      console.error('Failed to create WebSocket:', error);
       setConnectionStatus('error');
     }
   }, [getWebSocketUrl, onConnect, onMessage, onError, onDisconnect, reconnectInterval, maxReconnectAttempts]);
@@ -132,7 +124,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       wsRef.current.send(JSON.stringify(message));
       return true;
     }
-    console.warn('WebSocket is not connected');
     return false;
   }, []);
 

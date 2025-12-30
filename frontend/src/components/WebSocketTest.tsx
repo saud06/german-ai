@@ -8,14 +8,11 @@ export default function WebSocketTest() {
 
   const { isConnected, connectionStatus, sendMessage, sendText, ping } = useWebSocket({
     onMessage: (message) => {
-      console.log('Received:', message);
       setMessages(prev => [...prev, { direction: 'received', data: message, timestamp: new Date() }]);
     },
     onConnect: () => {
-      console.log('Connected to WebSocket');
     },
     onDisconnect: () => {
-      console.log('Disconnected from WebSocket');
     },
   });
 
