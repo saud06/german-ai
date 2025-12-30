@@ -383,7 +383,12 @@ export default function QuizPage() {
                 </span>
                 {currentQuestion.skills && currentQuestion.skills.length > 0 && (
                   <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
-                    {currentQuestion.skills[0]}
+                    {currentQuestion.skills[0].charAt(0).toUpperCase() + currentQuestion.skills[0].slice(1).replace(/_/g, ' ')}
+                  </span>
+                )}
+                {config.level && (
+                  <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
+                    {config.level.charAt(0).toUpperCase() + config.level.slice(1)}
                   </span>
                 )}
               </div>
@@ -656,7 +661,7 @@ export default function QuizPage() {
                 <div className="space-y-2">
                   {strengths.map((s, i) => (
                     <div key={i} className="px-3 py-2 bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg">
-                      {s}
+                      {s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')}
                     </div>
                   ))}
                 </div>
@@ -666,7 +671,7 @@ export default function QuizPage() {
                 <div className="space-y-2">
                   {weaknesses.map((w, i) => (
                     <div key={i} className="px-3 py-2 bg-orange-50 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded-lg">
-                      {w}
+                      {w.charAt(0).toUpperCase() + w.slice(1).replace(/_/g, ' ')}
                     </div>
                   ))}
                 </div>
@@ -708,16 +713,10 @@ export default function QuizPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4">
+            <div className="flex justify-center">
               <button
                 onClick={restartQuiz}
-                className="flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition-all"
-              >
-                🔄 Try Again
-              </button>
-              <button
-                onClick={restartQuiz}
-                className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
+                className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-indigo-700 transition-all"
               >
                 📝 New Quiz
               </button>

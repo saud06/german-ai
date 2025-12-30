@@ -134,25 +134,37 @@ Rules:
             
             content = response.get('message', {}).get('content', '[]')
             
-            # Extract JSON array
+            # Extract JSON array with robust parsing
+            items = []
             try:
+                # Method 1: Direct parse
                 items = json.loads(content)
             except Exception:
-                # Try to extract from markdown
-                if '```json' in content:
-                    json_str = content.split('```json')[1].split('```')[0].strip()
-                    items = json.loads(json_str)
-                elif '```' in content:
-                    json_str = content.split('```')[1].split('```')[0].strip()
-                    items = json.loads(json_str)
-                else:
-                    # Try to find JSON array
-                    start = content.find('[')
-                    end = content.rfind(']')
-                    if start != -1 and end != -1 and end > start:
-                        items = json.loads(content[start:end+1])
+                try:
+                    # Method 2: Extract from markdown code blocks
+                    if '```json' in content:
+                        json_str = content.split('```json')[1].split('```')[0].strip()
+                        items = json.loads(json_str)
+                    elif '```' in content:
+                        json_str = content.split('```')[1].split('```')[0].strip()
+                        items = json.loads(json_str)
                     else:
-                        raise ValueError("No JSON found")
+                        # Method 3: Find JSON array boundaries
+                        start = content.find('[')
+                        end = content.rfind(']')
+                        if start != -1 and end != -1 and end > start:
+                            json_str = content[start:end+1]
+                            # Clean up common issues
+                            json_str = json_str.replace('\n', ' ').replace('\r', '')
+                            # Remove trailing commas before closing brackets
+                            json_str = json_str.replace(',]', ']').replace(', ]', ']')
+                            items = json.loads(json_str)
+                        else:
+                            raise ValueError("No JSON array found in response")
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"JSON parsing failed: {e}. Content: {content[:200]}")
+                    items = []
             
             # Validate and normalize all question types
             out: List[Dict[str, Any]] = []
