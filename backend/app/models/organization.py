@@ -97,7 +97,7 @@ class Organization(BaseModel):
     total_api_calls: int = 0
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -121,7 +121,7 @@ class OrganizationMember(BaseModel):
     last_active: Optional[datetime] = None
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -145,7 +145,7 @@ class OrganizationInvitation(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -175,7 +175,7 @@ class APIKey(BaseModel):
     active: bool = True
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -206,7 +206,7 @@ class Webhook(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -237,7 +237,7 @@ class WebhookDelivery(BaseModel):
     next_retry_at: Optional[datetime] = None
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -264,7 +264,7 @@ class AuditLog(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
