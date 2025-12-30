@@ -281,7 +281,9 @@ export default function ScenarioDetailPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(
+      
+      // First, transcribe the audio to show user message immediately
+      const transcribeResponse = await fetch(
         `http://localhost:8000/api/v1/scenarios/${scenarioId}/voice-message`,
         {
           method: 'POST',
@@ -293,41 +295,16 @@ export default function ScenarioDetailPage() {
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!transcribeResponse.ok) {
+        const errorData = await transcribeResponse.json();
         throw new Error(errorData.detail || 'Failed to send voice message');
       }
 
-      const data = await response.json();
+      const data = await transcribeResponse.json();
 
-      // Add transcribed user message
-      if (conversationState) {
-        setConversationState({
-          ...conversationState,
-          messages: [...conversationState.messages, {
-            role: 'user',
-            content: data.transcribed_text,
-            timestamp: new Date().toISOString()
-          }]
-        });
-      }
-
-      // Add character response
-      if (conversationState) {
-        setConversationState({
-          ...conversationState,
-          messages: [...conversationState.messages, {
-            role: 'user',
-            content: data.transcribed_text,
-            timestamp: new Date().toISOString()
-          }, {
-            role: 'character',
-            content: data.character_message,
-            timestamp: new Date().toISOString(),
-            audio: data.character_audio
-          }]
-        });
-      }
+      // Refresh conversation state to get both user message and AI response
+      // (backend already added both to state)
+      await checkConversationState();
 
       // Play audio response if available
       if (data.character_audio) {
@@ -337,9 +314,6 @@ export default function ScenarioDetailPage() {
         } catch (audioErr) {
         }
       }
-
-      // Always refresh conversation state to get updated objectives
-      await checkConversationState();
       
       // If complete, update status (no alert)
       if (data.conversation_complete && conversationState) {

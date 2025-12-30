@@ -38,17 +38,15 @@ class ConversationEngine:
 Persönlichkeit: {character.personality}
 
 Szenario: {scenario.name}
-{scenario.context}
 
-Regeln:
-- Antworte NUR auf Deutsch
-- Maximal 1-2 kurze Sätze (15-20 Wörter)
-- Bleibe in deiner Rolle
-- Sei {character.personality}
-- Verstehe auch fehlerhafte Sätze
-- Reagiere natürlich auf Begrüßungen (Guten Tag, Hallo, etc.)
+REGELN:
+1. Antworte NUR auf Deutsch
+2. MAXIMAL 1 kurzer Satz (10-15 Wörter)
+3. Bleibe in deiner Rolle
+4. Verstehe fehlerhafte Sätze
+5. Reagiere natürlich
 
-Ziele: {', '.join(uncompleted_objectives[:2])}"""
+AKTUELLE ZIELE: {', '.join(uncompleted_objectives[:2]) if uncompleted_objectives else 'Gespräch führen'}"""
         
         return prompt
     
@@ -81,42 +79,50 @@ Ziele: {', '.join(uncompleted_objectives[:2])}"""
         # Build conversation history
         history = self.build_conversation_history(state)
         
-        # Build simple prompt for faster generation (using generate API instead of chat)
-        conversation_context = "\n".join([
-            f"{'Gast' if msg['role'] == 'user' else character.name}: {msg['content']}"
-            for msg in history
-        ])
+        # Build conversation messages properly for chat API
+        messages = [{"role": "system", "content": system_prompt}]
         
-        full_prompt = f"""{system_prompt}
-
-BISHERIGE KONVERSATION:
-{conversation_context}
-
-Gast: {user_message}
-{character.name}:"""
+        # Add conversation history
+        for msg in history:
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
         
-        # Use chat API with optimized settings for faster responses
+        # Add current user message
+        messages.append({"role": "user", "content": user_message})
+        
+        # Use chat API with strict limits for short responses
         response = await self.ollama.client.chat(
             model=self.ollama.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"{conversation_context}\n\nGast: {user_message}\n{character.name}:"}
-            ],
+            messages=messages,
             options={
                 'temperature': 0.7,
-                'num_predict': 50,  # Allow slightly longer responses
+                'num_predict': 25,  # Strict limit for short responses
                 'top_p': 0.9,
                 'top_k': 40,
-                'repeat_penalty': 1.1,
-                'num_ctx': 1024,  # Increased context window
+                'repeat_penalty': 1.2,  # Higher to avoid repetition
+                'num_ctx': 1024,
+                'stop': ['\n', 'Gast:', 'User:', '\n\n'],  # Stop tokens to prevent format leaking
             }
         )
         
         ai_response = response.get('message', {}).get('content', '').strip()
         
+        # Clean up any leaked format
+        if 'Gast:' in ai_response:
+            ai_response = ai_response.split('Gast:')[0].strip()
+        if character.name + ':' in ai_response:
+            ai_response = ai_response.replace(character.name + ':', '').strip()
+        
         # Ensure response ends with punctuation
         if ai_response and ai_response[-1] not in '.!?':
             ai_response += '.'
+        
+        # Enforce maximum length (truncate if too long)
+        words = ai_response.split()
+        if len(words) > 20:
+            ai_response = ' '.join(words[:20]) + '...'
         
         return ai_response
     
@@ -135,35 +141,48 @@ Gast: {user_message}
         # Build conversation history
         history = self.build_conversation_history(state)
         
-        # Build simple prompt for streaming
-        conversation_context = "\n".join([
-            f"{'Gast' if msg['role'] == 'user' else character.name}: {msg['content']}"
-            for msg in history
-        ])
+        # Build conversation messages properly for chat API
+        messages = [{"role": "system", "content": system_prompt}]
         
-        # Use chat API with streaming and optimized settings
+        # Add conversation history
+        for msg in history:
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
+        
+        # Add current user message
+        messages.append({"role": "user", "content": user_message})
+        
+        # Use chat API with streaming and strict limits
         stream = await self.ollama.client.chat(
             model=self.ollama.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"{conversation_context}\n\nGast: {user_message}\n{character.name}:"}
-            ],
+            messages=messages,
             options={
                 'temperature': 0.7,
-                'num_predict': 50,  # Allow slightly longer responses
+                'num_predict': 25,  # Strict limit for short responses
                 'top_p': 0.9,
                 'top_k': 40,
-                'repeat_penalty': 1.1,
-                'num_ctx': 1024,  # Increased context window
+                'repeat_penalty': 1.2,  # Higher to avoid repetition
+                'num_ctx': 1024,
+                'stop': ['\n', 'Gast:', 'User:', '\n\n'],  # Stop tokens
             },
             stream=True
         )
         
-        # Stream the response
+        # Stream the response with format cleaning
+        word_count = 0
         async for chunk in stream:
             if 'message' in chunk and 'content' in chunk['message']:
                 content = chunk['message']['content']
                 if content:
+                    # Stop if we see format leaking
+                    if 'Gast:' in content or character.name + ':' in content:
+                        break
+                    # Enforce word limit during streaming
+                    word_count += len(content.split())
+                    if word_count > 20:
+                        break
                     yield content
     
     def check_objectives(
