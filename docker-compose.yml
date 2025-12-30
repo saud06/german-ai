@@ -103,7 +103,7 @@ services:
       - "10200:10200"
     volumes:
       - piper_data:/data
-    command: --voice de_DE-eva_k-x_low
+    command: --voice de_DE-thorsten-high
     deploy:
       resources:
         limits:
