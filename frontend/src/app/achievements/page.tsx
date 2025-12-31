@@ -342,41 +342,110 @@ export default function AchievementsPage() {
 
             {/* Leaderboard Tab */}
             {activeTab === "leaderboard" && (
-              <div>
-                {userRank && (
-                  <div className="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 rounded-lg p-4 mb-6 border-2 border-yellow-300 dark:border-yellow-700">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold mb-2 dark:text-white">🏆 XP Leaderboard</h2>
+                  <p className="text-gray-600 dark:text-gray-300">Top learners ranked by total experience points</p>
+                </div>
+
+                {/* Current User Rank Card */}
+                {userRank && stats && (
+                  <div className="rounded-xl border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 p-4">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-lg dark:text-white">Your Rank: #{userRank}</span>
-                      <span className="text-2xl">🏅</span>
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-lg">
+                          👤
+                        </div>
+                        <div>
+                          <div className="font-semibold dark:text-white">Your Rank</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            Level {stats.level}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-2xl font-bold ${
+                          userRank === 1 ? 'text-yellow-600 dark:text-yellow-400' :
+                          userRank === 2 ? 'text-gray-500 dark:text-gray-400' :
+                          userRank === 3 ? 'text-amber-700 dark:text-amber-500' :
+                          'text-gray-600 dark:text-gray-400'
+                        }`}>
+                          {userRank === 1 ? '🥇' : userRank === 2 ? '🥈' : userRank === 3 ? '🥉' : `#${userRank}`}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {stats.total_xp.toLocaleString()} XP
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
 
+                {/* Leaderboard List */}
                 <div className="space-y-2">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Top {leaderboard.length} learners
+                  </div>
+                  
                   {leaderboard.map((entry, index) => (
                     <div
                       key={entry.user_id}
-                      className={`flex items-center justify-between p-4 rounded-lg ${
+                      className={`rounded-lg border p-4 transition hover:shadow-md ${
                         index < 3
-                          ? "bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-300 dark:border-yellow-700"
-                          : "bg-gray-50 dark:bg-gray-700"
+                          ? "border-yellow-300 dark:border-yellow-700 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20"
+                          : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800"
                       }`}
                     >
-                      <div className="flex items-center space-x-4">
-                        <span className="text-2xl font-bold w-8 dark:text-white">
-                          {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
-                        </span>
-                        <div>
-                          <div className="font-medium dark:text-white">User {entry.user_id.slice(0, 8)}...</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">Level {entry.level}</div>
+                      <div className="flex items-center justify-between">
+                        {/* Left: Rank + Avatar + Name */}
+                        <div className="flex items-center gap-4">
+                          <div className={`text-2xl font-bold w-12 text-center ${
+                            index === 0 ? 'text-yellow-600 dark:text-yellow-400' :
+                            index === 1 ? 'text-gray-500 dark:text-gray-400' :
+                            index === 2 ? 'text-amber-700 dark:text-amber-500' :
+                            'text-gray-600 dark:text-gray-400'
+                          }`}>
+                            {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                          </div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 dark:bg-zinc-700 font-semibold text-gray-700 dark:text-gray-300">
+                            {entry.user_id.slice(0, 1).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-semibold dark:text-white">
+                              User {entry.user_id.slice(0, 8)}...
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              Level {entry.level}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-indigo-600 dark:text-indigo-400">{entry.total_xp} XP</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{entry.current_streak} day streak 🔥</div>
+
+                        {/* Right: Stats */}
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <div className="text-lg font-bold dark:text-white">{entry.total_xp.toLocaleString()}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">XP</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold dark:text-white">{entry.current_streak}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Streak</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Link to Full Leaderboard */}
+                <div className="text-center pt-4">
+                  <a
+                    href="/leaderboard"
+                    className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+                  >
+                    View Full Leaderboard with More Rankings →
+                  </a>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    See streak rankings, scenario rankings, and time-based leaderboards
+                  </p>
                 </div>
               </div>
             )}
