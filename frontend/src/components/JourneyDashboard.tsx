@@ -14,10 +14,10 @@ export default function JourneyDashboard({ children }: JourneyDashboardProps) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !onboardingCompleted && !activeJourney) {
-      router.push('/onboarding/welcome');
+    if (!loading && !activeJourney) {
+      window.location.href = '/onboarding/welcome';
     }
-  }, [loading, onboardingCompleted, activeJourney, router]);
+  }, [loading, activeJourney]);
 
   if (loading) {
     return (
