@@ -5,6 +5,8 @@ import MiniTranscriptionCard from '@/components/MiniTranscriptionCard'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useRouter } from 'next/navigation'
+import { useJourney } from '@/contexts/JourneyContext'
+import { getJourneyLevels } from '@/lib/levelUtils'
 
 type SpeechResult = {
   expected: string
@@ -62,6 +64,8 @@ function calculateWordScore(expectedWord: string, spokenWord: string): number {
 
 export default function SpeechPage() {
   const { userId } = useAuth()
+  const { activeJourney } = useJourney()
+  const journeyLevels = getJourneyLevels(activeJourney)
   const [expected, setExpected] = useState('Ich gehe zur Schule.')
   const [serverResult, setServerResult] = useState<SpeechResult | null>(null)
   const [localTranscript, setLocalTranscript] = useState<string>('')
@@ -656,7 +660,7 @@ export default function SpeechPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
                 <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Expected:</p>
-                <p className="text-base font-medium text-gray-900 dark:text-white break-words">{expected}</p>
+                <p className="text-base font-medium text-gray-900 dark:text-white">{expected}</p>
               </div>
               
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4">
@@ -854,16 +858,15 @@ export default function SpeechPage() {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Level:</span>
-              <select 
-                className="px-3 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-200 dark:bg-gray-700 dark:text-white text-sm font-medium" 
-                value={levelFilter} 
+              <select
+                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                value={levelFilter}
                 onChange={(e)=>setLevelFilter(e.target.value)}
               >
                 <option value="">All Levels</option>
-                <option value="A1">A1 - Beginner</option>
-                <option value="A2">A2 - Elementary</option>
-                <option value="B1">B1 - Intermediate</option>
-                <option value="B2">B2 - Upper Intermediate</option>
+                {journeyLevels.map((level) => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
               </select>
             </div>
             <div className="flex items-center gap-2">

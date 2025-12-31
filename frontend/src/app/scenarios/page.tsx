@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useJourney } from '@/contexts/JourneyContext';
+import { getJourneyLevels, mapToJourneyLevel, getLevelColor, getLevelFilterColor } from '@/lib/levelUtils';
 
 interface Character {
   id: string;
@@ -51,6 +52,9 @@ export default function ScenariosPage() {
   const [filter, setFilter] = useState<string>('all');
   const [userProgress, setUserProgress] = useState<Record<string, UserProgress>>({});
   const [contentMappings, setContentMappings] = useState<Record<string, any>>({});
+  
+  // Get journey-specific levels
+  const journeyLevels = getJourneyLevels(activeJourney);
 
   const formatText = (text: string) => {
     return text.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
@@ -147,12 +151,7 @@ export default function ScenariosPage() {
   );
 
   const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    return getLevelColor(difficulty, activeJourney);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -208,36 +207,17 @@ export default function ScenariosPage() {
           >
             All
           </button>
-          <button
-            onClick={() => setFilter('beginner')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === 'beginner'
-                ? 'bg-green-600 text-white'
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-          >
-            Beginner
-          </button>
-          <button
-            onClick={() => setFilter('intermediate')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === 'intermediate'
-                ? 'bg-yellow-600 text-white'
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-          >
-            Intermediate
-          </button>
-          <button
-            onClick={() => setFilter('advanced')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === 'advanced'
-                ? 'bg-red-600 text-white'
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-          >
-            Advanced
-          </button>
+          {journeyLevels.map((level) => (
+            <button
+              key={level}
+              onClick={() => setFilter(level.toLowerCase())}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                getLevelFilterColor(level, activeJourney, filter === level.toLowerCase())
+              }`}
+            >
+              {level}
+            </button>
+          ))}
         </div>
 
         {/* Error */}

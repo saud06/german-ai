@@ -5,26 +5,11 @@ import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useSearchParams } from 'next/navigation'
 import * as learningPathApi from '@/lib/learningPathApi'
+import { useJourney } from '@/contexts/JourneyContext'
+import { mapToJourneyLevel, getLevelColor, getJourneyLevels } from '@/lib/levelUtils'
 
 type SeedWord = { _id?: string, word: string, translation?: string, example?: string, level?: string }
 type UserVocab = { _id: string, word: string, translation?: string, example?: string, level?: string, status?: string, srs?: any }
-
-// Map difficulty levels
-const getLevelName = (level?: string) => {
-  if (!level) return 'Beginner'
-  const normalized = level.toLowerCase()
-  if (normalized === 'beginner' || normalized === 'a1' || normalized === 'a2') return 'Beginner'
-  if (normalized === 'intermediate' || normalized === 'b1' || normalized === 'b2') return 'Intermediate'
-  if (normalized === 'advanced' || normalized === 'c1' || normalized === 'c2') return 'Advanced'
-  return 'Beginner'
-}
-
-const getLevelColor = (level?: string) => {
-  const name = getLevelName(level)
-  if (name === 'Beginner') return 'bg-green-100 text-green-800'
-  if (name === 'Intermediate') return 'bg-yellow-100 text-yellow-800'
-  return 'bg-red-100 text-red-800'
-}
 
 function SoundIcon() {
   return (
@@ -59,6 +44,7 @@ function useSpeak() {
 
 export default function VocabPage() {
   const { userId } = useAuth()
+  const { activeJourney } = useJourney()
   const searchParams = useSearchParams()
   const activityId = searchParams.get('activity_id')
   const [tab, setTab] = useState<'today'|'browse'|'saved'|'review'>('today')
@@ -66,6 +52,9 @@ export default function VocabPage() {
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(null), 2500) }
   const { speaking, speak } = useSpeak()
   const [activityCompleted, setActivityCompleted] = useState(false)
+  
+  // Get journey-specific levels
+  const journeyLevels = getJourneyLevels(activeJourney)
 
   // Today - with multiple words and navigation
   const [todayWords, setTodayWords] = useState<SeedWord[]>([])
@@ -95,7 +84,7 @@ export default function VocabPage() {
       const r = await api.get('/vocab/today/batch', { 
         params: { 
           count: 10,
-          level: 'beginner',
+          level: journeyLevels[0]?.toLowerCase() || 'beginner',
           user_id: userId || undefined 
         } 
       })
@@ -362,8 +351,8 @@ export default function VocabPage() {
                       {/* Card Header */}
                       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white relative">
                         <div className="flex items-center justify-between mb-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(word.level)}`}>
-                            {getLevelName(word.level)}
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(word.level, activeJourney)}`}>
+                            {mapToJourneyLevel(word.level || '', activeJourney)}
                           </span>
                           <button 
                             className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-all"
@@ -473,9 +462,9 @@ export default function VocabPage() {
                   onChange={(e)=>setLevel(e.target.value)}
                 >
                   <option value="">All Levels</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
+                  {journeyLevels.map((lvl) => (
+                    <option key={lvl} value={lvl.toLowerCase()}>{lvl}</option>
+                  ))}
                 </select>
                 <button 
                   className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg"
@@ -493,8 +482,8 @@ export default function VocabPage() {
                 <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                   <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 relative">
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(w.level)}`}>
-                        {getLevelName(w.level)}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(w.level, activeJourney)}`}>
+                        {mapToJourneyLevel(w.level || '', activeJourney)}
                       </span>
                       <button 
                         className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-all"
@@ -581,8 +570,8 @@ export default function VocabPage() {
                 <div key={w._id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                   <div className="bg-gradient-to-r from-green-500 to-teal-600 p-4 relative">
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(w.level)}`}>
-                        {getLevelName(w.level)}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(w.level, activeJourney)}`}>
+                        {mapToJourneyLevel(w.level || '', activeJourney)}
                       </span>
                       <button 
                         className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full transition-all"

@@ -2,12 +2,16 @@
 import React, { useEffect, useState } from 'react'
 import RequireAuth from '@/components/RequireAuth'
 import api from '@/lib/api'
+import { useJourney } from '@/contexts/JourneyContext'
+import { getJourneyLevels } from '@/lib/levelUtils'
 import { useAuth } from '@/store/auth'
 import { useSearchParams } from 'next/navigation'
 import * as learningPathApi from '@/lib/learningPathApi'
 
 export default function GrammarCoach() {
   const { userId } = useAuth()
+  const { activeJourney } = useJourney()
+  const journeyLevels = getJourneyLevels(activeJourney)
   const searchParams = useSearchParams()
   const activityId = searchParams.get('activity_id')
   const [sentence, setSentence] = useState('')
@@ -306,9 +310,9 @@ export default function GrammarCoach() {
                   onChange={(e)=>setLevelFilter(e.target.value)}
                 >
                   <option value="">All Levels</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
+                  {journeyLevels.map((level) => (
+                    <option key={level} value={level.toLowerCase()}>{level}</option>
+                  ))}
                 </select>
               </div>
               <div className="flex items-center gap-2">
