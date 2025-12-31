@@ -79,6 +79,10 @@ export default function AchievementsPage() {
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         console.log('📊 Stats data:', statsData);
+        console.log('📊 Stats data keys:', Object.keys(statsData));
+        console.log('📊 Stats data.level:', statsData.level);
+        console.log('📊 Stats data.total_xp:', statsData.total_xp);
+        console.log('📊 Stats data.current_streak:', statsData.current_streak);
         setStats(statsData);
       } else {
         const errorText = await statsRes.text();
