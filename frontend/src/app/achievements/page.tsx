@@ -42,11 +42,8 @@ export default function AchievementsPage() {
   const [token, setToken] = useState<string | null>(null);
   
   useEffect(() => {
-    // Get token from localStorage
     const storedToken = localStorage.getItem("token");
-    console.log('🔑 Token found:', storedToken ? 'Yes' : 'No');
     if (!storedToken) {
-      console.log('⚠️ No token, redirecting to login');
       router.push("/login");
       return;
     }
@@ -69,56 +66,33 @@ export default function AchievementsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fetching achievements data...');
       
-      // Fetch stats
       const statsRes = await fetch("http://localhost:8000/api/v1/achievements/stats", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('📊 Stats response status:', statsRes.status);
       if (statsRes.ok) {
         const statsData = await statsRes.json();
-        console.log('📊 Stats data:', statsData);
-        console.log('📊 Stats data keys:', Object.keys(statsData));
-        console.log('📊 Stats data.level:', statsData.level);
-        console.log('📊 Stats data.total_xp:', statsData.total_xp);
-        console.log('📊 Stats data.current_streak:', statsData.current_streak);
         setStats(statsData);
-      } else {
-        const errorText = await statsRes.text();
-        console.error('❌ Stats error:', statsRes.status, errorText);
       }
 
-      // Fetch achievements
       const achievementsRes = await fetch("http://localhost:8000/api/v1/achievements/list", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('🏆 Achievements response status:', achievementsRes.status);
       if (achievementsRes.ok) {
         const achievementsData = await achievementsRes.json();
-        console.log('🏆 Achievements data:', achievementsData);
         setAchievements(achievementsData.achievements || []);
-      } else {
-        const errorText = await achievementsRes.text();
-        console.error('❌ Achievements error:', achievementsRes.status, errorText);
       }
 
-      // Fetch leaderboard
       const leaderboardRes = await fetch("http://localhost:8000/api/v1/achievements/leaderboard/xp", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('👑 Leaderboard response status:', leaderboardRes.status);
       if (leaderboardRes.ok) {
         const leaderboardData = await leaderboardRes.json();
-        console.log('👑 Leaderboard data:', leaderboardData);
         setLeaderboard(leaderboardData.leaderboard || []);
         setUserRank(leaderboardData.user_rank);
-      } else {
-        const errorText = await leaderboardRes.text();
-        console.error('❌ Leaderboard error:', leaderboardRes.status, errorText);
       }
     } catch (error) {
-      console.error('❌ Fetch error:', error);
+      console.error('Error fetching achievements data:', error);
     } finally {
       setLoading(false);
     }
@@ -291,7 +265,7 @@ export default function AchievementsPage() {
                       className={`rounded-lg border-2 p-4 transition-all ${
                         achievement.unlocked
                           ? `${getTierBg(achievement.achievement.tier)} shadow-md`
-                          : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 opacity-60"
+                          : "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 opacity-70"
                       }`}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -300,16 +274,16 @@ export default function AchievementsPage() {
                           {achievement.achievement.tier}
                         </span>
                       </div>
-                      <h3 className="font-bold text-lg mb-1 dark:text-white">{achievement.achievement.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{achievement.achievement.description}</p>
+                      <h3 className="font-bold text-lg mb-1 text-gray-900 dark:text-white">{achievement.achievement.name}</h3>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{achievement.achievement.description}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
                           +{achievement.achievement.xp_reward} XP
                         </span>
                         {achievement.unlocked ? (
-                          <span className="text-green-600 font-bold">✓ Unlocked</span>
+                          <span className="text-green-600 dark:text-green-400 font-bold">✓ Unlocked</span>
                         ) : (
-                          <span className="text-gray-400 dark:text-gray-500">🔒 Locked</span>
+                          <span className="text-gray-600 dark:text-gray-400">🔒 Locked</span>
                         )}
                       </div>
                     </div>

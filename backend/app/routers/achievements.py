@@ -45,18 +45,15 @@ async def get_user_stats(
     db = Depends(get_db)
 ):
     """Get user's gamification statistics"""
-    print(f"[DEBUG] Getting stats for user_id: {user_id}")
     service = AchievementService(db)
     stats = await service.get_user_stats(user_id)
     
     if not stats:
-        print(f"[DEBUG] No stats found for user_id: {user_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User stats not found"
         )
     
-    print(f"[DEBUG] Stats found - level: {stats.level}, xp: {stats.total_xp}, streak: {stats.current_streak}")
     return stats
 
 
