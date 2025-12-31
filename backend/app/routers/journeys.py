@@ -48,13 +48,15 @@ async def select_journey(
                 detail=f"You already have a {request.journey_type} journey. Switch to it instead."
             )
         
+        now = datetime.utcnow()
+        
         new_journey = {
             "id": journey_id,
             "type": request.journey_type,
             "is_primary": request.is_primary or len(learning_journeys.get("journeys", [])) == 0,
             "level": request.level,
-            "created_at": datetime.utcnow(),
-            "last_accessed": datetime.utcnow(),
+            "created_at": now,
+            "last_accessed": now,
             "progress": {
                 "lessons_completed": 0,
                 "scenarios_completed": 0,
@@ -75,16 +77,21 @@ async def select_journey(
         
         if len(learning_journeys["journeys"]) == 1:
             learning_journeys["onboarding_completed"] = True
-            learning_journeys["onboarding_completed_at"] = datetime.utcnow()
+            learning_journeys["onboarding_completed_at"] = now
         
         await users.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {"learning_journeys": learning_journeys}}
         )
         
+        # Serialize datetime for JSON response
+        journey_response = new_journey.copy()
+        journey_response["created_at"] = now.isoformat()
+        journey_response["last_accessed"] = now.isoformat()
+        
         return {
             "success": True,
-            "journey": new_journey,
+            "journey": journey_response,
             "message": f"{request.journey_type.capitalize()} journey created successfully"
         }
     

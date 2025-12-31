@@ -131,7 +131,12 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchJourneys();
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchJourneys();
+    } else {
+      setLoading(false);
+    }
     fetchConfigurations();
   }, []);
 

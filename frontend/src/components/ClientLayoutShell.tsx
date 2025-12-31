@@ -15,6 +15,10 @@ const Navbar = dynamic(() => import('@/components/Navbar'), { ssr: false })
 export default function ClientLayoutShell({ children }: { children: React.ReactNode }) {
   const [err, setErr] = useState<string | null>(null)
   const pathname = usePathname()
+  
+  // Check if we're in onboarding flow
+  const isOnboarding = pathname?.startsWith('/onboarding')
+  
   useEffect(() => {
     return onError((m) => { setErr(m); setTimeout(() => setErr(null), 4000) })
   }, [])
@@ -33,14 +37,14 @@ export default function ClientLayoutShell({ children }: { children: React.ReactN
     <JourneyProvider>
       <div className="container py-6">
         <AuthHydrator />
-        <Navbar />
+        {!isOnboarding && <Navbar />}
         {err && (
           <div className="mb-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">{err}</div>
         )}
         <PageTransition>
           {children}
         </PageTransition>
-        <Footer />
+        {!isOnboarding && <Footer />}
       </div>
     </JourneyProvider>
   )
