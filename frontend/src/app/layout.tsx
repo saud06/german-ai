@@ -20,10 +20,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Ensure theme class is set before hydration to avoid mismatches */}
         {/* Inline a tiny script to avoid any external loading/encoding hiccups */}
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}`}
-        </Script>
-        
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var theme = localStorage.getItem('theme');
+                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (e) {}
+            })();
+          `
+        }} />
       </head>
       <body suppressHydrationWarning>
         <ClientLayoutShell>

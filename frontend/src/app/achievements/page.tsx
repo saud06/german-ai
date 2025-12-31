@@ -44,7 +44,9 @@ export default function AchievementsPage() {
   useEffect(() => {
     // Get token from localStorage
     const storedToken = localStorage.getItem("token");
+    console.log('🔑 Token found:', storedToken ? 'Yes' : 'No');
     if (!storedToken) {
+      console.log('⚠️ No token, redirecting to login');
       router.push("/login");
       return;
     }
@@ -67,35 +69,52 @@ export default function AchievementsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Fetching achievements data...');
       
       // Fetch stats
       const statsRes = await fetch("http://localhost:8000/api/v1/achievements/stats", {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('📊 Stats response status:', statsRes.status);
       if (statsRes.ok) {
         const statsData = await statsRes.json();
+        console.log('📊 Stats data:', statsData);
         setStats(statsData);
+      } else {
+        const errorText = await statsRes.text();
+        console.error('❌ Stats error:', statsRes.status, errorText);
       }
 
       // Fetch achievements
       const achievementsRes = await fetch("http://localhost:8000/api/v1/achievements/list", {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('🏆 Achievements response status:', achievementsRes.status);
       if (achievementsRes.ok) {
         const achievementsData = await achievementsRes.json();
+        console.log('🏆 Achievements data:', achievementsData);
         setAchievements(achievementsData.achievements || []);
+      } else {
+        const errorText = await achievementsRes.text();
+        console.error('❌ Achievements error:', achievementsRes.status, errorText);
       }
 
       // Fetch leaderboard
       const leaderboardRes = await fetch("http://localhost:8000/api/v1/achievements/leaderboard/xp", {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('👑 Leaderboard response status:', leaderboardRes.status);
       if (leaderboardRes.ok) {
         const leaderboardData = await leaderboardRes.json();
+        console.log('👑 Leaderboard data:', leaderboardData);
         setLeaderboard(leaderboardData.leaderboard || []);
         setUserRank(leaderboardData.user_rank);
+      } else {
+        const errorText = await leaderboardRes.text();
+        console.error('❌ Leaderboard error:', leaderboardRes.status, errorText);
       }
     } catch (error) {
+      console.error('❌ Fetch error:', error);
     } finally {
       setLoading(false);
     }
