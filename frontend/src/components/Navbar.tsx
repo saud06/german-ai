@@ -126,17 +126,14 @@ const VoiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Navbar() {
   const { token, userId, name, email, logout } = useAuth()
-  const { activeJourney, allJourneys, switchJourney } = useJourney()
   const [dark, setDark] = useState(false)
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
-  const [journeyOpen, setJourneyOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const profileRef = useRef<HTMLDivElement | null>(null)
   const moreRef = useRef<HTMLDivElement | null>(null)
-  const journeyRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(()=>{
     const saved = localStorage.getItem('theme')
@@ -182,16 +179,6 @@ export default function Navbar() {
       setOpen(false)
       setProfileOpen(false)
       setMoreOpen(false)
-      setJourneyOpen(false)
-    }
-  }
-
-  const handleJourneySwitch = async (journeyId: string) => {
-    try {
-      await switchJourney(journeyId)
-      setJourneyOpen(false)
-    } catch (err) {
-      console.error('Failed to switch journey:', err)
     }
   }
 
@@ -203,9 +190,6 @@ export default function Navbar() {
       }
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
         setMoreOpen(false)
-      }
-      if (journeyRef.current && !journeyRef.current.contains(e.target as Node)) {
-        setJourneyOpen(false)
       }
     }
     document.addEventListener('mousedown', onDocClick)
@@ -298,84 +282,6 @@ export default function Navbar() {
         </nav>
         {/* Right controls */}
         <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-          {/* Journey Switcher */}
-          {token && activeJourney && allJourneys.length > 0 && (
-            <div className="relative" ref={journeyRef}>
-              <button
-                onClick={() => setJourneyOpen(v => !v)}
-                className={clsx(
-                  'hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors',
-                  journeyOpen
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                )}
-                title="Switch Journey"
-              >
-                <span className="text-lg">{activeJourney.configuration?.icon}</span>
-                <span className="text-sm font-medium hidden lg:inline">{activeJourney.configuration?.display_name}</span>
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {journeyOpen && (
-                <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-lg border bg-white dark:bg-zinc-900 shadow-lg backdrop-blur p-2 z-50">
-                  <div className="px-3 py-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-                    Switch Journey
-                  </div>
-                  {allJourneys.map((journey) => {
-                    const isActive = activeJourney.id === journey.id
-                    const config = journey.configuration
-                    return (
-                      <button
-                        key={journey.id}
-                        onClick={() => handleJourneySwitch(journey.id)}
-                        disabled={isActive}
-                        className={clsx(
-                          'w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors',
-                          isActive
-                            ? 'bg-blue-50 dark:bg-blue-900/20 cursor-default'
-                            : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                        )}
-                      >
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
-                          style={{ backgroundColor: `${config?.color}20` }}
-                        >
-                          {config?.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-zinc-900 dark:text-white truncate">
-                              {config?.display_name}
-                            </span>
-                            {isActive && (
-                              <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-medium rounded">
-                                Active
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                            Level: {journey.level}
-                          </div>
-                        </div>
-                      </button>
-                    )
-                  })}
-                  <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                    <Link
-                      href="/settings"
-                      onClick={() => setJourneyOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm text-zinc-600 dark:text-zinc-400"
-                    >
-                      <SettingsIcon className="h-4 w-4" />
-                      <span>Manage Journeys</span>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
           {/* Theme toggle */}
           <button
             aria-label="Toggle theme"
