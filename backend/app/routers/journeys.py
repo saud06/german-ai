@@ -249,14 +249,15 @@ async def get_journey_configurations(db = Depends(get_db)):
         logger.error(f"Error getting configurations: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/active", response_model=JourneyResponse)
+@router.get("/active")
 async def get_active_journey(
     user_id: str = Depends(auth_dep),
     db = Depends(get_db)
 ):
     """Get the active journey with full configuration"""
     
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    users = db["users"]
+    user = await users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -270,11 +271,17 @@ async def get_active_journey(
     active_journey = None
     for journey in journeys_data.get("journeys", []):
         if journey.get("id") == active_id:
-            active_journey = journey
+            active_journey = journey.copy()
             break
     
     if not active_journey:
         return {"active_journey": None}
+    
+    # Serialize datetime fields
+    if "created_at" in active_journey and active_journey["created_at"]:
+        active_journey["created_at"] = active_journey["created_at"].isoformat() if hasattr(active_journey["created_at"], 'isoformat') else str(active_journey["created_at"])
+    if "last_accessed" in active_journey and active_journey["last_accessed"]:
+        active_journey["last_accessed"] = active_journey["last_accessed"].isoformat() if hasattr(active_journey["last_accessed"], 'isoformat') else str(active_journey["last_accessed"])
     
     # Get configuration
     configs = db["journey_configurations"]
