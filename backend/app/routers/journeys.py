@@ -241,43 +241,56 @@ async def get_journey_configurations(db = Depends(get_db)):
         logger.error(f"Error getting configurations: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/active")
-async def get_active_journey(
-    user_id: str = Depends(auth_dep),
-    db = Depends(get_db)
-):
-    """
-    Get the currently active journey with full configuration
-    """
-    try:
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        learning_journeys = user.get("learning_journeys", {})
-        active_journey_id = learning_journeys.get("active_journey_id")
-        
-        if not active_journey_id:
-            return {"active_journey": None}
-        
-        active_journey = next(
-            (j for j in learning_journeys.get("journeys", []) if j["id"] == active_journey_id),
-            None
-        )
-        
-        if not active_journey:
-            return {"active_journey": None}
-        
-        configuration = await db.journey_configurations.find_one({
-            "journey_type": active_journey["type"]
-        })
-        
-        if configuration:
-            configuration["_id"] = str(configuration["_id"])
-            active_journey["configuration"] = configuration
-        
-        return {"active_journey": active_journey}
+@router.get("/active", response_model=JourneyResponse)
+async def get_active_journey(current_user: dict = Depends(get_current_user)):
+    """Get the active journey with full configuration"""
+    user_id = current_user["user_id"]
     
-    except Exception as e:
-        logger.error(f"Error getting active journey: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    journeys_data = user.get("learning_journeys", {})
+    active_id = journeys_data.get("active_journey_id")
+    
+    if not active_id:
+        return {"active_journey": None}
+    
+    # Find active journey
+    active_journey = None
+    for journey in journeys_data.get("journeys", []):
+        if journey.get("id") == active_id:
+            active_journey = journey
+            break
+    
+    if not active_journey:
+        return {"active_journey": None}
+    
+    # Get configuration
+    config = await db.journey_configurations.find_one(
+        {"journey_type": active_journey["type"]}
+    )
+    
+    if config:
+        config["_id"] = str(config["_id"])
+        active_journey["configuration"] = config
+    
+    return {"active_journey": active_journey}
+
+@router.get("/content-mappings")
+async def get_content_mappings(
+    content_type: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get content mappings for journey-aware filtering"""
+    query = {}
+    if content_type:
+        query["content_type"] = content_type
+    
+    mappings = await db.journey_content_mappings.find(query).to_list(length=1000)
+    
+    # Convert ObjectId to string
+    for mapping in mappings:
+        mapping["_id"] = str(mapping["_id"])
+    
+    return {"mappings": mappings}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useJourney } from '@/contexts/JourneyContext';
 
 interface Character {
   id: string;
@@ -43,11 +44,13 @@ interface UserProgress {
 
 export default function ScenariosPage() {
   const router = useRouter();
+  const { activeJourney } = useJourney();
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [userProgress, setUserProgress] = useState<Record<string, UserProgress>>({});
+  const [contentMappings, setContentMappings] = useState<Record<string, any>>({});
 
   const formatText = (text: string) => {
     return text.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
@@ -56,7 +59,32 @@ export default function ScenariosPage() {
   useEffect(() => {
     fetchScenarios();
     fetchUserProgress();
+    fetchContentMappings();
   }, []);
+
+  const fetchContentMappings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://localhost:8000/api/v1/journeys/content-mappings?content_type=scenario', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const mappingsMap: Record<string, any> = {};
+        data.mappings?.forEach((m: any) => {
+          mappingsMap[m.content_id] = m;
+        });
+        setContentMappings(mappingsMap);
+      }
+    } catch (err) {
+      console.error('Failed to fetch content mappings:', err);
+    }
+  };
 
   const fetchScenarios = async () => {
     try {
@@ -104,7 +132,17 @@ export default function ScenariosPage() {
     }
   };
 
-  const filteredScenarios = scenarios.filter(s => 
+  // Sort scenarios by journey priority
+  const sortedScenarios = [...scenarios].sort((a, b) => {
+    if (!activeJourney) return 0;
+    
+    const aPriority = contentMappings[a._id]?.priority_by_purpose?.[activeJourney.type] || 5;
+    const bPriority = contentMappings[b._id]?.priority_by_purpose?.[activeJourney.type] || 5;
+    
+    return bPriority - aPriority; // Higher priority first
+  });
+
+  const filteredScenarios = sortedScenarios.filter(s => 
     filter === 'all' || s.difficulty === filter
   );
 
