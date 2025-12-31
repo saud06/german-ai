@@ -106,8 +106,8 @@ async def vocab_today(db=Depends(get_db), user_id: Optional[str] = None):
 async def vocab_today_batch(
     count: int = Query(default=10, ge=1, le=20),
     level: str = Query(default=""),
-    db=Depends(get_db),
-    user_id: Optional[str] = None
+    user_id: Optional[str] = Query(default=None),
+    db=Depends(get_db)
 ):
     """
     Get vocabulary words for today - same words all day, new words tomorrow
@@ -119,9 +119,12 @@ async def vocab_today_batch(
         if not level and user_id:
             journey_level = await get_user_journey_level(db, user_id)
             level = journey_level or "A1"
+            print(f"[VOCAB] User {user_id} journey level: {journey_level} -> using level: {level}")
         elif not level:
             level = "A1"
+            print(f"[VOCAB] No user_id provided, defaulting to A1")
         
+        print(f"[VOCAB] Generating {count} words at level: {level}")
         vocab_ai = VocabAIService(db)
         words = await vocab_ai.generate_daily_words(level=level, count=count, user_id=user_id)
         
