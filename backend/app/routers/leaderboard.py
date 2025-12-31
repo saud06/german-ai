@@ -60,52 +60,34 @@ async def get_global_leaderboard(
         month_ago = now - timedelta(days=30)
         time_filter = {"updated_at": {"$gte": month_ago}}
     
-    # Get user stats with XP
-    pipeline = [
-        {"$match": time_filter} if time_filter else {"$match": {}},
-        {
-            "$lookup": {
-                "from": "users",
-                "localField": "user_id",
-                "foreignField": "_id",
-                "as": "user"
-            }
-        },
-        {"$unwind": "$user"},
-        {
-            "$project": {
-                "user_id": "$user_id",
-                "name": "$user.name",
-                "email": "$user.email",
-                "total_xp": 1,
-                "level": 1,
-                "streak": 1,
-                "scenarios_completed": {"$ifNull": ["$scenarios_completed", 0]},
-                "achievements_unlocked": {"$ifNull": ["$achievements_unlocked", 0]},
-                "avatar": {"$ifNull": ["$user.avatar", None]}
-            }
-        },
-        {"$sort": {"total_xp": -1}},
-        {"$limit": limit}
-    ]
-    
-    user_stats = await db.user_stats.aggregate(pipeline).to_list(length=limit)
+    # Get user stats sorted by XP
+    query = time_filter if time_filter else {}
+    user_stats = await db.user_stats.find(query).sort("total_xp", -1).limit(limit).to_list(length=limit)
     
     # Add ranks
     entries = []
     current_user_entry = None
     
     for idx, stat in enumerate(user_stats):
+        # Try to get user name from users collection, fallback to user_id
+        try:
+            from bson import ObjectId
+            user_doc = await db.users.find_one({"_id": ObjectId(stat["user_id"])})
+        except:
+            user_doc = await db.users.find_one({"_id": stat["user_id"]})
+        
+        user_name = user_doc.get("name") if user_doc else f"User {stat['user_id'][:8]}"
+        
         entry = LeaderboardEntry(
             user_id=str(stat["user_id"]),
-            name=stat.get("name", "Anonymous"),
+            name=user_name,
             rank=idx + 1,
             total_xp=stat.get("total_xp", 0),
             level=stat.get("level", 1),
-            streak=stat.get("streak", 0),
+            streak=stat.get("current_streak", 0),
             scenarios_completed=stat.get("scenarios_completed", 0),
-            achievements_unlocked=stat.get("achievements_unlocked", 0),
-            avatar=stat.get("avatar"),
+            achievements_unlocked=0,
+            avatar=user_doc.get("avatar") if user_doc else None,
             is_current_user=(str(stat["user_id"]) == user_id)
         )
         entries.append(entry)
@@ -129,9 +111,9 @@ async def get_global_leaderboard(
                 rank=higher_ranked + 1,
                 total_xp=user_stat.get("total_xp", 0),
                 level=user_stat.get("level", 1),
-                streak=user_stat.get("streak", 0),
+                streak=user_stat.get("current_streak", 0),
                 scenarios_completed=user_stat.get("scenarios_completed", 0),
-                achievements_unlocked=user_stat.get("achievements_unlocked", 0),
+                achievements_unlocked=0,
                 avatar=user_doc.get("avatar") if user_doc else None,
                 is_current_user=True
             )
@@ -158,49 +140,26 @@ async def get_streak_leaderboard(
     Get leaderboard ranked by current streak
     """
     # Get user stats sorted by streak
-    pipeline = [
-        {
-            "$lookup": {
-                "from": "users",
-                "localField": "user_id",
-                "foreignField": "_id",
-                "as": "user"
-            }
-        },
-        {"$unwind": "$user"},
-        {
-            "$project": {
-                "user_id": "$user_id",
-                "name": "$user.name",
-                "total_xp": 1,
-                "level": 1,
-                "streak": {"$ifNull": ["$streak", 0]},
-                "scenarios_completed": {"$ifNull": ["$scenarios_completed", 0]},
-                "achievements_unlocked": {"$ifNull": ["$achievements_unlocked", 0]},
-                "avatar": {"$ifNull": ["$user.avatar", None]}
-            }
-        },
-        {"$sort": {"streak": -1, "total_xp": -1}},
-        {"$limit": limit}
-    ]
-    
-    user_stats = await db.user_stats.aggregate(pipeline).to_list(length=limit)
+    user_stats = await db.user_stats.find({}).sort([("current_streak", -1), ("total_xp", -1)]).limit(limit).to_list(length=limit)
     
     # Add ranks
     entries = []
     current_user_entry = None
     
     for idx, stat in enumerate(user_stats):
+        user_doc = await db.users.find_one({"_id": stat["user_id"]})
+        user_name = user_doc.get("name", f"User {stat['user_id'][:8]}") if user_doc else f"User {stat['user_id'][:8]}"
+        
         entry = LeaderboardEntry(
             user_id=str(stat["user_id"]),
-            name=stat.get("name", "Anonymous"),
+            name=user_name,
             rank=idx + 1,
             total_xp=stat.get("total_xp", 0),
             level=stat.get("level", 1),
-            streak=stat.get("streak", 0),
+            streak=stat.get("current_streak", 0),
             scenarios_completed=stat.get("scenarios_completed", 0),
-            achievements_unlocked=stat.get("achievements_unlocked", 0),
-            avatar=stat.get("avatar"),
+            achievements_unlocked=0,
+            avatar=user_doc.get("avatar") if user_doc else None,
             is_current_user=(str(stat["user_id"]) == user_id)
         )
         entries.append(entry)
@@ -214,7 +173,7 @@ async def get_streak_leaderboard(
         if user_stat:
             # Count users with higher streak
             higher_ranked = await db.user_stats.count_documents({
-                "streak": {"$gt": user_stat.get("streak", 0)}
+                "current_streak": {"$gt": user_stat.get("current_streak", 0)}
             })
             
             user_doc = await db.users.find_one({"_id": user_id})
@@ -224,9 +183,9 @@ async def get_streak_leaderboard(
                 rank=higher_ranked + 1,
                 total_xp=user_stat.get("total_xp", 0),
                 level=user_stat.get("level", 1),
-                streak=user_stat.get("streak", 0),
+                streak=user_stat.get("current_streak", 0),
                 scenarios_completed=user_stat.get("scenarios_completed", 0),
-                achievements_unlocked=user_stat.get("achievements_unlocked", 0),
+                achievements_unlocked=0,
                 avatar=user_doc.get("avatar") if user_doc else None,
                 is_current_user=True
             )
@@ -252,49 +211,26 @@ async def get_scenarios_leaderboard(
     Get leaderboard ranked by scenarios completed
     """
     # Get user stats sorted by scenarios
-    pipeline = [
-        {
-            "$lookup": {
-                "from": "users",
-                "localField": "user_id",
-                "foreignField": "_id",
-                "as": "user"
-            }
-        },
-        {"$unwind": "$user"},
-        {
-            "$project": {
-                "user_id": "$user_id",
-                "name": "$user.name",
-                "total_xp": 1,
-                "level": 1,
-                "streak": {"$ifNull": ["$streak", 0]},
-                "scenarios_completed": {"$ifNull": ["$scenarios_completed", 0]},
-                "achievements_unlocked": {"$ifNull": ["$achievements_unlocked", 0]},
-                "avatar": {"$ifNull": ["$user.avatar", None]}
-            }
-        },
-        {"$sort": {"scenarios_completed": -1, "total_xp": -1}},
-        {"$limit": limit}
-    ]
-    
-    user_stats = await db.user_stats.aggregate(pipeline).to_list(length=limit)
+    user_stats = await db.user_stats.find({}).sort([("scenarios_completed", -1), ("total_xp", -1)]).limit(limit).to_list(length=limit)
     
     # Add ranks
     entries = []
     current_user_entry = None
     
     for idx, stat in enumerate(user_stats):
+        user_doc = await db.users.find_one({"_id": stat["user_id"]})
+        user_name = user_doc.get("name", f"User {stat['user_id'][:8]}") if user_doc else f"User {stat['user_id'][:8]}"
+        
         entry = LeaderboardEntry(
             user_id=str(stat["user_id"]),
-            name=stat.get("name", "Anonymous"),
+            name=user_name,
             rank=idx + 1,
             total_xp=stat.get("total_xp", 0),
             level=stat.get("level", 1),
-            streak=stat.get("streak", 0),
+            streak=stat.get("current_streak", 0),
             scenarios_completed=stat.get("scenarios_completed", 0),
-            achievements_unlocked=stat.get("achievements_unlocked", 0),
-            avatar=stat.get("avatar"),
+            achievements_unlocked=0,
+            avatar=user_doc.get("avatar") if user_doc else None,
             is_current_user=(str(stat["user_id"]) == user_id)
         )
         entries.append(entry)
@@ -318,9 +254,9 @@ async def get_scenarios_leaderboard(
                 rank=higher_ranked + 1,
                 total_xp=user_stat.get("total_xp", 0),
                 level=user_stat.get("level", 1),
-                streak=user_stat.get("streak", 0),
+                streak=user_stat.get("current_streak", 0),
                 scenarios_completed=user_stat.get("scenarios_completed", 0),
-                achievements_unlocked=user_stat.get("achievements_unlocked", 0),
+                achievements_unlocked=0,
                 avatar=user_doc.get("avatar") if user_doc else None,
                 is_current_user=True
             )
