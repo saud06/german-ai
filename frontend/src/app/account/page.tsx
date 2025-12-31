@@ -206,23 +206,23 @@ export default function AccountPage() {
   return (
     <>
       <RequireAuth />
-      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8">
         <div className="max-w-6xl mx-auto px-4">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Account & Billing</h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <h1 className="text-3xl font-bold mb-2 dark:text-white">💳 Account & Billing</h1>
+            <p className="text-gray-600 dark:text-gray-300">
               Manage your subscription, billing, and referrals
             </p>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-zinc-800">
+          <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setActiveTab('subscription')}
               className={`px-4 py-2 font-medium transition-colors border-b-2 ${
                 activeTab === 'subscription'
-                  ? 'border-indigo-600 text-indigo-600'
+                  ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
                   : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
@@ -232,7 +232,7 @@ export default function AccountPage() {
               onClick={() => setActiveTab('referrals')}
               className={`px-4 py-2 font-medium transition-colors border-b-2 ${
                 activeTab === 'referrals'
-                  ? 'border-indigo-600 text-indigo-600'
+                  ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
                   : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
@@ -244,11 +244,11 @@ export default function AccountPage() {
           {activeTab === 'subscription' && (
             <div className="space-y-6">
               {/* Current Subscription */}
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border p-6">
-                <h2 className="text-xl font-semibold mb-4">Current Plan</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <h2 className="text-xl font-semibold mb-4 dark:text-white">Current Plan</h2>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold capitalize">{subscription?.tier || 'Free'}</p>
+                    <p className="text-2xl font-bold capitalize dark:text-white">{subscription?.tier || 'Free'}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Status: <span className="capitalize">{subscription?.status || 'Active'}</span>
                     </p>
@@ -272,12 +272,12 @@ export default function AccountPage() {
 
               {/* Pricing Plans */}
               <div>
-                <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
+                <h2 className="text-xl font-semibold mb-4 dark:text-white">Available Plans</h2>
                 <div className="grid md:grid-cols-3 gap-6">
                   {pricingTiers.map((tier) => (
                     <div
                       key={tier.id}
-                      className={`relative bg-white dark:bg-zinc-900 rounded-lg border p-6 ${
+                      className={`relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm ${
                         tier.popular ? 'ring-2 ring-indigo-600' : ''
                       }`}
                     >
@@ -287,13 +287,13 @@ export default function AccountPage() {
                         </div>
                       )}
                       <div className="mb-4">
-                        <h3 className="text-xl font-bold">{tier.name}</h3>
+                        <h3 className="text-xl font-bold dark:text-white">{tier.name}</h3>
                         <div className="mt-2">
                           {tier.price === 0 ? (
-                            <span className="text-3xl font-bold">Free</span>
+                            <span className="text-3xl font-bold dark:text-white">Free</span>
                           ) : (
                             <>
-                              <span className="text-3xl font-bold">${(tier.price! / 100).toFixed(0)}</span>
+                              <span className="text-3xl font-bold dark:text-white">${(tier.price! / 100).toFixed(0)}</span>
                               <span className="text-gray-600 dark:text-gray-400">/{tier.interval}</span>
                             </>
                           )}
@@ -303,7 +303,7 @@ export default function AccountPage() {
                         {tier.features.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm">
                             <span className="text-green-500 mt-0.5">✓</span>
-                            <span>{feature}</span>
+                            <span className="dark:text-gray-300">{feature}</span>
                           </li>
                         ))}
                       </ul>
@@ -337,12 +337,12 @@ export default function AccountPage() {
           {activeTab === 'referrals' && (
             <div className="space-y-6">
               {/* Referral Code */}
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border p-6">
-                <h2 className="text-xl font-semibold mb-4">Your Referral Code</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <h2 className="text-xl font-semibold mb-4 dark:text-white">Your Referral Code</h2>
                 {referralStats?.code ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
-                      <div className="flex-1 bg-gray-100 dark:bg-zinc-800 rounded-lg p-4 font-mono text-lg">
+                      <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-4 font-mono text-lg dark:text-white">
                         {referralStats.code}
                       </div>
                       <button
@@ -384,19 +384,19 @@ export default function AccountPage() {
               {/* Referral Stats */}
               {referralStats && (
                 <div className="grid md:grid-cols-4 gap-4">
-                  <div className="bg-white dark:bg-zinc-900 rounded-lg border p-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
                     <p className="text-sm text-gray-600 dark:text-gray-400">Total Referrals</p>
                     <p className="text-2xl font-bold">{referralStats.total_referrals}</p>
                   </div>
-                  <div className="bg-white dark:bg-zinc-900 rounded-lg border p-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
                     <p className="text-sm text-gray-600 dark:text-gray-400">Successful</p>
                     <p className="text-2xl font-bold text-green-600">{referralStats.successful_referrals}</p>
                   </div>
-                  <div className="bg-white dark:bg-zinc-900 rounded-lg border p-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
                     <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
                     <p className="text-2xl font-bold text-yellow-600">{referralStats.pending_referrals}</p>
                   </div>
-                  <div className="bg-white dark:bg-zinc-900 rounded-lg border p-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
                     <p className="text-sm text-gray-600 dark:text-gray-400">Total Rewards</p>
                     <p className="text-2xl font-bold text-indigo-600">{referralStats.total_rewards} XP</p>
                   </div>
