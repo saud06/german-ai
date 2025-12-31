@@ -218,9 +218,11 @@ export default function LeaderboardPage() {
             <div
               key={entry.user_id}
               className={`rounded-lg border p-4 transition hover:shadow-md ${
-                entry.is_current_user
+                entry.rank <= 3
+                  ? 'border-yellow-300 dark:border-yellow-700 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20'
+                  : entry.is_current_user
                   ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                  : 'bg-white dark:bg-zinc-900'
+                  : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800'
               }`}
             >
               <div className="flex items-center justify-between">
