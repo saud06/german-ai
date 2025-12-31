@@ -114,6 +114,45 @@ async def websocket_endpoint(
         logger.error(f"WebSocket error for {user_id}: {e}")
         manager.disconnect(websocket, user_id)
 
+@router.websocket("/test")
+async def test_websocket(
+    websocket: WebSocket,
+    token: Optional[str] = Query(None)
+):
+    """
+    Simple WebSocket test endpoint
+    
+    Usage:
+    ws://localhost:8000/api/v1/ws/test?token=YOUR_JWT_TOKEN
+    """
+    
+    # Authenticate
+    user_id = "anonymous"
+    if token:
+        try:
+            payload = decode_jwt(token)
+            user_id = payload.get("sub", "anonymous")
+        except Exception as e:
+            await websocket.close(code=1008, reason="Authentication failed")
+            return
+    
+    # Accept connection
+    await websocket.accept()
+    
+    try:
+        # Send welcome message
+        await websocket.send_text(f"✅ Connected! Your user ID: {user_id}")
+        
+        # Echo loop
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"Echo: {data}")
+    
+    except WebSocketDisconnect:
+        logger.info(f"Test WebSocket client {user_id} disconnected")
+    except Exception as e:
+        logger.error(f"Test WebSocket error: {e}")
+
 @router.websocket("/voice")
 async def voice_websocket(
     websocket: WebSocket,

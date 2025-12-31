@@ -257,3 +257,62 @@ async def get_conversation_history(
     except Exception as e:
         logger.error(f"History fetch error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+class TestModelRequest(BaseModel):
+    model: str
+    prompt: str
+
+class TestModelResponse(BaseModel):
+    response: str
+    model: str
+    response_time: int
+
+@router.post("/test-model", response_model=TestModelResponse)
+async def test_model(
+    request: TestModelRequest,
+    user_id: str = Depends(auth_dep)
+):
+    """
+    Test a specific AI model with a prompt
+    """
+    import time
+    import httpx
+    
+    try:
+        start_time = time.time()
+        
+        # Direct call to Ollama API to test specific model
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{settings.OLLAMA_BASE_URL}/api/chat",
+                json={
+                    "model": request.model,
+                    "messages": [
+                        {"role": "system", "content": "You are a helpful German language assistant."},
+                        {"role": "user", "content": request.prompt}
+                    ],
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.7,
+                        "num_predict": 200
+                    }
+                }
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=f"Ollama error: {response.text}")
+            
+            data = response.json()
+            response_time = int((time.time() - start_time) * 1000)  # Convert to ms
+            
+            return TestModelResponse(
+                response=data.get("message", {}).get("content", "No response"),
+                model=request.model,
+                response_time=response_time
+            )
+    
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Model test timed out")
+    except Exception as e:
+        logger.error(f"Model test error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to test model: {str(e)}")
