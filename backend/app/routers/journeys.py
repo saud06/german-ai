@@ -35,24 +35,26 @@ async def select_journey(
             "onboarding_completed": False
         })
         
-        journey_id = f"{request.journey_type}_{len(learning_journeys.get('journeys', []))}"
+        # Convert enum to string value
+        journey_type_str = request.journey_type.value if hasattr(request.journey_type, 'value') else str(request.journey_type)
+        journey_id = f"{journey_type_str}_{len(learning_journeys.get('journeys', []))}"
         
         existing_journey = next(
-            (j for j in learning_journeys.get("journeys", []) if j["type"] == request.journey_type),
+            (j for j in learning_journeys.get("journeys", []) if j["type"] == journey_type_str),
             None
         )
         
         if existing_journey:
             raise HTTPException(
                 status_code=400,
-                detail=f"You already have a {request.journey_type} journey. Switch to it instead."
+                detail=f"You already have a {journey_type_str} journey. Switch to it instead."
             )
         
         now = datetime.utcnow()
         
         new_journey = {
             "id": journey_id,
-            "type": request.journey_type,
+            "type": journey_type_str,
             "is_primary": request.is_primary or len(learning_journeys.get("journeys", [])) == 0,
             "level": request.level,
             "created_at": now,

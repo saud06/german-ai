@@ -48,7 +48,8 @@ export default function OnboardingConfirmation() {
   };
 
   const handleStartJourney = () => {
-    router.push('/dashboard');
+    // Force full page reload to refresh journey context
+    window.location.href = '/dashboard';
   };
 
   if (loading) {

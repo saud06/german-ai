@@ -68,7 +68,8 @@ export default function SelectLevel() {
 
       if (response.ok) {
         localStorage.removeItem('onboarding_journey_type');
-        router.push('/onboarding/confirmation');
+        // Force refresh journey context before navigating
+        window.location.href = '/onboarding/confirmation';
       } else {
         const error = await response.json();
         alert(error.detail || 'Failed to create journey');
