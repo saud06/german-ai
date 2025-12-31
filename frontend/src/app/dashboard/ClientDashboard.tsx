@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
+import { useJourney } from '@/contexts/JourneyContext'
 import LiveTranscriptionCard from '@/components/LiveTranscriptionCard'
 import JourneyDashboard from '@/components/JourneyDashboard'
 
@@ -17,9 +18,17 @@ type ProgressDTO = {
 
 export default function ClientDashboard() {
   const { userId } = useAuth()
+  const { activeJourney, loading } = useJourney()
   const [data, setData] = useState<ProgressDTO | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+
+  // Enforce journey creation - redirect if no active journey
+  useEffect(() => {
+    if (!loading && !activeJourney) {
+      window.location.href = '/onboarding/welcome'
+    }
+  }, [loading, activeJourney])
 
   // Mini Pronunciation widget state
   const [recording, setRecording] = useState(false)
