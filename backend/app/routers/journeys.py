@@ -125,11 +125,24 @@ async def get_my_journeys(
         
         configs_collection = db["journey_configurations"]
         configurations = await configs_collection.find({}).to_list(length=10)
+        
+        # Serialize ObjectId in configurations
+        for config in configurations:
+            if "_id" in config:
+                config["_id"] = str(config["_id"])
+        
         config_map = {config["journey_type"]: config for config in configurations}
         
         journeys_with_config = []
         for journey in learning_journeys.get("journeys", []):
             journey_data = journey.copy()
+            
+            # Serialize datetime fields
+            if "created_at" in journey_data and journey_data["created_at"]:
+                journey_data["created_at"] = journey_data["created_at"].isoformat() if hasattr(journey_data["created_at"], 'isoformat') else str(journey_data["created_at"])
+            if "last_accessed" in journey_data and journey_data["last_accessed"]:
+                journey_data["last_accessed"] = journey_data["last_accessed"].isoformat() if hasattr(journey_data["last_accessed"], 'isoformat') else str(journey_data["last_accessed"])
+            
             journey_data["configuration"] = config_map.get(journey["type"])
             journeys_with_config.append(journey_data)
         
