@@ -373,10 +373,8 @@ class AchievementService:
         unlocked_only: bool = False
     ) -> List[Dict[str, Any]]:
         """Get user's achievements with progress"""
-        # Get all achievements
-        all_achievements = await self.achievements_collection.find(
-            {"secret": False} if not unlocked_only else {}
-        ).to_list(length=100)
+        # Get all achievements (no secret filter since achievements don't have that field)
+        all_achievements = await self.achievements_collection.find({}).to_list(length=100)
         
         # Get user's progress
         user_progress = await self.user_achievements_collection.find(
