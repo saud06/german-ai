@@ -284,7 +284,7 @@ async def test_model(
         # Direct call to Ollama API to test specific model
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
-                f"{settings.OLLAMA_BASE_URL}/api/chat",
+                f"{settings.OLLAMA_HOST}/api/chat",
                 json={
                     "model": request.model,
                     "messages": [
