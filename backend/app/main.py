@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from .config import settings
 from .routers import auth, vocab, grammar, quiz, progress, speech, quiz_v2, paragraph
 from .routers import users, ai_conversation, scenarios, analytics, reviews, achievements, grammar_rules, payments
-from .routers import grammar_exercises, writing_practice, reading_practice, organizations, api_keys, webhooks, admin_dashboard, gdpr, referrals, marketing_analytics, gamification, friends, leaderboard, learning_paths, integrated_learning, websocket
+from .routers import grammar_exercises, writing_practice, reading_practice, organizations, api_keys, webhooks, admin_dashboard, gdpr, referrals, marketing_analytics, gamification, friends, leaderboard, learning_paths, integrated_learning, websocket, journeys
 from .startup import seed_collections
 from .redis_client import redis_client
 from .ollama_client import ollama_client
@@ -125,6 +125,7 @@ app.include_router(leaderboard.router, prefix=API_PREFIX, tags=["leaderboard"])
 app.include_router(learning_paths.router, prefix=API_PREFIX, tags=["learning-paths"])
 app.include_router(integrated_learning.router, tags=["integrated-learning"])
 app.include_router(websocket.router, prefix=API_PREFIX, tags=["websocket"])
+app.include_router(journeys.router, prefix=API_PREFIX, tags=["journeys"])
 
 # Import and register notifications router
 from .routers import notifications
