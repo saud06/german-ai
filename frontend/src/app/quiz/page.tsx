@@ -5,6 +5,7 @@ import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import { useSearchParams } from 'next/navigation'
 import * as learningPathApi from '@/lib/learningPathApi'
+import { useJourney } from '@/contexts/JourneyContext'
 
 interface QuizQuestion {
   id: string
@@ -44,6 +45,7 @@ type QuizStage = 'setup' | 'loading' | 'quiz' | 'results'
 
 export default function QuizPage() {
   const { userId } = useAuth()
+  const { activeJourney } = useJourney()
   const searchParams = useSearchParams()
   const activityId = searchParams.get('activity_id')
   
@@ -76,6 +78,7 @@ export default function QuizPage() {
   const [topics, setTopics] = useState<any[]>([])
   const [levels, setLevels] = useState<any[]>([])
   const [questionTypes, setQuestionTypes] = useState<any[]>([])
+  const [contentMappings, setContentMappings] = useState<Record<string, any>>({})
 
   useEffect(() => {
     setMounted(true)
@@ -127,10 +130,48 @@ export default function QuizPage() {
   const loadTopics = async () => {
     try {
       const r = await api.get('/quiz-v2/topics')
-      setTopics(r.data.topics || [])
+      let topicsList = r.data.topics || []
+      
+      // Sort topics by journey priority if active journey exists
+      if (activeJourney && contentMappings) {
+        topicsList = topicsList.sort((a: any, b: any) => {
+          const aPriority = contentMappings[a.value]?.priority_by_purpose?.[activeJourney.type] || 5
+          const bPriority = contentMappings[b.value]?.priority_by_purpose?.[activeJourney.type] || 5
+          return bPriority - aPriority
+        })
+      }
+      
+      setTopics(topicsList)
       setLevels(r.data.levels || [])
       setQuestionTypes(r.data.question_types || [])
+      
+      // Load content mappings for quiz filtering
+      loadContentMappings()
     } catch (e) {
+    }
+  }
+
+  const loadContentMappings = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const response = await fetch('http://localhost:8000/api/v1/journeys/content-mappings?content_type=quiz', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const mappingsMap: Record<string, any> = {}
+        data.mappings?.forEach((m: any) => {
+          mappingsMap[m.content_id] = m
+        })
+        setContentMappings(mappingsMap)
+      }
+    } catch (err) {
+      console.error('Failed to fetch quiz content mappings:', err)
     }
   }
 
