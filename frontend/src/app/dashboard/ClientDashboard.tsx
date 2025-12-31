@@ -4,6 +4,7 @@ import Link from 'next/link'
 import api from '@/lib/api'
 import { useAuth } from '@/store/auth'
 import LiveTranscriptionCard from '@/components/LiveTranscriptionCard'
+import JourneyDashboard from '@/components/JourneyDashboard'
 
 type ProgressDTO = {
   user_id: string
@@ -147,10 +148,11 @@ export default function ClientDashboard() {
     )
 
   return (
-    <main className="space-y-6">
-      {confetti && <ConfettiOverlay onDone={() => setConfetti(false)} />}
-      {/* Hero */}
-      <section className="rounded-xl border bg-gradient-to-br from-white/70 to-white/40 p-5 backdrop-blur dark:from-zinc-900/60 dark:to-zinc-900/40">
+    <JourneyDashboard>
+      <main className="space-y-6">
+        {confetti && <ConfettiOverlay onDone={() => setConfetti(false)} />}
+        {/* Hero */}
+        <section className="rounded-xl border bg-gradient-to-br from-white/70 to-white/40 p-5 backdrop-blur dark:from-zinc-900/60 dark:to-zinc-900/40">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-2xl font-semibold">Welcome back{data ? ',' : ''} <span className="text-primary">Learner</span>!</h2>
@@ -338,6 +340,7 @@ export default function ClientDashboard() {
         </ul>
       </section>
     </main>
+    </JourneyDashboard>
   )
 }
 

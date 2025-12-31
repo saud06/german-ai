@@ -6,6 +6,7 @@ import PageTransition from '@/components/PageTransition'
 import AuthHydrator from '@/components/AuthHydrator'
 import Footer from '@/components/Footer'
 import { onError } from '@/store/errors'
+import { JourneyProvider } from '@/contexts/JourneyContext'
 
 // Render Navbar only on the client to avoid SSR/client markup mismatch
 // because it depends on localStorage-based auth/theme state.
@@ -29,16 +30,18 @@ export default function ClientLayoutShell({ children }: { children: React.ReactN
   }, [pathname])
 
   return (
-    <div className="container py-6">
-      <AuthHydrator />
-      <Navbar />
-      {err && (
-        <div className="mb-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">{err}</div>
-      )}
-      <PageTransition>
-        {children}
-      </PageTransition>
-      <Footer />
-    </div>
+    <JourneyProvider>
+      <div className="container py-6">
+        <AuthHydrator />
+        <Navbar />
+        {err && (
+          <div className="mb-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">{err}</div>
+        )}
+        <PageTransition>
+          {children}
+        </PageTransition>
+        <Footer />
+      </div>
+    </JourneyProvider>
   )
 }
