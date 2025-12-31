@@ -36,14 +36,20 @@ class AchievementService:
     
     async def get_user_stats(self, user_id: str) -> Optional[UserStats]:
         """Get user's statistics"""
+        print(f"[SERVICE DEBUG] Looking for stats with user_id: {user_id}")
         stats_dict = await self.user_stats_collection.find_one({"user_id": user_id})
+        print(f"[SERVICE DEBUG] Found stats_dict: {stats_dict is not None}")
         if stats_dict:
+            print(f"[SERVICE DEBUG] Stats dict level: {stats_dict.get('level')}, xp: {stats_dict.get('total_xp')}")
             # Convert ObjectId to string for Pydantic
             if "_id" in stats_dict:
                 stats_dict["_id"] = str(stats_dict["_id"])
-            return UserStats(**stats_dict)
+            stats_obj = UserStats(**stats_dict)
+            print(f"[SERVICE DEBUG] Created UserStats object - level: {stats_obj.level}, xp: {stats_obj.total_xp}")
+            return stats_obj
         
         # Create new stats for user
+        print(f"[SERVICE DEBUG] No stats found, creating new for user_id: {user_id}")
         new_stats = UserStats(user_id=user_id)
         stats_data = new_stats.model_dump(by_alias=True, exclude={"id"})
         await self.user_stats_collection.insert_one(stats_data)
