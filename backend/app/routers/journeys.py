@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from ..db import get_db
 from ..security import auth_dep
@@ -242,9 +242,11 @@ async def get_journey_configurations(db = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/active", response_model=JourneyResponse)
-async def get_active_journey(current_user: dict = Depends(get_current_user)):
+async def get_active_journey(
+    user_id: str = Depends(auth_dep),
+    db = Depends(get_db)
+):
     """Get the active journey with full configuration"""
-    user_id = current_user["user_id"]
     
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
@@ -267,7 +269,8 @@ async def get_active_journey(current_user: dict = Depends(get_current_user)):
         return {"active_journey": None}
     
     # Get configuration
-    config = await db.journey_configurations.find_one(
+    configs = db["journey_configurations"]
+    config = await configs.find_one(
         {"journey_type": active_journey["type"]}
     )
     
@@ -280,14 +283,16 @@ async def get_active_journey(current_user: dict = Depends(get_current_user)):
 @router.get("/content-mappings")
 async def get_content_mappings(
     content_type: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+    user_id: str = Depends(auth_dep),
+    db = Depends(get_db)
 ):
     """Get content mappings for journey-aware filtering"""
     query = {}
     if content_type:
         query["content_type"] = content_type
     
-    mappings = await db.journey_content_mappings.find(query).to_list(length=1000)
+    mappings_collection = db["journey_content_mappings"]
+    mappings = await mappings_collection.find(query).to_list(length=1000)
     
     # Convert ObjectId to string
     for mapping in mappings:
