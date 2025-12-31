@@ -84,7 +84,6 @@ export default function VocabPage() {
       const r = await api.get('/vocab/today/batch', { 
         params: { 
           count: 10,
-          level: journeyLevels[0]?.toLowerCase() || 'beginner',
           user_id: userId || undefined 
         } 
       })

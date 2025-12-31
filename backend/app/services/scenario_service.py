@@ -9,6 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.models.scenario import Scenario, Character, Objective
 from app.models.conversation_state import ConversationState, ObjectiveProgress, Message
+from app.utils.journey_utils import get_level_range_for_content
 
 
 class ScenarioService:
@@ -20,10 +21,13 @@ class ScenarioService:
         self.conversation_states_collection = db.conversation_states
     
     async def get_all_scenarios(self, difficulty: Optional[str] = None) -> List[Scenario]:
-        """Get all scenarios, optionally filtered by difficulty"""
+        """Get all scenarios, optionally filtered by difficulty/level"""
         query = {}
         if difficulty:
-            query["difficulty"] = difficulty
+            # Get appropriate level range for the user's level
+            level_range = get_level_range_for_content(difficulty)
+            # Query scenarios that match any of the levels in the range
+            query["difficulty"] = {"$in": level_range}
         
         cursor = self.scenarios_collection.find(query).sort("created_at", -1)
         scenarios = await cursor.to_list(length=100)

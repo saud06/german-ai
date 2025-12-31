@@ -5,6 +5,7 @@ from typing import List, Optional, Any
 from ..db import get_db
 from ..security import auth_dep
 from ..services.vocab_ai_service import VocabAIService
+from ..utils.journey_utils import get_user_journey_level, get_level_range_for_content
 import datetime as dt
 import re
 
@@ -53,11 +54,15 @@ async def vocab_today(db=Depends(get_db), user_id: Optional[str] = None):
     Returns a single word for backward compatibility
     """
     try:
+        # Get user's journey level
+        journey_level = await get_user_journey_level(db, user_id) if user_id else None
+        level = journey_level or "A1"
+        
         # Use AI service to generate daily words
         vocab_ai = VocabAIService(db)
         
         # Generate 10 words for the day (cached), return first one
-        words = await vocab_ai.generate_daily_words(level="A1", count=10, user_id=user_id)
+        words = await vocab_ai.generate_daily_words(level=level, count=10, user_id=user_id)
         
         if words:
             word = words[0]
@@ -71,8 +76,9 @@ async def vocab_today(db=Depends(get_db), user_id: Optional[str] = None):
             return JSONResponse(content=result)
         
         # Fallback to database if AI fails
+        level_range = get_level_range_for_content(level)
         pipeline = [
-            {"$match": {"level": {"$in": ["A1", "A2"]}}},
+            {"$match": {"level": {"$in": level_range}}},
             {"$sample": {"size": 1}},
             {"$project": {"_id": 0, "word": 1, "level": 1, "translation": 1, "example": {"$arrayElemAt": ["$examples", 0]}}},
         ]
@@ -99,15 +105,23 @@ async def vocab_today(db=Depends(get_db), user_id: Optional[str] = None):
 @router.get("/today/batch")
 async def vocab_today_batch(
     count: int = Query(default=10, ge=1, le=20),
-    level: str = Query(default="A1"),
+    level: str = Query(default=""),
     db=Depends(get_db),
     user_id: Optional[str] = None
 ):
     """
     Get vocabulary words for today - same words all day, new words tomorrow
     Words are cached per day and exclude already learned vocabulary
+    Uses user's journey level if not specified
     """
     try:
+        # Get user's journey level if level not provided
+        if not level and user_id:
+            journey_level = await get_user_journey_level(db, user_id)
+            level = journey_level or "A1"
+        elif not level:
+            level = "A1"
+        
         vocab_ai = VocabAIService(db)
         words = await vocab_ai.generate_daily_words(level=level, count=count, user_id=user_id)
         

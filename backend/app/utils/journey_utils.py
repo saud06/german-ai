@@ -1,0 +1,134 @@
+"""
+Utility functions for journey-related operations
+"""
+from typing import Optional
+from bson import ObjectId
+
+
+async def get_user_journey_level(db, user_id: str) -> Optional[str]:
+    """
+    Get the level of the user's active journey
+    Returns the level (e.g., 'A1', 'B1', 'Beginner', etc.) or None
+    """
+    try:
+        user = await db["users"].find_one({"_id": ObjectId(user_id)})
+        if not user:
+            return None
+        
+        journeys_data = user.get("learning_journeys", {})
+        active_id = journeys_data.get("active_journey_id")
+        
+        if not active_id:
+            return None
+        
+        # Find active journey
+        for journey in journeys_data.get("journeys", []):
+            if journey.get("id") == active_id:
+                return journey.get("level")
+        
+        return None
+    except Exception as e:
+        print(f"Error getting user journey level: {e}")
+        return None
+
+
+async def get_user_journey_info(db, user_id: str) -> dict:
+    """
+    Get the user's active journey information
+    Returns dict with level, type, and other journey info
+    """
+    try:
+        user = await db["users"].find_one({"_id": ObjectId(user_id)})
+        if not user:
+            return {"level": None, "type": None, "id": None}
+        
+        journeys_data = user.get("learning_journeys", {})
+        active_id = journeys_data.get("active_journey_id")
+        
+        if not active_id:
+            return {"level": None, "type": None, "id": None}
+        
+        # Find active journey
+        for journey in journeys_data.get("journeys", []):
+            if journey.get("id") == active_id:
+                return {
+                    "level": journey.get("level"),
+                    "type": journey.get("type"),
+                    "id": journey.get("id"),
+                    "is_primary": journey.get("is_primary", False)
+                }
+        
+        return {"level": None, "type": None, "id": None}
+    except Exception as e:
+        print(f"Error getting user journey info: {e}")
+        return {"level": None, "type": None, "id": None}
+
+
+def normalize_level_for_query(level: str, journey_type: Optional[str] = None) -> dict:
+    """
+    Convert a level to a MongoDB query filter
+    Handles both CEFR levels (A1, A2, etc.) and difficulty levels (Beginner, Intermediate, Advanced)
+    
+    For CEFR levels: Returns exact match
+    For difficulty levels: Returns range of CEFR levels
+    """
+    if not level:
+        return {}
+    
+    level_lower = level.lower()
+    
+    # If it's already a CEFR level, return exact match
+    if level_lower in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2']:
+        return {"level": level.upper()}
+    
+    # Map difficulty levels to CEFR ranges
+    difficulty_map = {
+        "beginner": ["A1", "A2"],
+        "intermediate": ["B1", "B2"],
+        "advanced": ["C1", "C2"]
+    }
+    
+    if level_lower in difficulty_map:
+        return {"level": {"$in": difficulty_map[level_lower]}}
+    
+    # Default: try exact match
+    return {"level": level}
+
+
+def get_level_range_for_content(level: str) -> list[str]:
+    """
+    Get appropriate content levels for a given user level
+    Returns current level and potentially easier levels for variety
+    
+    For example:
+    - B1 user gets: B1, A2 content (current + one level below)
+    - A1 user gets: A1 content only
+    - Beginner gets: A1, A2 content
+    """
+    level_lower = level.lower()
+    
+    # CEFR levels
+    cefr_progression = {
+        'a1': ['A1'],
+        'a2': ['A2', 'A1'],
+        'b1': ['B1', 'A2'],
+        'b2': ['B2', 'B1'],
+        'c1': ['C1', 'B2'],
+        'c2': ['C2', 'C1']
+    }
+    
+    if level_lower in cefr_progression:
+        return cefr_progression[level_lower]
+    
+    # Difficulty levels
+    difficulty_map = {
+        'beginner': ['A1', 'A2'],
+        'intermediate': ['B1', 'B2'],
+        'advanced': ['C1', 'C2']
+    }
+    
+    if level_lower in difficulty_map:
+        return difficulty_map[level_lower]
+    
+    # Default: return the level as-is
+    return [level.upper()]

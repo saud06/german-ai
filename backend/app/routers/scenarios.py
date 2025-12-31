@@ -28,6 +28,7 @@ from app.ollama_client import get_ollama
 from app.piper_client import piper_client
 from app.whisper_client import whisper_client
 from app.middleware.subscription import require_scenario_access, track_scenario_usage, require_ai_access, track_ai_usage_minutes
+from app.utils.journey_utils import get_user_journey_level, get_level_range_for_content
 
 router = APIRouter(prefix="/api/v1/scenarios", tags=["scenarios"])
 
@@ -42,7 +43,13 @@ async def list_scenarios(
     user_id: str = Depends(auth_dep),
     db = Depends(get_db)
 ):
-    """Get all available scenarios"""
+    """Get all available scenarios - filtered by user's journey level if no difficulty specified"""
+    # If no difficulty filter, use user's journey level
+    if not difficulty:
+        journey_level = await get_user_journey_level(db, user_id)
+        if journey_level:
+            difficulty = journey_level
+    
     service = ScenarioService(db)
     scenarios = await service.get_all_scenarios(difficulty=difficulty)
     
