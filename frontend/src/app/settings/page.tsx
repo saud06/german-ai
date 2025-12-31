@@ -5,6 +5,7 @@ import RequireAuth from '@/components/RequireAuth'
 import { useAuth } from '@/store/auth'
 import { APP_VERSION } from '@/lib/appInfo'
 import { getMe, updateMe, changePassword } from '@/lib/users'
+import JourneyManagement from '@/components/JourneyManagement'
 
 export default function SettingsPage() {
   const { userId, token, name, email, setProfile } = useAuth()
@@ -149,6 +150,10 @@ export default function SettingsPage() {
           </div>
           <div className="text-xs text-zinc-500">User ID: <span className="font-mono">{userId}</span></div>
         </form>
+      </section>
+
+      <section className="rounded-md border p-4">
+        <JourneyManagement />
       </section>
 
       <section className="rounded-md border p-4">
