@@ -114,12 +114,6 @@ export default function SelectLevel() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <div 
-            className="inline-block w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-4"
-            style={{ backgroundColor: `${config.color}20` }}
-          >
-            {config.icon}
-          </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Choose Your Starting Level
           </h1>
@@ -143,13 +137,12 @@ export default function SelectLevel() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div 
-                    className="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg"
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
                     style={{ 
-                      backgroundColor: selectedLevel === level ? config.color : `${config.color}20`,
-                      color: selectedLevel === level ? 'white' : config.color
+                      backgroundColor: selectedLevel === level ? config.color : `${config.color}20`
                     }}
                   >
-                    {level}
+                    {getLevelIcon(level, config.level_system.type)}
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -218,6 +211,26 @@ export default function SelectLevel() {
       </div>
     </div>
   );
+}
+
+function getLevelIcon(level: string, systemType: string): string {
+  if (systemType === 'cefr') {
+    const icons: Record<string, string> = {
+      'A1': '🌱',
+      'A2': '🌿',
+      'B1': '🌳',
+      'B2': '🎯',
+      'C1': '🏆',
+    };
+    return icons[level] || '📚';
+  } else {
+    const icons: Record<string, string> = {
+      'Beginner': '🌱',
+      'Intermediate': '🎯',
+      'Advanced': '🏆',
+    };
+    return icons[level] || '📚';
+  }
 }
 
 function getLevelDescription(level: string, systemType: string): string {
