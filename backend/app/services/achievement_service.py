@@ -38,11 +38,15 @@ class AchievementService:
         """Get user's statistics"""
         stats_dict = await self.user_stats_collection.find_one({"user_id": user_id})
         if stats_dict:
+            # Convert ObjectId to string for Pydantic
+            if "_id" in stats_dict:
+                stats_dict["_id"] = str(stats_dict["_id"])
             return UserStats(**stats_dict)
         
         # Create new stats for user
         new_stats = UserStats(user_id=user_id)
-        await self.user_stats_collection.insert_one(new_stats.dict(by_alias=True, exclude={"id"}))
+        stats_data = new_stats.model_dump(by_alias=True, exclude={"id"})
+        await self.user_stats_collection.insert_one(stats_data)
         return new_stats
     
     async def update_user_stats(self, user_id: str, updates: Dict[str, Any]) -> UserStats:
