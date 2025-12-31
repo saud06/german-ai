@@ -162,7 +162,15 @@ class UserStats(BaseModel):
     class Config:
         populate_by_name = True
         arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+        json_encoders = {ObjectId: str, datetime: lambda v: v.isoformat() if v else None}
+        json_schema_extra = {
+            "example": {
+                "user_id": "123",
+                "total_xp": 1250,
+                "level": 5,
+                "current_streak": 7
+            }
+        }
 
 
 # Achievement definitions
