@@ -24,7 +24,8 @@ async def select_journey(
     Add a new journey for the user or update existing
     """
     try:
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        users = db["users"]
+        user = await users.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -76,7 +77,7 @@ async def select_journey(
             learning_journeys["onboarding_completed"] = True
             learning_journeys["onboarding_completed_at"] = datetime.utcnow()
         
-        await db.users.update_one(
+        await users.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {"learning_journeys": learning_journeys}}
         )
@@ -102,7 +103,8 @@ async def get_my_journeys(
     Get all journeys for the current user
     """
     try:
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        users = db["users"]
+        user = await users.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -112,7 +114,8 @@ async def get_my_journeys(
             "onboarding_completed": False
         })
         
-        configurations = await db.journey_configurations.find({}).to_list(length=10)
+        configs_collection = db["journey_configurations"]
+        configurations = await configs_collection.find({}).to_list(length=10)
         config_map = {config["journey_type"]: config for config in configurations}
         
         journeys_with_config = []
@@ -141,7 +144,8 @@ async def switch_journey(
     Switch to a different active journey
     """
     try:
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        users = db["users"]
+        user = await users.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -155,15 +159,10 @@ async def switch_journey(
         if not journey_exists:
             raise HTTPException(status_code=404, detail="Journey not found")
         
-        for journey in learning_journeys["journeys"]:
-            if journey["id"] == request.journey_id:
-                journey["last_accessed"] = datetime.utcnow()
-        
-        learning_journeys["active_journey_id"] = request.journey_id
-        
-        await db.users.update_one(
+        await db["users"].update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"learning_journeys": learning_journeys}}
+            {"$set": {"learning_journeys.active_journey_id": request.journey_id, "learning_journeys.journeys.$[elem].last_accessed": datetime.utcnow()}},
+            array_filters=[{"elem.id": request.journey_id}]
         )
         
         return {
@@ -188,7 +187,8 @@ async def remove_journey(
     Remove a journey (must keep at least one)
     """
     try:
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        users = db["users"]
+        user = await users.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -208,7 +208,7 @@ async def remove_journey(
         if learning_journeys.get("active_journey_id") == journey_id:
             learning_journeys["active_journey_id"] = learning_journeys["journeys"][0]["id"]
         
-        await db.users.update_one(
+        await db["users"].update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {"learning_journeys": learning_journeys}}
         )
@@ -230,7 +230,8 @@ async def get_journey_configurations(db = Depends(get_db)):
     Get all available journey configurations
     """
     try:
-        configurations = await db.journey_configurations.find({}).to_list(length=10)
+        configs_collection = db["journey_configurations"]
+        configurations = await configs_collection.find({}).to_list(length=10)
         
         for config in configurations:
             config["_id"] = str(config["_id"])
