@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-DB_NAME = os.getenv("DB_NAME", "german_learning")
+DB_NAME = os.getenv("MONGODB_DB_NAME", "german_ai")
 
 async def check():
     client = AsyncIOMotorClient(MONGODB_URI)

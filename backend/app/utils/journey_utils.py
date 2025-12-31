@@ -11,24 +11,37 @@ async def get_user_journey_level(db, user_id: str) -> Optional[str]:
     Returns the level (e.g., 'A1', 'B1', 'Beginner', etc.) or None
     """
     try:
+        print(f"[JOURNEY] Looking up user_id: {user_id}")
         user = await db["users"].find_one({"_id": ObjectId(user_id)})
         if not user:
+            print(f"[JOURNEY] User not found with ID: {user_id}")
             return None
         
+        print(f"[JOURNEY] Found user: {user.get('email')}")
         journeys_data = user.get("learning_journeys", {})
         active_id = journeys_data.get("active_journey_id")
         
+        print(f"[JOURNEY] Active journey ID: {active_id}")
+        print(f"[JOURNEY] Total journeys: {len(journeys_data.get('journeys', []))}")
+        
         if not active_id:
+            print(f"[JOURNEY] No active journey ID found")
             return None
         
         # Find active journey
         for journey in journeys_data.get("journeys", []):
+            print(f"[JOURNEY] Checking journey: {journey.get('id')} (type: {journey.get('type')}, level: {journey.get('level')})")
             if journey.get("id") == active_id:
-                return journey.get("level")
+                level = journey.get("level")
+                print(f"[JOURNEY] ✅ Found active journey level: {level}")
+                return level
         
+        print(f"[JOURNEY] Active journey not found in journeys list")
         return None
     except Exception as e:
-        print(f"Error getting user journey level: {e}")
+        print(f"[JOURNEY] Error getting user journey level: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
