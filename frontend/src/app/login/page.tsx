@@ -26,7 +26,8 @@ export default function LoginPage() {
         const me = await getMe()
         setProfile(me.name, me.email)
       } catch {}
-      router.replace('/dashboard', { scroll: false })
+      // Redirect to onboarding/welcome - it will handle routing to dashboard if journey exists
+      window.location.href = '/onboarding/welcome'
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Login failed')
     } finally {

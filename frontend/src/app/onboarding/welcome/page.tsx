@@ -1,9 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useJourney } from '@/contexts/JourneyContext';
+import { useEffect } from 'react';
 
 export default function OnboardingWelcome() {
   const router = useRouter();
+  const { activeJourney, loading } = useJourney();
+
+  // If user already has a journey, redirect to dashboard
+  useEffect(() => {
+    if (!loading && activeJourney) {
+      window.location.href = '/dashboard';
+    }
+  }, [loading, activeJourney]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
