@@ -105,23 +105,22 @@ class VocabAIService:
         prompt = f"""Generate {count} German vocabulary words at {level} level ({level_description.get(level, 'beginner level')}).{exclude_text}
 
 For each word, provide:
-1. The German word
+1. The German word (with article for nouns: der/die/das)
 2. English translation
 3. A practical example sentence in German using the word
 
-Format your response as a JSON array like this:
-[
-  {{"word": "Haus", "translation": "house", "example": "Ich wohne in einem großen Haus."}},
-  {{"word": "Wasser", "translation": "water", "example": "Ich trinke jeden Tag viel Wasser."}}
-]
+CRITICAL: Return ONLY a valid JSON array. No explanations, no markdown, no extra text.
 
-Make sure the words are:
+Format:
+[{{"word":"Haus","translation":"house","example":"Ich wohne in einem großen Haus."}},{{"word":"Wasser","translation":"water","example":"Ich trinke jeden Tag viel Wasser."}}]
+
+Requirements:
 - Appropriate for {level} level
 - Useful for everyday conversation
-- Include a variety of word types (nouns, verbs, adjectives)
-- Have natural, practical example sentences
+- Mix of nouns, verbs, adjectives
+- Natural example sentences
 
-Return ONLY the JSON array, no additional text."""
+Return ONLY the JSON array."""
 
         try:
             # Check if Ollama is available
@@ -177,7 +176,11 @@ Return ONLY the JSON array, no additional text."""
             match_criteria = {"level": {"$in": ["B1", "B2"]}}
         elif level_lower == "advanced":
             match_criteria = {"level": {"$in": ["C1", "C2"]}}
+        elif level_lower in ["a1", "a2", "b1", "b2", "c1", "c2"]:
+            # CEFR level - convert to uppercase for database query
+            match_criteria = {"level": level.upper()}
         else:
+            # Unknown level - try exact match
             match_criteria = {"level": level}
         
         if exclude_words:
