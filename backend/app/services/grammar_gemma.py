@@ -54,6 +54,16 @@ async def check_grammar_with_gemma(sentence: str) -> SentenceResult:
         client = ollama.AsyncClient(host=settings.OLLAMA_HOST)
         model = settings.OLLAMA_MODEL_GRAMMAR
         
+        print(f"[GEMMA GRAMMAR] Host: {settings.OLLAMA_HOST}, Model: {model}")
+        
+        # Test connection and list models
+        try:
+            models_list = await client.list()
+            available_models = [m['name'] for m in models_list.get('models', [])]
+            print(f"[GEMMA GRAMMAR] Available models: {available_models}")
+        except Exception as e:
+            print(f"[GEMMA GRAMMAR] Failed to list models: {e}")
+        
         prompt = f"""Analyze this German sentence for grammar errors:
 
 "{sentence}"
