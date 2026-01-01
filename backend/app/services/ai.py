@@ -49,32 +49,32 @@ async def grammar_check(db, sentence: str) -> SentenceResult:
         print(f"[AI GRAMMAR] Ollama available: {ollama_client.is_available}")
         
         if ollama_client.is_available:
-            prompt = f"""You are a strict German grammar checker. Analyze this sentence carefully:
+            prompt = f"""You are a strict German grammar checker. Analyze this sentence:
 
 "{sentence}"
 
-Check for these common errors:
-1. Article gender (der/die/das)
-2. Case endings (Nominativ/Akkusativ/Dativ/Genitiv)
-3. Verb conjugation (ich mache, du machst, er macht)
-4. Adjective endings
-5. Word order
+Check for these errors:
+1. Article gender (der/die/das) - match noun gender
+2. Case endings (Nominativ/Akkusativ/Dativ/Genitiv) - match sentence structure
+3. Verb conjugation (ich mache, du machst, er macht) - match subject
+4. Adjective endings - match gender, case, article
+5. Word order - verb position, time-manner-place
 
-Return ONLY valid JSON:
+Return ONLY this JSON structure (fill with YOUR analysis of the sentence above):
 {{
-  "is_correct": false,
-  "corrected": "Das ist meine Meinung.",
-  "explanation": "Changed 'meiner' to 'meine' (nominative case)",
-  "suggested_variation": "Meiner Meinung nach...",
-  "tips": ["Use nominative after 'ist'"]
+  "is_correct": true_or_false,
+  "corrected": "the_corrected_sentence_here",
+  "explanation": "what_you_changed_and_why",
+  "suggested_variation": "alternative_phrasing",
+  "tips": ["grammar_tip_1", "grammar_tip_2"]
 }}
 
-CRITICAL RULES:
-- Preserve original capitalization (Das stays Das, not das)
-- If ANY error exists: is_correct=false
-- corrected must be the FIXED German sentence
-- Be strict - catch all grammar errors
-- Keep explanation in German or English
+CRITICAL:
+- Analyze the EXACT sentence provided above
+- Preserve original capitalization
+- If errors exist: is_correct=false, corrected=fixed version
+- If perfect: is_correct=true, corrected=same as original
+- DO NOT copy examples - analyze the actual sentence
 
 JSON:"""
             
