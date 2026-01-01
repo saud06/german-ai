@@ -64,32 +64,33 @@ async def check_grammar_with_gemma(sentence: str) -> SentenceResult:
         except Exception as e:
             print(f"[GEMMA GRAMMAR] Failed to list models: {e}")
         
-        prompt = f"""Analyze this German sentence for grammar errors:
+        prompt = f"""You are a strict German grammar checker. Analyze ONLY for actual grammar errors:
 
 "{sentence}"
 
-Check for:
-1. Subject-verb agreement (singular/plural)
-2. Article gender (der/die/das)
-3. Case endings (Nominativ/Akkusativ/Dativ/Genitiv)
-4. Verb conjugation
-5. Adjective endings
+Grammar errors to check:
+1. Subject-verb agreement: "Ich haben" → "Ich habe"
+2. Article gender: "die Mann" → "der Mann"
+3. Case endings: "mit die Frau" → "mit der Frau"
+4. Verb conjugation: "Er gehen" → "Er geht"
+5. Adjective endings: "ein gute Mann" → "ein guter Mann"
 
 Return ONLY valid JSON:
 {{
-  "is_correct": false,
-  "corrected": "corrected German sentence",
+  "is_correct": true/false,
+  "corrected": "corrected sentence",
   "explanation": "what was wrong",
   "suggested_variation": "alternative phrasing",
   "tips": ["grammar tip"]
 }}
 
-CRITICAL:
-- DO NOT translate to English - keep all text in GERMAN
-- If perfect: is_correct=true, corrected=same as original
-- If errors: is_correct=false, corrected=fixed German sentence
-- Preserve capitalization exactly
-- Return corrected GERMAN sentence, not English translation
+CRITICAL RULES:
+1. If the sentence is grammatically CORRECT, set is_correct=true and corrected=EXACT same as original
+2. Only mark is_correct=false if there is an ACTUAL grammar error (wrong verb form, wrong case, wrong gender)
+3. DO NOT "correct" stylistic choices or add words that aren't errors
+4. DO NOT translate to English - all text must be in GERMAN
+5. "Das ist meine Meinung" is CORRECT (don't change to "meiner Meinung nach")
+6. Only fix actual mistakes, not style preferences
 
 JSON:"""
         
