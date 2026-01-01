@@ -24,6 +24,8 @@ function similarity(a: string, b: string): number {
   const s1 = (a || '').toLowerCase().trim()
   const s2 = (b || '').toLowerCase().trim()
   const m = s1.length, n = s2.length
+
+  // Simple word-level Levenshtein
   if (m === 0 && n === 0) return 100
   const dp = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0))
   for (let i = 0; i <= m; i++) dp[i][0] = i
