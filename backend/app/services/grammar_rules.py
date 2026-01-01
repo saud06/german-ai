@@ -76,6 +76,10 @@ def check_verb_conjugation(sentence: str) -> Optional[Tuple[str, str]]:
     Returns (corrected_sentence, explanation) or None
     """
     patterns = [
+        # "Ich haben" -> should be "Ich habe"
+        (r'\bIch\s+haben\b', r'Ich habe',
+         "Changed 'haben' to 'habe' (first person singular conjugation)"),
+        
         # "Ich machen" -> should be "Ich mache"
         (r'\bIch\s+machen\b', r'Ich mache',
          "Changed 'machen' to 'mache' (first person singular conjugation)"),
@@ -83,6 +87,10 @@ def check_verb_conjugation(sentence: str) -> Optional[Tuple[str, str]]:
         # "Er/Sie/Es machen" -> should be "macht"
         (r'\b(Er|Sie|Es)\s+machen\b', r'\1 macht',
          "Changed 'machen' to 'macht' (third person singular conjugation)"),
+        
+        # "Er/Sie/Es haben" -> should be "hat"
+        (r'\b(Er|Sie|Es)\s+haben\b', r'\1 hat',
+         "Changed 'haben' to 'hat' (third person singular conjugation)"),
     ]
     
     for pattern, replacement, explanation in patterns:
