@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from ..security import auth_dep
-from ..services.ai import grammar_check
+from ..services.grammar_gemma import check_grammar_with_gemma
 from ..db import get_db
 from ..services.typing_utils import SentenceResult
 from ..utils.journey_utils import get_user_journey_level, get_level_range_for_content
@@ -17,23 +17,20 @@ class GrammarRequest(BaseModel):
 async def grammar(payload: GrammarRequest, db=Depends(get_db), _: str = Depends(auth_dep)):
     print(f"[GRAMMAR CHECK] Checking sentence: '{payload.sentence}'")
     try:
-        res = await grammar_check(db, payload.sentence)
+        res = await check_grammar_with_gemma(payload.sentence)
         print(f"[GRAMMAR CHECK] Result - is_correct: {res.source == 'ok'}, corrected: '{res.corrected}'")
         return res.model_dump()
-    except ValueError as e:
-        print(f"[GRAMMAR CHECK] ValueError: {e}")
-        # For authenticated endpoint, return a friendly OK when no issues detected by rules/AI
-        ok = SentenceResult(
+    except Exception as e:
+        print(f"[GRAMMAR CHECK] Error: {e}")
+        # Return error result
+        error_result = SentenceResult(
             original=payload.sentence,
             corrected=payload.sentence,
-            explanation="No issues detected by available checks.",
+            explanation=f"Grammar check failed: {str(e)}",
             suggested_variation=payload.sentence,
-            source="ok",
+            source="error",
         )
-        return ok.model_dump()
-    except Exception as e:
-        print(f"[GRAMMAR CHECK] Unexpected error: {e}")
-        raise
+        return error_result.model_dump()
 
 class GrammarRequestPublic(BaseModel):
     user_id: str | None = None
@@ -46,10 +43,18 @@ async def grammar_public(payload: GrammarRequestPublic, db=Depends(get_db)):
     Intended for trial/unauthenticated usage from the Grammar Coach page.
     """
     try:
-        res = await grammar_check(db, payload.sentence)
+        res = await check_grammar_with_gemma(payload.sentence)
         return res.model_dump()
-    except ValueError:
-        raise HTTPException(status_code=503, detail="No grammar service available (AI off and no DB rule matched)")
+    except Exception as e:
+        # Return error result for public endpoint
+        error_result = SentenceResult(
+            original=payload.sentence,
+            corrected=payload.sentence,
+            explanation=f"Grammar check failed: {str(e)}",
+            suggested_variation=payload.sentence,
+            source="error",
+        )
+        return error_result.model_dump()
 
 class GrammarSaveRequest(BaseModel):
     original: str

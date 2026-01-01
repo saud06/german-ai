@@ -41,38 +41,18 @@ async def grammar_check(db, sentence: str) -> SentenceResult:
     
     print(f"[AI GRAMMAR] Starting grammar check for: '{sentence}'")
     
-    # Try rule-based checking first (more reliable for common errors)
+    # Use Gemma 2 directly for all grammar checking
     try:
-        from .grammar_rules import check_grammar_rules
-        
-        rule_result = check_grammar_rules(sentence)
-        if rule_result:
-            corrected, explanation = rule_result
-            print(f"[GRAMMAR RULES] Found error - corrected: '{corrected}'")
-            
-            highlights = _align_words(sentence, corrected)
-            return SentenceResult(
-                original=sentence,
-                corrected=corrected,
-                explanation=explanation,
-                suggested_variation=corrected,
-                source="rule_based",
-                highlights=highlights,
-                tips=["Review German grammar rules"],
-                rule_source="pattern_matching",
-            )
-    except Exception as e:
-        print(f"[GRAMMAR RULES] Error: {e}")
-    
-    # Try Ollama (Mistral 7B) as fallback - local, fast, free
-    try:
-        from ..ollama_client import ollama_client
+        import ollama
         import json
         
-        print(f"[AI GRAMMAR] Ollama available: {ollama_client.is_available}")
+        # Use Gemma 2 - better for German grammar than Mistral
+        client = ollama.AsyncClient(host=settings.OLLAMA_HOST)
+        grammar_model = settings.OLLAMA_MODEL_GRAMMAR
         
-        if ollama_client.is_available:
-            prompt = f"""Analyze this German sentence for grammar errors:
+        print(f"[AI GRAMMAR] Using {grammar_model} for grammar checking")
+        
+        prompt = f"""Analyze this German sentence for grammar errors:
 
 "{sentence}"
 
@@ -101,24 +81,24 @@ CRITICAL RULES:
 - Return the corrected GERMAN sentence, not English translation
 
 JSON:"""
-            
-            response = await ollama_client.chat(
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-                keep_alive="5m"
-            )
-            
-            content = response.get('message', {}).get('content', '').strip()
-            print(f"[AI GRAMMAR] Raw AI response: {content[:500]}")
-            
-            # Extract JSON from response - try multiple methods
-            data = None
-            
-            # Method 1: Direct JSON parse
-            try:
-                data = json.loads(content)
-            except:
-                pass
+        
+        response = await client.chat(
+            model=grammar_model,
+            messages=[{"role": "user", "content": prompt}],
+            options={"temperature": 0.0}
+        )
+        
+        content = response.get('message', {}).get('content', '').strip()
+        print(f"[AI GRAMMAR] Raw AI response: {content[:500]}")
+        
+        # Extract JSON from response - try multiple methods
+        data = None
+        
+        # Method 1: Direct JSON parse
+        try:
+            data = json.loads(content)
+        except:
+            pass
             
             # Method 2: Extract from markdown code blocks
             if not data:
