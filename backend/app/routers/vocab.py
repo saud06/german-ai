@@ -153,23 +153,32 @@ async def vocab_today_batch(
 
 
 @router.get("/search")
-async def vocab_search(q: str = "", level: Optional[str] = None, limit: int = 25, db=Depends(get_db)):
+async def vocab_search(
+    q: str = "", 
+    level: Optional[str] = None, 
+    user_id: Optional[str] = Query(default=None),
+    limit: int = 25, 
+    db=Depends(get_db)
+):
+    print(f"[VOCAB SEARCH] q='{q}', level='{level}', user_id='{user_id}'")
+    
+    # Get user's journey level if user_id provided and no level specified
+    if not level and user_id:
+        journey_level = await get_user_journey_level(db, user_id)
+        if journey_level:
+            level = journey_level
+            print(f"[VOCAB SEARCH] Using journey level: {level}")
+    
     term = q.strip()
     rx = re.compile(re.escape(term), re.IGNORECASE) if term else None
     criteria: dict[str, Any] = {}
     if rx:
         criteria["$or"] = [{"word": rx}, {"translation": rx}, {"examples": rx}]
     if level:
-        # Convert difficulty level to CEFR for database query
-        level_lower = level.lower()
-        if level_lower == "beginner":
-            criteria["level"] = {"$in": ["A1", "A2"]}
-        elif level_lower == "intermediate":
-            criteria["level"] = {"$in": ["B1", "B2"]}
-        elif level_lower == "advanced":
-            criteria["level"] = {"$in": ["C1", "C2"]}
-        else:
-            criteria["level"] = level
+        # Use level range for content variety
+        level_range = get_level_range_for_content(level)
+        print(f"[VOCAB SEARCH] Level range for {level}: {level_range}")
+        criteria["level"] = {"$in": level_range}
     cur = db["seed_words"].find(criteria or {}).limit(int(limit))
     items = await cur.to_list(length=limit)
     out = []

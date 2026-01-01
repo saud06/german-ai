@@ -156,15 +156,25 @@ export default function VocabPage() {
 
   // Browse
   const [q, setQ] = useState('')
-  const [level, setLevel] = useState('')
   const [bLoading, setBLoading] = useState(false)
   const [results, setResults] = useState<SeedWord[]>([])
   const [bSavingId, setBSavingId] = useState<string | null>(null)
   
   const browseVocab = async () => {
+    if (!userId) {
+      console.log('[VOCAB] Skipping browse - userId not available yet')
+      return
+    }
+    
     try {
       setBLoading(true)
-      const r = await api.get('/vocab/search', { params: { q, level: level || undefined, limit: 30 } })
+      const r = await api.get('/vocab/search', { 
+        params: { 
+          q, 
+          user_id: userId,
+          limit: 30 
+        } 
+      })
       setResults(r.data || [])
     } catch (err) {
       setResults([])
@@ -174,7 +184,7 @@ export default function VocabPage() {
     }
   }
   
-  useEffect(() => { if (tab==='browse') browseVocab() }, [tab])
+  useEffect(() => { if (tab==='browse' && userId) browseVocab() }, [tab, userId])
   
   const saveSeed = async (w: SeedWord) => {
     if (!userId) return
@@ -460,20 +470,10 @@ export default function VocabPage() {
                   onChange={(e)=>setQ(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && browseVocab()}
                 />
-                <select 
-                  className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white" 
-                  value={level} 
-                  onChange={(e)=>setLevel(e.target.value)}
-                >
-                  <option value="">All Levels</option>
-                  {journeyLevels.map((lvl) => (
-                    <option key={lvl} value={lvl.toLowerCase()}>{lvl}</option>
-                  ))}
-                </select>
                 <button 
                   className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg"
                   onClick={browseVocab} 
-                  disabled={bLoading}
+                  disabled={bLoading || !userId}
                 >
                   {bLoading ? 'Searching...' : 'Search'}
                 </button>
