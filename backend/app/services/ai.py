@@ -39,10 +39,14 @@ def _align_words(a: str, b: str) -> list[dict]:
 async def grammar_check(db, sentence: str) -> SentenceResult:
     settings = get_settings()
     
+    print(f"[AI GRAMMAR] Starting grammar check for: '{sentence}'")
+    
     # Try Ollama (Mistral 7B) first - local, fast, free
     try:
         from ..ollama_client import ollama_client
         import json
+        
+        print(f"[AI GRAMMAR] Ollama available: {ollama_client.is_available}")
         
         if ollama_client.is_available:
             prompt = f"""Analyze this German sentence for grammar errors:

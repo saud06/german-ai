@@ -15,10 +15,13 @@ class GrammarRequest(BaseModel):
 
 @router.post('/check')
 async def grammar(payload: GrammarRequest, db=Depends(get_db), _: str = Depends(auth_dep)):
+    print(f"[GRAMMAR CHECK] Checking sentence: '{payload.sentence}'")
     try:
         res = await grammar_check(db, payload.sentence)
+        print(f"[GRAMMAR CHECK] Result - is_correct: {res.source == 'ok'}, corrected: '{res.corrected}'")
         return res.model_dump()
-    except ValueError:
+    except ValueError as e:
+        print(f"[GRAMMAR CHECK] ValueError: {e}")
         # For authenticated endpoint, return a friendly OK when no issues detected by rules/AI
         ok = SentenceResult(
             original=payload.sentence,
@@ -28,6 +31,9 @@ async def grammar(payload: GrammarRequest, db=Depends(get_db), _: str = Depends(
             source="ok",
         )
         return ok.model_dump()
+    except Exception as e:
+        print(f"[GRAMMAR CHECK] Unexpected error: {e}")
+        raise
 
 class GrammarRequestPublic(BaseModel):
     user_id: str | None = None
