@@ -111,27 +111,18 @@ def normalize_level_for_query(level: str, journey_type: Optional[str] = None) ->
 def get_level_range_for_content(level: str) -> list[str]:
     """
     Get appropriate content levels for a given user level
-    Returns current level and potentially easier levels for variety
+    Returns only the exact level selected by the user
     
     For example:
-    - B1 user gets: B1, A2 content (current + one level below)
+    - B1 user gets: B1 content only
     - A1 user gets: A1 content only
-    - Beginner gets: A1, A2 content
+    - Beginner gets: A1, A2 content (difficulty range)
     """
     level_lower = level.lower()
     
-    # CEFR levels
-    cefr_progression = {
-        'a1': ['A1'],
-        'a2': ['A2', 'A1'],
-        'b1': ['B1', 'A2'],
-        'b2': ['B2', 'B1'],
-        'c1': ['C1', 'B2'],
-        'c2': ['C2', 'C1']
-    }
-    
-    if level_lower in cefr_progression:
-        return cefr_progression[level_lower]
+    # CEFR levels - return exact level only
+    if level_lower in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2']:
+        return [level.upper()]
     
     # Difficulty levels
     difficulty_map = {
