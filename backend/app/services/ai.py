@@ -41,7 +41,30 @@ async def grammar_check(db, sentence: str) -> SentenceResult:
     
     print(f"[AI GRAMMAR] Starting grammar check for: '{sentence}'")
     
-    # Try Ollama (Mistral 7B) first - local, fast, free
+    # Try rule-based checking first (more reliable for common errors)
+    try:
+        from .grammar_rules import check_grammar_rules
+        
+        rule_result = check_grammar_rules(sentence)
+        if rule_result:
+            corrected, explanation = rule_result
+            print(f"[GRAMMAR RULES] Found error - corrected: '{corrected}'")
+            
+            highlights = _align_words(sentence, corrected)
+            return SentenceResult(
+                original=sentence,
+                corrected=corrected,
+                explanation=explanation,
+                suggested_variation=corrected,
+                source="rule_based",
+                highlights=highlights,
+                tips=["Review German grammar rules"],
+                rule_source="pattern_matching",
+            )
+    except Exception as e:
+        print(f"[GRAMMAR RULES] Error: {e}")
+    
+    # Try Ollama (Mistral 7B) as fallback - local, fast, free
     try:
         from ..ollama_client import ollama_client
         import json
