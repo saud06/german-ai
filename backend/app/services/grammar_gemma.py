@@ -54,35 +54,43 @@ async def check_grammar_with_gemma(sentence: str) -> SentenceResult:
         client = ollama.AsyncClient(host=settings.OLLAMA_HOST)
         model = settings.OLLAMA_MODEL_GRAMMAR
         
-        prompt = f"""You are a strict German grammar checker. Analyze ONLY for actual grammar errors:
+        prompt = f"""Check this German sentence for grammar errors:
 
 "{sentence}"
 
-Grammar errors to check:
-1. Subject-verb agreement: "Ich haben" → "Ich habe"
-2. Article gender: 
-   - "die Mann" → "der Mann" (masculine)
-   - "Der Entwicklung" → "Die Entwicklung" (feminine)
-   - "das Frau" → "die Frau" (feminine)
-3. Case after prepositions:
-   - Dativ: "mit die Frau" → "mit der Frau", "unter welche" → "unter welchen"
-   - Akkusativ: "für die Mann" → "für den Mann"
-4. Akkusativ after verbs (direct object):
-   - "Ich mache ein Vorschlag" → "Ich mache einen Vorschlag" (machen takes Akkusativ)
-   - "Ich habe ein Buch" → correct (ein Buch is neuter, stays ein)
-5. Verb conjugation: "Er gehen" → "Er geht"
-6. Adjective endings: "ein gute Mann" → "ein guter Mann"
-7. Uncountable nouns with viel/viele:
-   - "viele Erfahrung" → "viel Erfahrung" (Erfahrung is uncountable, use viel not viele)
-   - "viel Bücher" → "viele Bücher" (Bücher is countable, use viele not viel)
+STEP 1 - Check subject-verb agreement:
+- Singular subject needs singular verb: "Das ist" NOT "Das sind"
+- Plural subject needs plural verb: "Die Bücher sind" NOT "Die Bücher ist"
+- Examples: "Ich habe", "Du hast", "Er/Sie/Es hat", "Wir/Sie haben"
 
-PREPOSITION CASES (CRITICAL):
-- Dativ: mit, nach, aus, zu, von, bei, seit, unter (when static)
-  Example: "unter welche Bedingungen" is WRONG → "unter welchen Bedingungen"
-- Akkusativ: für, durch, gegen, ohne, um, bis
-- Two-way: an, auf, in, über, unter, vor (Dativ=location, Akkusativ=direction)
+STEP 2 - Check article gender (der/die/das):
+- Masculine: der Mann, der Vorschlag
+- Feminine: die Frau, die Entwicklung, die Erfahrung, die Meinung
+- Neuter: das Kind, das Buch
+- WRONG: "Der Entwicklung" → CORRECT: "Die Entwicklung"
 
-Return ONLY valid JSON:
+STEP 3 - Check case (Nominativ/Akkusativ/Dativ):
+- After prepositions (Dativ): mit, nach, aus, zu, von, bei, seit, unter
+  WRONG: "unter welche" → CORRECT: "unter welchen"
+- After verbs (Akkusativ): machen, haben, sehen, brauchen
+  WRONG: "Ich mache ein Vorschlag" → CORRECT: "Ich mache einen Vorschlag"
+
+STEP 4 - Check viel/viele with countable/uncountable:
+- Uncountable (singular): viel Erfahrung, viel Zeit, viel Geld
+- Countable (plural): viele Bücher, viele Menschen, viele Ideen
+- WRONG: "viele Erfahrung" → CORRECT: "viel Erfahrung" (keep singular!)
+
+STEP 5 - Check adjective endings:
+- WRONG: "ein gute Mann" → CORRECT: "ein guter Mann"
+- WRONG: "eine schweren Entscheidung" → CORRECT: "eine schwere Entscheidung"
+
+RULES:
+- If CORRECT: is_correct=true, corrected=EXACT same text
+- If ERROR: is_correct=false, corrected=fixed German text
+- Keep all text in GERMAN (no English translation)
+- Fix ONLY actual grammar errors, not style
+
+Return JSON:
 {{
   "is_correct": true/false,
   "corrected": "corrected sentence",
@@ -90,21 +98,6 @@ Return ONLY valid JSON:
   "suggested_variation": "alternative phrasing",
   "tips": ["grammar tip"]
 }}
-
-CRITICAL RULES:
-1. If the sentence is grammatically CORRECT, set is_correct=true and corrected=EXACT same as original
-2. Only mark is_correct=false if there is an ACTUAL grammar error (wrong verb form, wrong case, wrong gender)
-3. CHECK article gender carefully - "Der Entwicklung" is WRONG (must be "Die Entwicklung" - feminine)
-4. CHECK preposition cases carefully - "unter welche" is WRONG (must be "unter welchen")
-5. CHECK Akkusativ after verbs - "Ich mache ein Vorschlag" is WRONG (must be "einen Vorschlag")
-6. "viele Erfahrung" is WRONG → "viel Erfahrung" (change ONLY viele to viel, keep Erfahrung singular)
-7. DO NOT change singular uncountable nouns to plural (Erfahrung stays Erfahrung, not Erfahrungen)
-8. Common noun genders: Entwicklung (die), Erfahrung (die), Mann (der), Frau (die), Kind (das), Vorschlag (der)
-9. Verbs taking Akkusativ: machen, haben, sehen, brauchen, nehmen
-10. DO NOT "correct" stylistic choices or add words that aren't errors
-11. DO NOT translate to English - all text must be in GERMAN
-12. "Das ist meine Meinung" is CORRECT (don't change to "meiner Meinung nach")
-13. Only fix actual mistakes, not style preferences
 
 JSON:"""
         
