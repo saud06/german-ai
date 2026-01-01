@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     OLLAMA_HOST: str = "http://ollama:11434"
     OLLAMA_MODEL: str = "mistral:7b"
     OLLAMA_MODEL_FAST: str = "llama3.2:3b"
+    OLLAMA_MODEL_GRAMMAR: str = "gemma2:9b"  # Better for German grammar checking
     OLLAMA_TIMEOUT: int = 120
     OLLAMA_TEMPERATURE: float = 0.7
     OLLAMA_MAX_TOKENS: int = 2048

@@ -47,6 +47,10 @@ def check_case_errors(sentence: str) -> Optional[Tuple[str, str]]:
     Returns (corrected_sentence, explanation) or None
     """
     patterns = [
+        # "Was ist die Unterschied" -> should be "der Unterschied" (masculine noun)
+        (r'\bist\s+die\s+Unterschied\b', r'ist der Unterschied',
+         "Changed 'die' to 'der' (Unterschied is masculine)"),
+        
         # "Unter welche/welches/welcher" -> should be "Unter welchen" (dative after unter)
         (r'\bUnter\s+(welche|welches|welcher)\b', r'Unter welchen',
          "Changed to 'welchen' (dative case after 'unter')"),
