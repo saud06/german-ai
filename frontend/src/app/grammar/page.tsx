@@ -19,9 +19,9 @@ export default function GrammarCoach() {
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState<{original:string, corrected:string, explanation:string, ts:string}[]>([])
   const [saving, setSaving] = useState(false)
-  const [examples, setExamples] = useState<{text:string, source:string}[]>([])
+  const [examples, setExamples] = useState<{text:string, source:string, level?:string}[]>([])
   const [loadingExamples, setLoadingExamples] = useState(false)
-  const [levelFilter, setLevelFilter] = useState('')
+  // Level filter removed - using journey level automatically
   const [trackFilter, setTrackFilter] = useState('')
   const [loadingUnifiedHistory, setLoadingUnifiedHistory] = useState(false)
   const [activityCompleted, setActivityCompleted] = useState(false)
@@ -79,10 +79,14 @@ export default function GrammarCoach() {
   useEffect(() => { loadUnifiedHistory() }, [userId])
 
   const loadExamples = async () => {
+    if (!userId) {
+      console.log('[GRAMMAR] Skipping examples load - userId not available')
+      return
+    }
+    
     try {
       setLoadingExamples(true)
-      const params: any = { size: 10 }
-      if (levelFilter) params.level = levelFilter
+      const params: any = { size: 10, user_id: userId }
       if (trackFilter) params.track = trackFilter
       const r = await api.get('/grammar/examples', { params })
       setExamples(r.data || [])
@@ -92,7 +96,7 @@ export default function GrammarCoach() {
       setLoadingExamples(false)
     }
   }
-  useEffect(() => { loadExamples() }, [levelFilter, trackFilter])
+  useEffect(() => { if (userId) loadExamples() }, [trackFilter, userId])
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
@@ -303,19 +307,6 @@ export default function GrammarCoach() {
             {/* Filters */}
             <div className="flex items-center gap-4 mb-6">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Level:</label>
-                <select
-                  className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  value={levelFilter}
-                  onChange={(e)=>setLevelFilter(e.target.value)}
-                >
-                  <option value="">All Levels</option>
-                  {journeyLevels.map((level) => (
-                    <option key={level} value={level.toLowerCase()}>{level}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Topic:</label>
                 <select
                   className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -343,8 +334,14 @@ export default function GrammarCoach() {
                     setActiveTab('check')
                   }}
                 >
-                  <p className="text-gray-900 dark:text-white font-medium">{ex.text}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{ex.source}</p>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className="text-gray-900 dark:text-white font-medium flex-1">{ex.text}</p>
+                    {ex.level && (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex-shrink-0">
+                        {ex.level.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
                 </button>
               ))}
               {examples.length === 0 && !loadingExamples && (

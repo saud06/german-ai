@@ -4,7 +4,8 @@ from ..security import auth_dep
 from ..services.ai import grammar_check
 from ..db import get_db
 from ..services.typing_utils import SentenceResult
-from typing import List
+from ..utils.journey_utils import get_user_journey_level, get_level_range_for_content
+from typing import List, Optional
 
 router = APIRouter(prefix="/grammar")
 
@@ -94,25 +95,56 @@ async def grammar_history(limit: int = 10, db=Depends(get_db), user_id: str = De
 class ExampleItem(BaseModel):
     text: str
     source: str
+    level: Optional[str] = None
 
 @router.get('/examples', response_model=List[ExampleItem])
-async def grammar_examples(size: int = 8, level: str | None = None, track: str | None = None, db=Depends(get_db)):
+async def grammar_examples(
+    size: int = 8, 
+    level: Optional[str] = None, 
+    track: Optional[str] = None,
+    user_id: Optional[str] = Query(default=None),
+    db=Depends(get_db)
+):
+    print(f"[GRAMMAR EXAMPLES] size={size}, level={level}, track={track}, user_id={user_id}")
+    
+    # Get user's journey level if user_id provided and no level specified
+    if not level and user_id:
+        journey_level = await get_user_journey_level(db, user_id)
+        if journey_level:
+            level = journey_level
+            print(f"[GRAMMAR EXAMPLES] Using journey level: {level}")
+    
     out: List[ExampleItem] = []
     try:
-        # From seed_words examples
-        match_stage = { 'ex': { '$type': 'string' } }
+        # From seed_words examples - use exact level only
+        match_stage = { 'examples': { '$type': 'array', '$ne': [] } }
         if level:
-            match_stage = { '$and': [match_stage, { 'level': level }] }
+            # Use exact level match (B1 users see only B1 sentences)
+            match_stage = { '$and': [match_stage, { 'level': level.upper() }] }
+            print(f"[GRAMMAR EXAMPLES] Filtering by level: {level.upper()}")
+        
         cursor = db['seed_words'].aggregate([
-            { '$project': { 'ex': { '$arrayElemAt': [ '$examples', 0 ] } } },
             { '$match': match_stage },
+            { '$project': { 
+                'ex': { '$arrayElemAt': [ '$examples', 0 ] },
+                'level': 1
+            } },
+            { '$match': { 'ex': { '$type': 'string' } } },
             { '$sample': { 'size': int(size) } },
         ])
         items = await cursor.to_list(length=size)
         for it in items:
             t = (it.get('ex') or '').strip()
             if t:
-                out.append(ExampleItem(text=t, source='seed_words'))
+                out.append(ExampleItem(
+                    text=t, 
+                    source='vocabulary',
+                    level=it.get('level')
+                ))
+        
+        print(f"[GRAMMAR EXAMPLES] Found {len(out)} examples from seed_words")
+        
+        # If not enough examples, get from quizzes (without level filtering for now)
         if len(out) < size:
             remain = size - len(out)
             q_match = { 'txt': { '$type': 'string' } }
@@ -127,9 +159,12 @@ async def grammar_examples(size: int = 8, level: str | None = None, track: str |
             for it in qitems:
                 t = (it.get('txt') or '').strip()
                 if t:
-                    out.append(ExampleItem(text=t, source='quizzes'))
-    except Exception:
+                    out.append(ExampleItem(text=t, source='quiz', level=level))
+            print(f"[GRAMMAR EXAMPLES] Added {len(qitems)} examples from quizzes")
+    except Exception as e:
+        print(f"[GRAMMAR EXAMPLES] Error: {e}")
         pass
+    
     if not out:
         return []
     return out[: size]
