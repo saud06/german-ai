@@ -49,25 +49,32 @@ async def grammar_check(db, sentence: str) -> SentenceResult:
         print(f"[AI GRAMMAR] Ollama available: {ollama_client.is_available}")
         
         if ollama_client.is_available:
-            prompt = f"""Analyze this German sentence for grammar errors:
+            prompt = f"""You are a strict German grammar checker. Analyze this sentence carefully:
 
 "{sentence}"
 
-Return ONLY valid JSON with NO extra text:
+Check for these common errors:
+1. Article gender (der/die/das)
+2. Case endings (Nominativ/Akkusativ/Dativ/Genitiv)
+3. Verb conjugation (ich mache, du machst, er macht)
+4. Adjective endings
+5. Word order
+
+Return ONLY valid JSON:
 {{
-  "is_correct": true,
-  "corrected": "corrected German sentence here",
-  "explanation": "what was wrong",
-  "suggested_variation": "alternative German phrasing",
-  "tips": ["one tip"]
+  "is_correct": false,
+  "corrected": "Das ist meine Meinung.",
+  "explanation": "Changed 'meiner' to 'meine' (nominative case)",
+  "suggested_variation": "Meiner Meinung nach...",
+  "tips": ["Use nominative after 'ist'"]
 }}
 
-Rules:
-- Keep ALL text in GERMAN (do not translate to English)
-- If sentence is correct: is_correct=true, corrected=same as original, explanation="Perfect! No errors."
-- If sentence has errors: is_correct=false, corrected=fixed German sentence, explanation=brief error description
-- Check: articles (der/die/das, zum/zur), verb conjugation, case endings, word order
-- Return ONLY the JSON object
+CRITICAL RULES:
+- Preserve original capitalization (Das stays Das, not das)
+- If ANY error exists: is_correct=false
+- corrected must be the FIXED German sentence
+- Be strict - catch all grammar errors
+- Keep explanation in German or English
 
 JSON:"""
             
@@ -78,6 +85,7 @@ JSON:"""
             )
             
             content = response.get('message', {}).get('content', '').strip()
+            print(f"[AI GRAMMAR] Raw AI response: {content[:500]}")
             
             # Extract JSON from response - try multiple methods
             data = None
@@ -130,6 +138,17 @@ JSON:"""
             is_correct = bool(data.get('is_correct', False))
             corrected = str(data.get('corrected') or sentence).strip()
             
+            # Validate: If AI lowercased the first word, restore original capitalization
+            if corrected and sentence:
+                sentence_words = sentence.split()
+                corrected_words = corrected.split()
+                if (len(sentence_words) > 0 and len(corrected_words) > 0 and 
+                    sentence_words[0][0].isupper() and corrected_words[0][0].islower()):
+                    # AI incorrectly lowercased - restore capitalization
+                    corrected_words[0] = corrected_words[0].capitalize()
+                    corrected = ' '.join(corrected_words)
+                    print(f"[AI GRAMMAR] Fixed capitalization: {corrected}")
+            
             # Clean explanation - remove any JSON artifacts
             explanation_raw = str(data.get('explanation') or "AI grammar check completed").strip()
             # If explanation contains JSON, it means parsing failed - extract just the text
@@ -151,9 +170,16 @@ JSON:"""
             # Clean tips
             tips = [t for t in tips if not t.startswith('{') and '"is_correct"' not in t]
             
-            # If corrected differs from original, it's not correct
+            # CRITICAL: If corrected differs from original, it's not correct
+            # Compare case-insensitively but preserve the corrected version
             if corrected.lower().strip() != sentence.lower().strip():
                 is_correct = False
+                print(f"[AI GRAMMAR] Detected difference - marking as incorrect")
+            
+            # Additional validation: If AI says correct but made changes, override
+            if is_correct and corrected != sentence:
+                is_correct = False
+                print(f"[AI GRAMMAR] AI said correct but made changes - overriding to incorrect")
             
             highlights = _align_words(sentence, corrected)
             result_source = "ok" if is_correct else "ai_mistral"
