@@ -12,6 +12,11 @@ def check_subject_verb_agreement(sentence: str) -> Optional[Tuple[str, str]]:
     """
     # Pattern: singular noun + plural verb
     patterns = [
+        # "Das sind [singular noun]" -> should be "Das ist"
+        (r'\bDas\s+sind\s+(meine?|deine?|seine?|ihre?|unsere?|eure?)\s+(\w+)\b',
+         r'Das ist \1 \2',
+         "Changed 'sind' to 'ist' (singular subject 'Das' requires singular verb)"),
+        
         # "Der/Die/Das [noun] sind" -> should be "ist"
         (r'\b(Der|Die|Das)\s+(\w+)\s+sind\b', r'\1 \2 ist', 
          "Changed 'sind' to 'ist' (singular subject requires singular verb)"),
