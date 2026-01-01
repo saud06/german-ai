@@ -25,10 +25,10 @@ class Settings(BaseSettings):
     WS_HEARTBEAT_INTERVAL: int = 30
     
     # Ollama Configuration
-    OLLAMA_HOST: str = "http://ollama:11434"
+    OLLAMA_HOST: str = "http://host.docker.internal:11435"
     OLLAMA_MODEL: str = "mistral:7b"
     OLLAMA_MODEL_FAST: str = "llama3.2:3b"
-    OLLAMA_MODEL_GRAMMAR: str = "mistral:7b"  # Fast enough for real-time grammar checking
+    OLLAMA_MODEL_GRAMMAR: str = "gemma2:9b"  # Using native Ollama with GPU via Metal
     OLLAMA_TIMEOUT: int = 120
     OLLAMA_TEMPERATURE: float = 0.7
     OLLAMA_MAX_TOKENS: int = 2048
