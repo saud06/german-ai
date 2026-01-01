@@ -66,6 +66,9 @@ Grammar errors to check:
    - Akkusativ: "für die Mann" → "für den Mann"
 4. Verb conjugation: "Er gehen" → "Er geht"
 5. Adjective endings: "ein gute Mann" → "ein guter Mann"
+6. Uncountable nouns with viel/viele:
+   - "viele Erfahrung" → "viel Erfahrung" (Erfahrung is uncountable, use viel not viele)
+   - "viel Bücher" → "viele Bücher" (Bücher is countable, use viele not viel)
 
 PREPOSITION CASES (CRITICAL):
 - Dativ: mit, nach, aus, zu, von, bei, seit, unter (when static)
@@ -86,10 +89,12 @@ CRITICAL RULES:
 1. If the sentence is grammatically CORRECT, set is_correct=true and corrected=EXACT same as original
 2. Only mark is_correct=false if there is an ACTUAL grammar error (wrong verb form, wrong case, wrong gender)
 3. CHECK preposition cases carefully - "unter welche" is WRONG (must be "unter welchen")
-4. DO NOT "correct" stylistic choices or add words that aren't errors
-5. DO NOT translate to English - all text must be in GERMAN
-6. "Das ist meine Meinung" is CORRECT (don't change to "meiner Meinung nach")
-7. Only fix actual mistakes, not style preferences
+4. "viele Erfahrung" is WRONG → "viel Erfahrung" (change ONLY viele to viel, keep Erfahrung singular)
+5. DO NOT change singular uncountable nouns to plural (Erfahrung stays Erfahrung, not Erfahrungen)
+6. DO NOT "correct" stylistic choices or add words that aren't errors
+7. DO NOT translate to English - all text must be in GERMAN
+8. "Das ist meine Meinung" is CORRECT (don't change to "meiner Meinung nach")
+9. Only fix actual mistakes, not style preferences
 
 JSON:"""
         
