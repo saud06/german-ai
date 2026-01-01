@@ -60,7 +60,10 @@ async def check_grammar_with_gemma(sentence: str) -> SentenceResult:
 
 Grammar errors to check:
 1. Subject-verb agreement: "Ich haben" → "Ich habe"
-2. Article gender: "die Mann" → "der Mann"  
+2. Article gender: 
+   - "die Mann" → "der Mann" (masculine)
+   - "Der Entwicklung" → "Die Entwicklung" (feminine)
+   - "das Frau" → "die Frau" (feminine)
 3. Case after prepositions:
    - Dativ: "mit die Frau" → "mit der Frau", "unter welche" → "unter welchen"
    - Akkusativ: "für die Mann" → "für den Mann"
@@ -88,13 +91,15 @@ Return ONLY valid JSON:
 CRITICAL RULES:
 1. If the sentence is grammatically CORRECT, set is_correct=true and corrected=EXACT same as original
 2. Only mark is_correct=false if there is an ACTUAL grammar error (wrong verb form, wrong case, wrong gender)
-3. CHECK preposition cases carefully - "unter welche" is WRONG (must be "unter welchen")
-4. "viele Erfahrung" is WRONG → "viel Erfahrung" (change ONLY viele to viel, keep Erfahrung singular)
-5. DO NOT change singular uncountable nouns to plural (Erfahrung stays Erfahrung, not Erfahrungen)
-6. DO NOT "correct" stylistic choices or add words that aren't errors
-7. DO NOT translate to English - all text must be in GERMAN
-8. "Das ist meine Meinung" is CORRECT (don't change to "meiner Meinung nach")
-9. Only fix actual mistakes, not style preferences
+3. CHECK article gender carefully - "Der Entwicklung" is WRONG (must be "Die Entwicklung" - feminine)
+4. CHECK preposition cases carefully - "unter welche" is WRONG (must be "unter welchen")
+5. "viele Erfahrung" is WRONG → "viel Erfahrung" (change ONLY viele to viel, keep Erfahrung singular)
+6. DO NOT change singular uncountable nouns to plural (Erfahrung stays Erfahrung, not Erfahrungen)
+7. Common noun genders: Entwicklung (die), Erfahrung (die), Mann (der), Frau (die), Kind (das)
+8. DO NOT "correct" stylistic choices or add words that aren't errors
+9. DO NOT translate to English - all text must be in GERMAN
+10. "Das ist meine Meinung" is CORRECT (don't change to "meiner Meinung nach")
+11. Only fix actual mistakes, not style preferences
 
 JSON:"""
         
