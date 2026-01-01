@@ -47,6 +47,10 @@ def check_case_errors(sentence: str) -> Optional[Tuple[str, str]]:
     Returns (corrected_sentence, explanation) or None
     """
     patterns = [
+        # "Unter welche" -> should be "Unter welchen" (dative after unter)
+        (r'\bUnter\s+welche\b', r'Unter welchen',
+         "Changed 'welche' to 'welchen' (dative case after 'unter')"),
+        
         # "Das ist meinen/meiner" -> should be "meine" (nominative)
         (r'\bist\s+(meinen|meiner)\s+(\w+)\b', r'ist meine \2',
          "Changed to 'meine' (nominative case after 'ist')"),

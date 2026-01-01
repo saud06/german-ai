@@ -86,18 +86,19 @@ Common errors to check:
 Return ONLY valid JSON (no extra text):
 {{
   "is_correct": false,
-  "corrected": "corrected sentence with fixes applied",
+  "corrected": "corrected GERMAN sentence with fixes applied",
   "explanation": "brief explanation of what was wrong",
-  "suggested_variation": "alternative way to say it",
+  "suggested_variation": "alternative GERMAN phrasing",
   "tips": ["tip about the grammar rule"]
 }}
 
-RULES:
+CRITICAL RULES:
+- DO NOT TRANSLATE TO ENGLISH - keep all text in GERMAN
 - If sentence is PERFECT: is_correct=true, corrected=EXACT same as original
-- If ANY error: is_correct=false, corrected=FIXED sentence
+- If ANY error: is_correct=false, corrected=FIXED GERMAN sentence
 - Preserve capitalization exactly
 - Focus on the ACTUAL errors in the sentence
-- Return the corrected sentence, not the original
+- Return the corrected GERMAN sentence, not English translation
 
 JSON:"""
             
