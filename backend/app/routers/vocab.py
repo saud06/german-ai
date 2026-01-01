@@ -115,14 +115,20 @@ async def vocab_today_batch(
     Uses user's journey level if not specified
     """
     try:
+        print(f"[VOCAB] === REQUEST START ===")
+        print(f"[VOCAB] Received params - count: {count}, level: '{level}', user_id: '{user_id}'")
+        
         # Get user's journey level if level not provided
         if not level and user_id:
+            print(f"[VOCAB] Fetching journey level for user_id: {user_id}")
             journey_level = await get_user_journey_level(db, user_id)
             level = journey_level or "A1"
             print(f"[VOCAB] User {user_id} journey level: {journey_level} -> using level: {level}")
         elif not level:
             level = "A1"
-            print(f"[VOCAB] No user_id provided, defaulting to A1")
+            print(f"[VOCAB] No level or user_id provided, defaulting to A1")
+        else:
+            print(f"[VOCAB] Using provided level: {level}")
         
         print(f"[VOCAB] Generating {count} words at level: {level}")
         vocab_ai = VocabAIService(db)

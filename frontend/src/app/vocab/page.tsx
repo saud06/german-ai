@@ -74,6 +74,11 @@ export default function VocabPage() {
   }
   
   const loadTodayWords = async () => {
+    if (!userId) {
+      console.log('[VOCAB] Skipping load - userId not available yet')
+      return
+    }
+    
     try {
       setTLoading(true)
       
@@ -84,7 +89,7 @@ export default function VocabPage() {
       const r = await api.get('/vocab/today/batch', { 
         params: { 
           count: 10,
-          user_id: userId || undefined 
+          user_id: userId 
         } 
       })
       const words = r.data || []
@@ -102,7 +107,7 @@ export default function VocabPage() {
   }
   
   
-  useEffect(() => { if (tab==='today') loadTodayWords() }, [tab, userId])
+  useEffect(() => { if (tab==='today' && userId) loadTodayWords() }, [tab, userId])
   
   const currentWord = todayWords[currentWordIndex]
   
