@@ -60,10 +60,18 @@ async def check_grammar_with_gemma(sentence: str) -> SentenceResult:
 
 Grammar errors to check:
 1. Subject-verb agreement: "Ich haben" → "Ich habe"
-2. Article gender: "die Mann" → "der Mann"
-3. Case endings: "mit die Frau" → "mit der Frau"
+2. Article gender: "die Mann" → "der Mann"  
+3. Case after prepositions:
+   - Dativ: "mit die Frau" → "mit der Frau", "unter welche" → "unter welchen"
+   - Akkusativ: "für die Mann" → "für den Mann"
 4. Verb conjugation: "Er gehen" → "Er geht"
 5. Adjective endings: "ein gute Mann" → "ein guter Mann"
+
+PREPOSITION CASES (CRITICAL):
+- Dativ: mit, nach, aus, zu, von, bei, seit, unter (when static)
+  Example: "unter welche Bedingungen" is WRONG → "unter welchen Bedingungen"
+- Akkusativ: für, durch, gegen, ohne, um, bis
+- Two-way: an, auf, in, über, unter, vor (Dativ=location, Akkusativ=direction)
 
 Return ONLY valid JSON:
 {{
@@ -77,10 +85,11 @@ Return ONLY valid JSON:
 CRITICAL RULES:
 1. If the sentence is grammatically CORRECT, set is_correct=true and corrected=EXACT same as original
 2. Only mark is_correct=false if there is an ACTUAL grammar error (wrong verb form, wrong case, wrong gender)
-3. DO NOT "correct" stylistic choices or add words that aren't errors
-4. DO NOT translate to English - all text must be in GERMAN
-5. "Das ist meine Meinung" is CORRECT (don't change to "meiner Meinung nach")
-6. Only fix actual mistakes, not style preferences
+3. CHECK preposition cases carefully - "unter welche" is WRONG (must be "unter welchen")
+4. DO NOT "correct" stylistic choices or add words that aren't errors
+5. DO NOT translate to English - all text must be in GERMAN
+6. "Das ist meine Meinung" is CORRECT (don't change to "meiner Meinung nach")
+7. Only fix actual mistakes, not style preferences
 
 JSON:"""
         
