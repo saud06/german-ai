@@ -72,42 +72,13 @@ services:
     networks:
       - german-ai-network
   
-  ollama:
-    image: ollama/ollama:latest
-    container_name: german_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_KEEP_ALIVE=24h
-      - OLLAMA_NUM_PARALLEL=1  # Reduce parallel requests to lower CPU
-      - OLLAMA_MAX_LOADED_MODELS=1  # Keep only 1 model loaded
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'  # Limit Ollama to 2 CPU cores to match local Docker CPU limit
-        # NVIDIA GPU support for deployment (uncomment when deploying to GPU server)
-        # reservations:
-        #   devices:
-        #     - driver: nvidia
-        #       count: 1
-        #       capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
-      interval: 30s
-      timeout: 30s
-      retries: 5
-      start_period: 120s
-
   whisper:
     image: onerahmet/openai-whisper-asr-webservice:latest
     container_name: german_whisper
     ports:
       - "9000:9000"
     environment:
-      - ASR_MODEL=tiny  # Use tiny model - fastest, good enough for German
+      - ASR_MODEL=tiny
       - ASR_ENGINE=faster_whisper
       - ASR_LANGUAGE=de
     volumes:
@@ -133,7 +104,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'  # Limit Piper to 2 CPU cores to prevent spikes
+          cpus: '2.0'
     healthcheck:
       test: ["CMD-SHELL", "echo 'test' | nc -z localhost 10200 || exit 1"]
       interval: 30s
@@ -150,6 +121,5 @@ networks:
 
 volumes:
   redis_data:
-  ollama_data:
   whisper_data:
   piper_data:

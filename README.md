@@ -39,52 +39,48 @@ A comprehensive, AI-powered German language learning platform featuring interact
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- MongoDB Atlas account (free tier works)
-- 8GB RAM minimum
-- (Optional) GPU for faster AI responses
+- **Docker Desktop**: Latest version
+- **MongoDB Atlas**: Free tier account (or local MongoDB)
+- **RAM**: 8GB minimum, 16GB recommended
+- **Storage**: 15GB free space
+- **GPU** (Recommended): NVIDIA/AMD/Apple Silicon for 10-15x faster AI
 
-### Installation
+### Automated Setup (Recommended)
 
-1. **Clone the repository**
+Choose your platform and run the automated setup script:
+
+**🍎 macOS (Apple Silicon/Intel)**
 ```bash
 git clone https://github.com/saud06/german-ai.git
 cd german-ai
+chmod +x setup-macos.sh
+./setup-macos.sh
 ```
 
-2. **Set up environment variables**
+**🐧 Linux (Ubuntu/Debian/Fedora)**
 ```bash
-cp .env.example .env
+git clone https://github.com/saud06/german-ai.git
+cd german-ai
+chmod +x setup-linux.sh
+./setup-linux.sh
 ```
 
-Edit `.env` with your configuration:
-```bash
-# Database
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/
-MONGODB_DB_NAME=german_ai
-
-# Security
-JWT_SECRET=your-secure-random-string-min-32-chars
-
-# AI Models
-OLLAMA_MODEL=mistral:7b
-ENABLE_AI_QUIZ_TOPUP=true
-
-# Voice Features
-ENABLE_VOICE_FEATURES=true
-WHISPER_MODEL=tiny
-PIPER_VOICE=de_DE-thorsten-high
-
-# Optional: OpenAI (for enhanced features)
-OPENAI_API_KEY=sk-...
+**🪟 Windows (PowerShell as Administrator)**
+```powershell
+git clone https://github.com/saud06/german-ai.git
+cd german-ai
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\setup-windows.ps1
 ```
 
-3. **Start the application**
-```bash
-./START_PROJECT.sh
-```
+### What the Setup Does
+- ✅ Installs Ollama natively on your GPU
+- ✅ Downloads AI models (Gemma 2, Mistral 7B, Llama 3.2)
+- ✅ Configures Docker containers
+- ✅ Sets up environment variables
+- ✅ Verifies GPU usage
 
-The application will be available at:
+### Access the Application
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
@@ -94,6 +90,8 @@ The application will be available at:
 Email:    saud@gmail.com
 Password: password
 ```
+
+> **📖 For detailed setup instructions, troubleshooting, and manual setup, see [SETUP.md](./SETUP.md)**
 
 ## 📊 Architecture
 
