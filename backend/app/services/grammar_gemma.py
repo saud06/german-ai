@@ -54,43 +54,73 @@ async def check_grammar_with_gemma(sentence: str) -> SentenceResult:
         client = ollama.AsyncClient(host=settings.OLLAMA_HOST)
         model = settings.OLLAMA_MODEL_GRAMMAR
         
-        prompt = f"""Check this German sentence for grammar errors:
+        prompt = f"""You are a German grammar expert. Analyze this sentence step by step:
 
 "{sentence}"
 
-STEP 1 - Check subject-verb agreement:
-- Singular subject needs singular verb: "Das ist" NOT "Das sind"
-- Plural subject needs plural verb: "Die Bücher sind" NOT "Die Bücher ist"
-- Examples: "Ich habe", "Du hast", "Er/Sie/Es hat", "Wir/Sie haben"
+═══════════════════════════════════════════════════════════════
+STEP 1: SUBJECT-VERB AGREEMENT (CRITICAL!)
+═══════════════════════════════════════════════════════════════
+Check if subject and verb match in number (singular/plural):
 
-STEP 2 - Check article gender (der/die/das):
-- Masculine: der Mann, der Vorschlag
-- Feminine: die Frau, die Entwicklung, die Erfahrung, die Meinung
-- Neuter: das Kind, das Buch
-- WRONG: "Der Entwicklung" → CORRECT: "Die Entwicklung"
+SINGULAR subjects → SINGULAR verbs:
+✓ "Das ist meine Meinung" (Das = singular → ist)
+✓ "Die Entwicklung ist positiv" (Entwicklung = singular → ist)
+✗ "Das sind meine Meinung" → WRONG! (Das = singular but sind = plural)
 
-STEP 3 - Check case (Nominativ/Akkusativ/Dativ):
-- After prepositions (Dativ): mit, nach, aus, zu, von, bei, seit, unter
-  WRONG: "unter welche" → CORRECT: "unter welchen"
-- After verbs (Akkusativ): machen, haben, sehen, brauchen
-  WRONG: "Ich mache ein Vorschlag" → CORRECT: "Ich mache einen Vorschlag"
+PLURAL subjects → PLURAL verbs:
+✓ "Die Bücher sind interessant" (Bücher = plural → sind)
+✗ "Die Bücher ist interessant" → WRONG! (Bücher = plural but ist = singular)
 
-STEP 4 - Check viel/viele with countable/uncountable:
-- Uncountable (singular): viel Erfahrung, viel Zeit, viel Geld
-- Countable (plural): viele Bücher, viele Menschen, viele Ideen
-- WRONG: "viele Erfahrung" → CORRECT: "viel Erfahrung" (keep singular!)
+Verb forms: ich bin/habe, du bist/hast, er/sie/es ist/hat, wir/sie sind/haben
 
-STEP 5 - Check adjective endings:
-- WRONG: "ein gute Mann" → CORRECT: "ein guter Mann"
-- WRONG: "eine schweren Entscheidung" → CORRECT: "eine schwere Entscheidung"
+═══════════════════════════════════════════════════════════════
+STEP 2: ARTICLE GENDER (der/die/das)
+═══════════════════════════════════════════════════════════════
+Check if article matches noun gender:
 
-RULES:
-- If CORRECT: is_correct=true, corrected=EXACT same text
-- If ERROR: is_correct=false, corrected=fixed German text
-- Keep all text in GERMAN (no English translation)
+Masculine (der): Mann, Vorschlag, Unterschied
+Feminine (die): Frau, Entwicklung, Erfahrung, Meinung, Entscheidung, Gelegenheit
+Neuter (das): Kind, Buch, Haus
+
+✗ "Der Entwicklung" → WRONG! Must be "Die Entwicklung" (feminine)
+✗ "die Mann" → WRONG! Must be "der Mann" (masculine)
+
+═══════════════════════════════════════════════════════════════
+STEP 3: CASE (Nominativ/Akkusativ/Dativ)
+═══════════════════════════════════════════════════════════════
+A) After DATIV prepositions: mit, nach, aus, zu, von, bei, seit, unter
+   ✗ "unter welche Bedingungen" → WRONG! Must be "unter welchen Bedingungen"
+   
+B) After AKKUSATIV verbs (direct object): machen, haben, sehen, brauchen, nehmen
+   ✗ "Ich mache ein Vorschlag" → WRONG! Must be "Ich mache einen Vorschlag"
+   (Vorschlag is masculine → ein becomes einen in Akkusativ)
+
+═══════════════════════════════════════════════════════════════
+STEP 4: VIEL/VIELE (countable vs uncountable)
+═══════════════════════════════════════════════════════════════
+Uncountable nouns (singular) → viel:
+✓ viel Erfahrung, viel Zeit, viel Geld
+✗ "viele Erfahrung" → WRONG! Must be "viel Erfahrung" (keep singular!)
+
+Countable nouns (plural) → viele:
+✓ viele Bücher, viele Menschen, viele Ideen
+
+═══════════════════════════════════════════════════════════════
+STEP 5: ADJECTIVE ENDINGS
+═══════════════════════════════════════════════════════════════
+✗ "ein gute Mann" → WRONG! Must be "ein guter Mann"
+✗ "eine schweren Entscheidung" → WRONG! Must be "eine schwere Entscheidung"
+
+═══════════════════════════════════════════════════════════════
+FINAL RULES:
+═══════════════════════════════════════════════════════════════
+- If sentence is CORRECT: set is_correct=true, corrected=EXACT same text
+- If sentence has ERROR: set is_correct=false, corrected=fixed German text
+- Keep ALL text in GERMAN (no English translation)
 - Fix ONLY actual grammar errors, not style
 
-Return JSON:
+Return ONLY this JSON:
 {{
   "is_correct": true/false,
   "corrected": "corrected sentence",
