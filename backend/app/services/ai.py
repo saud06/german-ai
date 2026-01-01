@@ -49,32 +49,32 @@ async def grammar_check(db, sentence: str) -> SentenceResult:
         print(f"[AI GRAMMAR] Ollama available: {ollama_client.is_available}")
         
         if ollama_client.is_available:
-            prompt = f"""You are a strict German grammar checker. Analyze this sentence:
+            prompt = f"""Analyze this German sentence for grammar errors:
 
 "{sentence}"
 
-Check for these errors:
-1. Article gender (der/die/das) - match noun gender
-2. Case endings (Nominativ/Akkusativ/Dativ/Genitiv) - match sentence structure
-3. Verb conjugation (ich mache, du machst, er macht) - match subject
-4. Adjective endings - match gender, case, article
-5. Word order - verb position, time-manner-place
+Common errors to check:
+1. Subject-verb agreement: "Die Entwicklung ist" (singular) NOT "sind" (plural)
+2. Article-noun gender: der Mann, die Frau, das Kind
+3. Case after prepositions: "mit dem Mann" (Dativ), "für den Mann" (Akkusativ)
+4. Verb conjugation: ich bin, du bist, er/sie/es ist, wir/sie sind
+5. Adjective endings based on article and case
 
-Return ONLY this JSON structure (fill with YOUR analysis of the sentence above):
+Return ONLY valid JSON (no extra text):
 {{
-  "is_correct": true_or_false,
-  "corrected": "the_corrected_sentence_here",
-  "explanation": "what_you_changed_and_why",
-  "suggested_variation": "alternative_phrasing",
-  "tips": ["grammar_tip_1", "grammar_tip_2"]
+  "is_correct": false,
+  "corrected": "corrected sentence with fixes applied",
+  "explanation": "brief explanation of what was wrong",
+  "suggested_variation": "alternative way to say it",
+  "tips": ["tip about the grammar rule"]
 }}
 
-CRITICAL:
-- Analyze the EXACT sentence provided above
-- Preserve original capitalization
-- If errors exist: is_correct=false, corrected=fixed version
-- If perfect: is_correct=true, corrected=same as original
-- DO NOT copy examples - analyze the actual sentence
+RULES:
+- If sentence is PERFECT: is_correct=true, corrected=EXACT same as original
+- If ANY error: is_correct=false, corrected=FIXED sentence
+- Preserve capitalization exactly
+- Focus on the ACTUAL errors in the sentence
+- Return the corrected sentence, not the original
 
 JSON:"""
             

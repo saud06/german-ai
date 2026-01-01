@@ -210,7 +210,18 @@ export default function GrammarCoach() {
                 <div className="bg-white bg-opacity-20 rounded-lg p-4 mb-3">
                   <p className="text-lg font-medium">{res.original}</p>
                 </div>
-                <p className="text-green-50">{res.explanation || 'Your sentence is grammatically correct. Great job!'}</p>
+                <p className="text-green-50 mb-4">{res.explanation || 'Your sentence is grammatically correct. Great job!'}</p>
+                
+                {/* Save button for correct sentences */}
+                {userId && (
+                  <button
+                    className="px-6 py-2.5 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg font-medium transition-all shadow-md"
+                    onClick={saveAttemptServer}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : '💾 Save to History'}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
