@@ -11,6 +11,7 @@ services:
     env_file:
       - .env
     environment:
+      # Native Ollama configuration (runs on host machine with GPU)
       - OLLAMA_HOST=http://host.docker.internal:11435
       - OLLAMA_MODEL=mistral:7b
       - OLLAMA_MODEL_FAST=llama3.2:3b
@@ -72,34 +73,37 @@ services:
     networks:
       - german-ai-network
   
-  ollama:
-    image: ollama/ollama:latest
-    container_name: german_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_KEEP_ALIVE=24h
-      - OLLAMA_NUM_PARALLEL=1  # Reduce parallel requests to lower CPU
-      - OLLAMA_MAX_LOADED_MODELS=1  # Keep only 1 model loaded
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'  # Limit Ollama to 2 CPU cores to match local Docker CPU limit
-        # NVIDIA GPU support for deployment (uncomment when deploying to GPU server)
-        # reservations:
-        #   devices:
-        #     - driver: nvidia
-        #       count: 1
-        #       capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
-      interval: 30s
-      timeout: 30s
-      retries: 5
-      start_period: 120s
+  # Ollama service is DISABLED by default
+  # Ollama should run NATIVELY on your machine for GPU access
+  # The setup.sh script will install and configure native Ollama automatically
+  # 
+  # If you really need to run Ollama in Docker (not recommended):
+  # 1. Uncomment the service below
+  # 2. Update OLLAMA_HOST in .env to http://ollama:11434
+  # 3. Note: Docker Ollama won't have GPU access unless you configure it
+  
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: german_ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0
+  #     - OLLAMA_KEEP_ALIVE=24h
+  #     - OLLAMA_NUM_PARALLEL=1
+  #     - OLLAMA_MAX_LOADED_MODELS=1
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '2.0'
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:11434/"]
+  #     interval: 30s
+  #     timeout: 30s
+  #     retries: 5
+  #     start_period: 120s
 
   whisper:
     image: onerahmet/openai-whisper-asr-webservice:latest

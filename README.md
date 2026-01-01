@@ -39,59 +39,82 @@ A comprehensive, AI-powered German language learning platform featuring interact
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Docker Desktop**: Latest version
-- **MongoDB Atlas**: Free tier account (or local MongoDB)
+- **Docker Desktop**: Latest version ([Install Docker](https://docs.docker.com/get-docker/))
+- **Git**: For cloning the repository
 - **RAM**: 8GB minimum, 16GB recommended
-- **Storage**: 15GB free space
-- **GPU** (Recommended): NVIDIA/AMD/Apple Silicon for 10-15x faster AI
+- **Storage**: 15GB free space for AI models
+- **GPU** (Optional but Recommended): NVIDIA/AMD for 10-15x faster AI performance
 
-### Automated Setup (Recommended)
+### One-Command Setup ⚡
 
-Choose your platform and run the automated setup script:
+**Clone and run the automated setup script:**
 
-**🍎 macOS (Apple Silicon/Intel)**
 ```bash
 git clone https://github.com/saud06/german-ai.git
 cd german-ai
-chmod +x setup-macos.sh
-./setup-macos.sh
+chmod +x setup.sh
+./setup.sh
 ```
 
-**🐧 Linux (Ubuntu/Debian/Fedora)**
-```bash
-git clone https://github.com/saud06/german-ai.git
-cd german-ai
-chmod +x setup-linux.sh
-./setup-linux.sh
-```
+**That's it!** The script will automatically:
+- ✅ Detect your operating system (Linux/macOS/Windows WSL)
+- ✅ Detect your GPU (NVIDIA/AMD/CPU)
+- ✅ Install Ollama **natively** on your machine for GPU acceleration
+- ✅ Download 3 AI models (mistral:7b, llama3.2:3b, gemma2:9b) - ~11GB total
+- ✅ Configure environment variables automatically
+- ✅ Start Docker containers (Backend, Frontend, Whisper, Piper, Redis)
+- ✅ Verify everything is working
 
-**🪟 Windows (PowerShell as Administrator)**
-```powershell
-git clone https://github.com/saud06/german-ai.git
-cd german-ai
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-.\setup-windows.ps1
-```
+### What Gets Installed
 
-### What the Setup Does
-- ✅ Installs Ollama natively on your GPU
-- ✅ Downloads AI models (Gemma 2, Mistral 7B, Llama 3.2)
-- ✅ Configures Docker containers
-- ✅ Sets up environment variables
-- ✅ Verifies GPU usage
+**Native (GPU-Accelerated):**
+- 🧠 **Ollama** - Runs on your GPU for fast AI responses
+  - mistral:7b (4.4 GB) - Main conversation model
+  - llama3.2:3b (2.0 GB) - Fast responses
+  - gemma2:9b (5.4 GB) - Grammar checking
+
+**Docker Containers:**
+- 🐳 **Backend** (FastAPI) - Port 8000
+- 🌐 **Frontend** (Next.js) - Port 3000
+- 🎤 **Whisper** (Speech Recognition) - Port 9000
+- 🔊 **Piper** (Text-to-Speech) - Port 10200
+- 💾 **Redis** (Cache) - Port 6379
 
 ### Access the Application
+
+After setup completes (5-10 minutes for model downloads):
+
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 
-### Demo Account
+### First Time Setup
+
+1. Open http://localhost:3000
+2. Create your account
+3. Start learning German!
+
+### Demo Account (Optional)
 ```
 Email:    saud@gmail.com
 Password: password
 ```
 
-> **📖 For detailed setup instructions, troubleshooting, and manual setup, see [SETUP.md](./SETUP.md)**
+### Platform-Specific Notes
+
+**macOS Users:**
+- The script will prompt you to install Ollama from https://ollama.com/download
+- After installation, run `./setup.sh` again
+
+**Windows Users:**
+- Use WSL2 (Windows Subsystem for Linux) for best compatibility
+- Or use PowerShell: `.\setup-windows.ps1` (if available)
+
+**Linux Users:**
+- Script works on Ubuntu, Debian, Fedora, Arch, and most distributions
+- GPU drivers (NVIDIA/AMD) should be installed beforehand for GPU acceleration
+
+> **📖 For detailed setup instructions, troubleshooting, and manual configuration, see [SETUP.md](./SETUP.md)**
 
 ## 📊 Architecture
 
