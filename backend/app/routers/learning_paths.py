@@ -24,9 +24,10 @@ router = APIRouter(prefix="/learning-paths", tags=["learning-paths"])
 @router.get("/", response_model=List[LearningPathResponse])
 async def get_all_learning_paths(
     user_id: str = Depends(get_current_user),
+    journey_level: Optional[str] = None,
     db = Depends(get_db)
 ):
-    """Get all learning paths with user progress"""
+    """Get all learning paths with user progress, optionally filtered by journey level"""
     
     # Get user progress
     progress_doc = await db.user_progress.find_one({"user_id": user_id})
@@ -55,8 +56,12 @@ async def get_all_learning_paths(
         }
         await db.user_progress.insert_one(progress_doc)
     
-    # Get all learning paths
-    paths = await db.learning_paths.find().sort("chapter", 1).to_list(length=100)
+    # Get all learning paths, optionally filtered by level
+    query = {}
+    if journey_level:
+        # Filter to show only paths matching the journey level
+        query["level"] = journey_level.upper()
+    paths = await db.learning_paths.find(query).sort("chapter", 1).to_list(length=100)
     
     result = []
     for path in paths:
@@ -163,9 +168,10 @@ async def get_progress_summary(
 @router.get("/recommendations", response_model=List[RecommendedAction])
 async def get_recommendations(
     user_id: str = Depends(get_current_user),
+    journey_level: Optional[str] = None,
     db = Depends(get_db)
 ):
-    """Get AI-powered recommendations for next actions"""
+    """Get AI-powered recommendations for next actions, optionally filtered by journey level"""
     
     # Get user progress
     progress_doc = await db.user_progress.find_one({"user_id": user_id})
@@ -179,7 +185,10 @@ async def get_recommendations(
     chapter_progress = progress_doc.get("chapter_progress", {})
     
     # Find incomplete locations in current chapter
-    path = await db.learning_paths.find_one({"chapter": current_chapter})
+    path_query = {"chapter": current_chapter}
+    if journey_level:
+        path_query["level"] = journey_level.upper()
+    path = await db.learning_paths.find_one(path_query)
     if path:
         for location_id in path.get("locations", []):
             location = await db.locations.find_one({"_id": ObjectId(location_id)})
@@ -235,9 +244,10 @@ async def get_recommendations(
 @router.get("/challenges/daily", response_model=List[DailyChallenge])
 async def get_daily_challenges(
     user_id: str = Depends(get_current_user),
+    journey_level: Optional[str] = None,
     db = Depends(get_db)
 ):
-    """Get today's challenges"""
+    """Get today's challenges, optionally filtered by journey level"""
     
     # Get or create today's challenges
     today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)

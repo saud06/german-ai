@@ -176,8 +176,9 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 // LEARNING PATHS
 // ============================================================================
 
-export async function getAllLearningPaths(): Promise<LearningPathResponse[]> {
-  return apiRequest('/learning-paths');
+export async function getAllLearningPaths(journeyLevel?: string): Promise<LearningPathResponse[]> {
+  const params = journeyLevel ? `?journey_level=${journeyLevel}` : '';
+  return apiRequest(`/learning-paths${params}`);
 }
 
 export async function getLearningPath(pathId: string): Promise<LearningPathResponse> {
@@ -221,12 +222,14 @@ export async function getProgressSummary(): Promise<ProgressSummary> {
   return apiRequest('/learning-paths/progress/summary');
 }
 
-export async function getRecommendations(): Promise<RecommendedAction[]> {
-  return apiRequest('/learning-paths/recommendations');
+export async function getRecommendations(journeyLevel?: string): Promise<RecommendedAction[]> {
+  const params = journeyLevel ? `?journey_level=${journeyLevel}` : '';
+  return apiRequest(`/learning-paths/recommendations${params}`);
 }
 
-export async function getDailyChallenges(): Promise<DailyChallenge[]> {
-  return apiRequest('/learning-paths/challenges/daily');
+export async function getDailyChallenges(journeyLevel?: string): Promise<DailyChallenge[]> {
+  const params = journeyLevel ? `?journey_level=${journeyLevel}` : '';
+  return apiRequest(`/learning-paths/challenges/daily${params}`);
 }
 
 // ============================================================================

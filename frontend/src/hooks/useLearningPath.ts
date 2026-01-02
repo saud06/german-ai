@@ -8,17 +8,17 @@ import * as api from '@/lib/learningPathApi';
 // LEARNING PATHS
 // ============================================================================
 
-export function useLearningPaths() {
+export function useLearningPaths(journeyLevel?: string) {
   const [data, setData] = useState<api.LearningPathResponse[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    api.getAllLearningPaths()
+    api.getAllLearningPaths(journeyLevel)
       .then(setData)
       .catch(setError)
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [journeyLevel]);
 
   return { data, isLoading, error, refetch: () => window.location.reload() };
 }
@@ -155,32 +155,32 @@ export function useProgressSummary() {
   return { data, isLoading, error, refetch };
 }
 
-export function useRecommendations() {
+export function useRecommendations(journeyLevel?: string) {
   const [data, setData] = useState<api.RecommendedAction[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    api.getRecommendations()
+    api.getRecommendations(journeyLevel)
       .then(setData)
       .catch(setError)
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [journeyLevel]);
 
   return { data, isLoading, error };
 }
 
-export function useDailyChallenges() {
+export function useDailyChallenges(journeyLevel?: string) {
   const [data, setData] = useState<api.DailyChallenge[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    api.getDailyChallenges()
+    api.getDailyChallenges(journeyLevel)
       .then(setData)
       .catch(setError)
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [journeyLevel]);
 
   return { data, isLoading, error };
 }

@@ -9,10 +9,15 @@ import { MapIcon, TrophyIcon, FlameIcon, MessageCircleIcon, BookOpenIcon, UsersI
 export default function LearningPathPage() {
   const router = useRouter();
   const { activeJourney } = useJourney();
-  const { data: paths, isLoading: pathsLoading } = useLearningPaths();
+  
+  // For Student journey, filter by their level (B1)
+  // For other journeys, show all levels
+  const journeyLevel = activeJourney?.type === 'student' ? activeJourney.level : undefined;
+  
+  const { data: paths, isLoading: pathsLoading } = useLearningPaths(journeyLevel);
   const { data: progress, isLoading: progressLoading } = useProgressSummary();
-  const { data: recommendations } = useRecommendations();
-  const { data: challenges } = useDailyChallenges();
+  const { data: recommendations } = useRecommendations(journeyLevel);
+  const { data: challenges } = useDailyChallenges(journeyLevel);
 
   if (pathsLoading || progressLoading) {
     return (
