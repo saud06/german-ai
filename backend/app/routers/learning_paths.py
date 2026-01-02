@@ -74,12 +74,24 @@ async def get_all_learning_paths(
         if "characters" in path:
             path["characters"] = [str(char_id) for char_id in path["characters"]]
         
-        # Check if unlocked
+        # Check if unlocked - first chapter is always unlocked
         is_unlocked = True
-        if path.get("unlock_requirements"):
+        if path.get("chapter", 1) == 1:
+            is_unlocked = True
+        elif path.get("unlock_requirements"):
             req = path["unlock_requirements"]
             if req.get("min_xp", 0) > progress_doc.get("total_xp", 0):
                 is_unlocked = False
+            # Check if previous chapter is completed
+            prev_chapter = path.get("chapter", 1) - 1
+            if prev_chapter > 0:
+                prev_chapter_completed = False
+                for ch_id, ch_prog in progress_doc.get("chapter_progress", {}).items():
+                    if ch_prog.get("progress_percent") == 100:
+                        prev_chapter_completed = True
+                        break
+                if not prev_chapter_completed:
+                    is_unlocked = False
         
         # Check if completed
         is_completed = False
@@ -180,29 +192,29 @@ async def get_recommendations(
     
     recommendations = []
     
-    # 1. Continue current chapter
-    current_chapter = progress_doc.get("current_chapter", 1)
-    chapter_progress = progress_doc.get("chapter_progress", {})
-    
-    # Find incomplete locations in current chapter
-    path_query = {"chapter": current_chapter}
+    # 1. Recommend scenarios based on journey level
+    scenario_query = {}
     if journey_level:
-        path_query["level"] = journey_level.upper()
-    path = await db.learning_paths.find_one(path_query)
-    if path:
-        for location_id in path.get("locations", []):
-            location = await db.locations.find_one({"_id": ObjectId(location_id)})
-            if location:
-                recommendations.append({
-                    "type": "location",
-                    "id": str(location["_id"]),
-                    "title": f"Visit {location['name']}",
-                    "description": location["description"],
-                    "estimated_minutes": location.get("estimated_minutes", 15),
-                    "xp_reward": 50,
-                    "priority": "high",
-                    "reason": "Continue your journey in Chapter " + str(current_chapter)
-                })
+        # Filter scenarios by journey level (e.g., b1 for Student journey)
+        scenario_query["difficulty"] = journey_level.lower()
+    
+    # Get incomplete scenarios
+    completed_scenarios = progress_doc.get("scenarios_completed", [])
+    scenarios = await db.scenarios.find(scenario_query).limit(5).to_list(5)
+    
+    for scenario in scenarios:
+        scenario_id = str(scenario["_id"])
+        if scenario_id not in completed_scenarios:
+            recommendations.append({
+                "type": "scenario",
+                "id": scenario_id,
+                "title": scenario.get("title_en", scenario["name"]),
+                "description": scenario.get("description_en", scenario["description"]),
+                "estimated_minutes": scenario.get("estimated_duration", 15),
+                "xp_reward": scenario.get("xp_reward", 50),
+                "priority": "high",
+                "reason": f"Practice {scenario.get('category', 'conversation')} skills"
+            })
     
     # 2. Practice with characters
     relationships = progress_doc.get("character_relationships", {})
