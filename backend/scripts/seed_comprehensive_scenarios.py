@@ -314,8 +314,153 @@ async def seed_comprehensive_scenarios():
         s["created_at"] = datetime.utcnow()
     scenarios.extend(a2_scenarios)
     
+    # B1 Level - Intermediate conversations (15 scenarios)
+    b1_scenarios = [
+        {
+            "name": "Vorstellungsgespräch", "title_en": "Job Interview",
+            "description": "Stellen Sie sich in einem Vorstellungsgespräch vor.",
+            "description_en": "Introduce yourself in a job interview.",
+            "category": "professional", "icon": "💼", "estimated_duration": 15,
+            "characters": [{"id": str(ObjectId()), "name": "Frau Richter", "role": "HR manager", "personality": "professional", "description": "Eine Personalchefin", "greeting": "Erzählen Sie mir von sich."}],
+            "objectives": [{"id": str(ObjectId()), "description": "Beschreiben Sie Ihre Erfahrung", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Geschäftstreffen", "title_en": "Business Meeting",
+            "description": "Nehmen Sie an einem Geschäftstreffen teil.",
+            "description_en": "Participate in a business meeting.",
+            "category": "professional", "icon": "📊", "estimated_duration": 15,
+            "characters": [{"id": str(ObjectId()), "name": "Herr Bauer", "role": "manager", "personality": "direct", "description": "Ein Manager", "greeting": "Lassen Sie uns beginnen."}],
+            "objectives": [{"id": str(ObjectId()), "description": "Präsentieren Sie Ihre Idee", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Mietvertrag besprechen", "title_en": "Discussing Rental Contract",
+            "description": "Besprechen Sie einen Mietvertrag.",
+            "description_en": "Discuss a rental contract.",
+            "category": "housing", "icon": "📄", "estimated_duration": 12,
+            "characters": [{"id": str(ObjectId()), "name": "Herr Zimmermann", "role": "landlord", "personality": "formal", "description": "Ein Vermieter", "greeting": "Haben Sie Fragen zum Vertrag?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Klären Sie die Bedingungen", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Arzttermin vereinbaren", "title_en": "Making Doctor's Appointment",
+            "description": "Vereinbaren Sie einen Arzttermin am Telefon.",
+            "description_en": "Make a doctor's appointment by phone.",
+            "category": "medical", "icon": "📞", "estimated_duration": 10,
+            "characters": [{"id": str(ObjectId()), "name": "Frau Lehmann", "role": "receptionist", "personality": "efficient", "description": "Eine Arzthelferin", "greeting": "Praxis Dr. Weber, was kann ich für Sie tun?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Vereinbaren Sie einen Termin", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Nachbarschaftskonflikt", "title_en": "Neighborhood Conflict",
+            "description": "Lösen Sie einen Konflikt mit Nachbarn.",
+            "description_en": "Resolve a conflict with neighbors.",
+            "category": "social", "icon": "🏘️", "estimated_duration": 12,
+            "characters": [{"id": str(ObjectId()), "name": "Herr Neumann", "role": "neighbor", "personality": "annoyed", "description": "Ein Nachbar", "greeting": "Wir müssen über den Lärm sprechen."}],
+            "objectives": [{"id": str(ObjectId()), "description": "Finden Sie eine Lösung", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Behördengang", "title_en": "Government Office Visit",
+            "description": "Beantragen Sie ein Dokument beim Amt.",
+            "description_en": "Apply for a document at the government office.",
+            "category": "services", "icon": "🏛️", "estimated_duration": 15,
+            "characters": [{"id": str(ObjectId()), "name": "Frau Koch", "role": "civil servant", "personality": "bureaucratic", "description": "Eine Beamtin", "greeting": "Welches Formular brauchen Sie?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Füllen Sie das Formular aus", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Kulturelle Veranstaltung", "title_en": "Cultural Event",
+            "description": "Diskutieren Sie über eine Kunstausstellung.",
+            "description_en": "Discuss an art exhibition.",
+            "category": "culture", "icon": "🎨", "estimated_duration": 12,
+            "characters": [{"id": str(ObjectId()), "name": "Sophie", "role": "art enthusiast", "personality": "passionate", "description": "Eine Kunstliebhaberin", "greeting": "Was halten Sie von dieser Ausstellung?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Geben Sie Ihre Meinung ab", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Politische Diskussion", "title_en": "Political Discussion",
+            "description": "Diskutieren Sie über aktuelle Themen.",
+            "description_en": "Discuss current topics.",
+            "category": "social", "icon": "🗳️", "estimated_duration": 15,
+            "characters": [{"id": str(ObjectId()), "name": "Martin", "role": "colleague", "personality": "opinionated", "description": "Ein Kollege", "greeting": "Was denken Sie über die Situation?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Argumentieren Sie Ihren Standpunkt", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Gesundheitsberatung", "title_en": "Health Consultation",
+            "description": "Besprechen Sie Ihre Gesundheit mit einem Arzt.",
+            "description_en": "Discuss your health with a doctor.",
+            "category": "medical", "icon": "🩺", "estimated_duration": 15,
+            "characters": [{"id": str(ObjectId()), "name": "Dr. Schneider", "role": "doctor", "personality": "thorough", "description": "Ein Arzt", "greeting": "Wie geht es Ihnen gesundheitlich?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Beschreiben Sie Ihre Beschwerden", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Finanzberatung", "title_en": "Financial Consultation",
+            "description": "Besprechen Sie Ihre Finanzen mit einem Berater.",
+            "description_en": "Discuss your finances with an advisor.",
+            "category": "finance", "icon": "💰", "estimated_duration": 15,
+            "characters": [{"id": str(ObjectId()), "name": "Herr Stein", "role": "financial advisor", "personality": "analytical", "description": "Ein Finanzberater", "greeting": "Wie kann ich Ihnen helfen?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Besprechen Sie Ihre Ziele", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Vereinsmitgliedschaft", "title_en": "Club Membership",
+            "description": "Treten Sie einem Verein bei.",
+            "description_en": "Join a club.",
+            "category": "social", "icon": "⚽", "estimated_duration": 10,
+            "characters": [{"id": str(ObjectId()), "name": "Petra", "role": "club president", "personality": "welcoming", "description": "Eine Vereinsvorsitzende", "greeting": "Möchten Sie unserem Verein beitreten?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Melden Sie sich an", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Reiseplanung", "title_en": "Travel Planning",
+            "description": "Planen Sie eine Reise mit einem Reisebüro.",
+            "description_en": "Plan a trip with a travel agency.",
+            "category": "travel", "icon": "✈️", "estimated_duration": 12,
+            "characters": [{"id": str(ObjectId()), "name": "Frau Berger", "role": "travel agent", "personality": "enthusiastic", "description": "Eine Reiseberaterin", "greeting": "Wohin möchten Sie reisen?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Buchen Sie eine Reise", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Umweltdiskussion", "title_en": "Environmental Discussion",
+            "description": "Diskutieren Sie über Umweltthemen.",
+            "description_en": "Discuss environmental topics.",
+            "category": "social", "icon": "🌍", "estimated_duration": 12,
+            "characters": [{"id": str(ObjectId()), "name": "Anna", "role": "activist", "personality": "passionate", "description": "Eine Aktivistin", "greeting": "Was tun Sie für die Umwelt?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Teilen Sie Ihre Meinung", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Technisches Problem", "title_en": "Technical Problem",
+            "description": "Lösen Sie ein technisches Problem am Telefon.",
+            "description_en": "Solve a technical problem by phone.",
+            "category": "services", "icon": "💻", "estimated_duration": 12,
+            "characters": [{"id": str(ObjectId()), "name": "Kevin", "role": "tech support", "personality": "patient", "description": "Ein IT-Support", "greeting": "Was ist das Problem?"}],
+            "objectives": [{"id": str(ObjectId()), "description": "Beschreiben Sie das Problem", "required": True}],
+            "xp_reward": 100
+        },
+        {
+            "name": "Elternabend", "title_en": "Parent-Teacher Meeting",
+            "description": "Sprechen Sie mit dem Lehrer Ihres Kindes.",
+            "description_en": "Talk to your child's teacher.",
+            "category": "education", "icon": "👨‍🏫", "estimated_duration": 12,
+            "characters": [{"id": str(ObjectId()), "name": "Herr Vogel", "role": "teacher", "personality": "concerned", "description": "Ein Lehrer", "greeting": "Danke, dass Sie gekommen sind."}],
+            "objectives": [{"id": str(ObjectId()), "description": "Besprechen Sie die Leistung", "required": True}],
+            "xp_reward": 100
+        }
+    ]
+    
+    for s in b1_scenarios:
+        s["difficulty"] = "b1"
+        s["created_at"] = datetime.utcnow()
+    scenarios.extend(b1_scenarios)
+    
     print(f"✅ Created {len(a1_scenarios)} A1 scenarios")
     print(f"✅ Created {len(a2_scenarios)} A2 scenarios")
+    print(f"✅ Created {len(b1_scenarios)} B1 scenarios")
     
     # Insert all scenarios
     if scenarios:

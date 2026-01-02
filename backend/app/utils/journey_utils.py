@@ -114,25 +114,25 @@ def get_level_range_for_content(level: str) -> list[str]:
     Returns only the exact level selected by the user
     
     For example:
-    - B1 user gets: B1 content only
-    - A1 user gets: A1 content only
-    - Beginner gets: A1, A2 content (difficulty range)
+    - B1 user gets: b1 content only (lowercase to match DB)
+    - A1 user gets: a1 content only
+    - Beginner gets: a1, a2 content (difficulty range)
     """
     level_lower = level.lower()
     
-    # CEFR levels - return exact level only
+    # CEFR levels - return exact level only (lowercase to match DB)
     if level_lower in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2']:
-        return [level.upper()]
+        return [level_lower]
     
-    # Difficulty levels
+    # Difficulty levels (lowercase to match DB)
     difficulty_map = {
-        'beginner': ['A1', 'A2'],
-        'intermediate': ['B1', 'B2'],
-        'advanced': ['C1', 'C2']
+        'beginner': ['a1', 'a2'],
+        'intermediate': ['b1', 'b2'],
+        'advanced': ['c1', 'c2']
     }
     
     if level_lower in difficulty_map:
         return difficulty_map[level_lower]
     
-    # Default: return the level as-is
-    return [level.upper()]
+    # Default: return lowercase
+    return [level_lower]
