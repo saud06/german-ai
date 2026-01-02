@@ -195,30 +195,32 @@ export default function ScenariosPage() {
           </p>
         </div>
 
-        {/* Filter */}
-        <div className="mb-6 flex gap-2">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === 'all'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            All
-          </button>
-          {journeyLevels.map((level) => (
+        {/* Filter - Only show user's current level for Student journey */}
+        {activeJourney?.type !== 'student' && (
+          <div className="mb-6 flex gap-2">
             <button
-              key={level}
-              onClick={() => setFilter(level.toLowerCase())}
+              onClick={() => setFilter('all')}
               className={`px-4 py-2 rounded-lg font-medium transition ${
-                getLevelFilterColor(level, activeJourney, filter === level.toLowerCase())
+                filter === 'all'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
               }`}
             >
-              {level}
+              All
             </button>
-          ))}
-        </div>
+            {journeyLevels.map((level) => (
+              <button
+                key={level}
+                onClick={() => setFilter(level.toLowerCase())}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  getLevelFilterColor(level, activeJourney, filter === level.toLowerCase())
+                }`}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Error */}
         {error && (
