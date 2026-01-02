@@ -429,7 +429,9 @@ export default function QuizPage() {
                 )}
                 {config.level && (
                   <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
-                    {config.level.charAt(0).toUpperCase() + config.level.slice(1)}
+                    {activeJourney?.type === 'student' && activeJourney?.level 
+                      ? activeJourney.level.toUpperCase() 
+                      : config.level.charAt(0).toUpperCase() + config.level.slice(1)}
                   </span>
                 )}
               </div>
