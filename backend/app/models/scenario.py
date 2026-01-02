@@ -95,7 +95,7 @@ class Objective(BaseModel):
     """Learning objective within a scenario"""
     id: str = Field(default_factory=lambda: str(ObjectId()))
     description: str  # e.g., "Order a drink"
-    keywords: List[str]  # Keywords that indicate completion
+    keywords: Optional[List[str]] = []  # Keywords that indicate completion
     required: bool = True  # Whether this objective is required
     hint: Optional[str] = None  # Hint in German
     completed: bool = False

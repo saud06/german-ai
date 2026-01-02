@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import VoiceRecorder from '@/components/VoiceRecorder';
+import { useJourney } from '@/contexts/JourneyContext';
+import { mapToJourneyLevel } from '@/lib/levelUtils';
 
 interface Character {
   id: string;
@@ -61,6 +63,7 @@ export default function ScenarioDetailPage() {
   const params = useParams();
   const scenarioId = params.id as string;
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { activeJourney } = useJourney();
 
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [conversationState, setConversationState] = useState<ConversationState | null>(null);
@@ -465,7 +468,7 @@ export default function ScenarioDetailPage() {
 
               {/* Meta Info */}
               <div className="flex items-center gap-6 mb-8 text-gray-600 dark:text-gray-400">
-                <span>📊 Difficulty: <strong>{scenario.difficulty}</strong></span>
+                <span>📊 Level: <strong>{mapToJourneyLevel(scenario.difficulty, activeJourney)}</strong></span>
                 <span>⏱️ Duration: <strong>{scenario.estimated_duration} min</strong></span>
                 <span>🎯 Objectives: <strong>{scenario.objectives.length}</strong></span>
                 {conversationState && (

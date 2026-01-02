@@ -256,7 +256,7 @@ export default function ScenariosPage() {
                 {/* Meta Info */}
                 <div className="flex items-center gap-2 mb-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(scenario.difficulty)}`}>
-                    {scenario.difficulty.charAt(0).toUpperCase() + scenario.difficulty.slice(1)}
+                    {mapToJourneyLevel(scenario.difficulty, activeJourney)}
                   </span>
                   <span className="text-gray-500 dark:text-gray-400 text-sm">
                     ⏱️ {scenario.estimated_duration} min
