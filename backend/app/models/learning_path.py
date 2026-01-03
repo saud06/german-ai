@@ -64,7 +64,7 @@ class LearningPath(BaseModel):
     image: str  # Chapter cover image
     locations: List[str] = []  # Location IDs
     characters: List[str] = []  # Character IDs
-    estimated_hours: int
+    estimated_hours: float
     unlock_requirements: Optional[UnlockRequirements] = None
     completion_reward: CompletionReward
     created_at: datetime = Field(default_factory=datetime.utcnow)
