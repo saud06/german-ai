@@ -50,15 +50,7 @@ export default function LearningPathPage() {
           <p className="text-lg text-gray-600 dark:text-gray-400">
             Learn German by living a virtual life in Germany
           </p>
-          {activeJourney && (
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Journey:</span>
-              <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                {activeJourney.type.charAt(0).toUpperCase() + activeJourney.type.slice(1)} • {activeJourney.level.toUpperCase()}
-              </span>
-            </div>
-          )}
-        </div>
+                  </div>
 
         {/* Current Chapter Card */}
         {currentPath && (
