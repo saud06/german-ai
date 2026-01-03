@@ -242,7 +242,7 @@ export default function LearningPathMapPage() {
               </g>
               
               {/* Winding Road Path */}
-              {(() => {
+              {locations && locations.length > 0 && (() => {
                 // Create serpentine path: bottom-left to top-right with smooth waves
                 const pathCoords = locations.map((_, idx) => {
                   const totalWidth = 1100;
@@ -316,7 +316,7 @@ export default function LearningPathMapPage() {
               })()}
               
               {/* Location markers */}
-              {locations.map((locData, idx) => {
+              {locations && locations.length > 0 && locations.map((locData, idx) => {
                 const { location, is_unlocked, is_completed } = locData;
                 
                 // Calculate position matching diagonal serpentine path
@@ -528,6 +528,19 @@ export default function LearningPathMapPage() {
               );
             })}
           </div>
+          
+          {/* No locations message */}
+          {(!locations || locations.length === 0) && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🗺️</div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Chapter Map Coming Soon
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                This chapter doesn't have any locations yet. Check back later as we add more content to your learning journey!
+              </p>
+            </div>
+          )}
         </div>
 
       </div>
