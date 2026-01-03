@@ -88,7 +88,8 @@ class Location(BaseModel):
     unlock_requirements: UnlockRequirements
     characters: List[str] = []  # Character IDs appearing here
     estimated_minutes: int
-    rewards: CompletionReward
+    rewards: Optional[CompletionReward] = Field(alias="completion_reward", default=None)
+    difficulty_requirements: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Config:
