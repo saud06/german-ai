@@ -1,25 +1,4 @@
 services:
-  mongodb:
-    image: mongo:7
-    container_name: german_mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=password
-      - MONGO_INITDB_DATABASE=german_ai
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
-    networks:
-      - german-ai-network
-
   backend:
     build:
       context: .
@@ -37,12 +16,12 @@ services:
       - OLLAMA_MODEL=mistral:7b
       - OLLAMA_MODEL_FAST=llama3.2:3b
       - OLLAMA_MODEL_GRAMMAR=gemma2:9b
-      - MONGODB_URL=mongodb://admin:password@mongodb:27017/german_ai?authSource=admin
+      # MongoDB Atlas connection (from .env)
+      - MONGODB_URL=${MONGODB_URI}
     ports:
       - "8000:8000"
     depends_on:
       - redis
-      - mongodb
       - whisper
       - piper
     extra_hosts:
@@ -177,7 +156,6 @@ networks:
 
 volumes:
   redis_data:
-  mongodb_data:
   ollama_data:
   whisper_data:
   piper_data:

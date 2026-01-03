@@ -29,6 +29,11 @@ async def get_all_learning_paths(
 ):
     """Get all learning paths with user progress, optionally filtered by journey level"""
     
+    # Debug logging
+    print(f"DEBUG: journey_level parameter = '{journey_level}'")
+    if journey_level:
+        print(f"DEBUG: Filtering by level = '{journey_level.upper()}'")
+    
     # Get user progress
     progress_doc = await db.user_progress.find_one({"user_id": user_id})
     if not progress_doc:
@@ -60,6 +65,7 @@ async def get_all_learning_paths(
     query = {}
     if journey_level:
         # Filter to show only paths matching the journey level
+        # Journey levels are stored as uppercase (A1, A2, B1, etc.)
         query["level"] = journey_level.upper()
     paths = await db.learning_paths.find(query).sort("chapter", 1).to_list(length=100)
     

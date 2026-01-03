@@ -11,8 +11,8 @@ from bson import ObjectId
 import os
 
 # MongoDB connection
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://admin:password@mongodb:27017/german_ai?authSource=admin")
-DB_NAME = "german_ai"
+MONGODB_URL = os.getenv("MONGODB_URI", "mongodb+srv://saud:A20WJXcybOc2aAgb@cluster0.8hmnx1o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+DB_NAME = os.getenv("MONGODB_DB_NAME", "german_ai")
 
 async def seed_comprehensive_learning_paths():
     """Seed comprehensive learning paths for all levels"""
