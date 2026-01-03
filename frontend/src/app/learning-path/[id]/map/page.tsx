@@ -123,29 +123,32 @@ export default function LearningPathMapPage() {
             
             <svg viewBox="0 0 1200 700" className="w-full h-auto relative z-10" preserveAspectRatio="xMidYMid meet">
               <defs>
-                {/* Road gradient */}
+                {/* Road gradient - darker and more vibrant */}
                 <linearGradient id="roadGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#4b5563', stopOpacity: 1 }} />
-                  <stop offset="50%" style={{ stopColor: '#374151', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#4b5563', stopOpacity: 1 }} />
+                  <stop offset="0%" style={{ stopColor: '#1e293b', stopOpacity: 1 }} />
+                  <stop offset="50%" style={{ stopColor: '#0f172a', stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: '#1e293b', stopOpacity: 1 }} />
                 </linearGradient>
                 
-                {/* Completed gradient */}
+                {/* Completed gradient - vibrant green */}
                 <linearGradient id="completedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
+                  <stop offset="0%" style={{ stopColor: '#22c55e', stopOpacity: 1 }} />
+                  <stop offset="50%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
                   <stop offset="100%" style={{ stopColor: '#059669', stopOpacity: 1 }} />
                 </linearGradient>
                 
-                {/* Active gradient */}
+                {/* Active gradient - vibrant indigo to purple */}
                 <linearGradient id="activeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#6366f1', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#8b5cf6', stopOpacity: 1 }} />
+                  <stop offset="0%" style={{ stopColor: '#818cf8', stopOpacity: 1 }} />
+                  <stop offset="50%" style={{ stopColor: '#6366f1', stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
                 </linearGradient>
                 
-                {/* Locked gradient */}
+                {/* Locked gradient - darker gray */}
                 <linearGradient id="lockedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#d1d5db', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#9ca3af', stopOpacity: 1 }} />
+                  <stop offset="0%" style={{ stopColor: '#6b7280', stopOpacity: 1 }} />
+                  <stop offset="50%" style={{ stopColor: '#4b5563', stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: '#374151', stopOpacity: 1 }} />
                 </linearGradient>
                 
                 {/* Glow effect */}
@@ -343,25 +346,25 @@ export default function LearningPathMapPage() {
                     className={`transition-all duration-300 ${is_unlocked ? "cursor-pointer" : "cursor-not-allowed"}`}
                     onClick={() => is_unlocked && router.push(`/learning-path/locations/${location._id}`)}
                   >
-                    {/* Pulse animation for active locations */}
+                    {/* Pulse animation for active locations - more vibrant */}
                     {is_unlocked && !is_completed && (
                       <circle
                         cx={x}
                         cy={y}
-                        r="40"
-                        fill={is_unlocked ? "#6366f1" : "#d1d5db"}
-                        opacity="0.2"
+                        r="45"
+                        fill="#818cf8"
+                        opacity="0.4"
                       >
                         <animate
                           attributeName="r"
-                          from="40"
-                          to="60"
+                          from="45"
+                          to="70"
                           dur="2s"
                           repeatCount="indefinite"
                         />
                         <animate
                           attributeName="opacity"
-                          from="0.2"
+                          from="0.4"
                           to="0"
                           dur="2s"
                           repeatCount="indefinite"
@@ -369,15 +372,24 @@ export default function LearningPathMapPage() {
                       </circle>
                     )}
                     
-                    {/* Circular marker with gradient - fixed hover */}
+                    {/* Circular marker with gradient - larger and more vibrant */}
                     <g className={is_unlocked ? "hover-marker" : ""}>
+                      {/* Outer glow ring */}
                       <circle
                         cx={x}
                         cy={y}
-                        r="40"
+                        r="50"
+                        fill={is_completed ? "#10b981" : is_unlocked ? "#6366f1" : "#4b5563"}
+                        opacity="0.2"
+                      />
+                      {/* Main marker circle */}
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r="45"
                         fill={is_completed ? "url(#completedGradient)" : is_unlocked ? "url(#activeGradient)" : "url(#lockedGradient)"}
-                        stroke="white"
-                        strokeWidth="5"
+                        stroke={is_completed ? "#22c55e" : is_unlocked ? "#818cf8" : "#6b7280"}
+                        strokeWidth="6"
                         filter="url(#shadow)"
                       />
                     </g>
@@ -395,24 +407,24 @@ export default function LearningPathMapPage() {
                       {is_completed ? "✓" : is_unlocked ? "★" : "🔒"}
                     </text>
                     
-                    {/* Location number badge - on top with higher z-index */}
+                    {/* Location number badge - colorful and prominent */}
                     <g style={{ zIndex: 100 }}>
                       <circle
                         cx={x}
-                        cy={y - 55}
-                        r="18"
-                        fill="white"
-                        stroke={is_completed ? "#10b981" : is_unlocked ? "#6366f1" : "#9ca3af"}
-                        strokeWidth="3"
+                        cy={y - 60}
+                        r="22"
+                        fill={is_completed ? "#10b981" : is_unlocked ? "#6366f1" : "#4b5563"}
+                        stroke="white"
+                        strokeWidth="4"
                         filter="url(#shadow)"
                       />
                       <text
                         x={x}
-                        y={y - 47}
+                        y={y - 51}
                         textAnchor="middle"
-                        fontSize="16"
+                        fontSize="18"
                         fontWeight="bold"
-                        fill={is_completed ? "#10b981" : is_unlocked ? "#6366f1" : "#9ca3af"}
+                        fill="white"
                         className="pointer-events-none"
                       >
                         {idx + 1}
