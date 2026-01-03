@@ -15,10 +15,10 @@ export default function LearningPathMapPage() {
 
   if (pathLoading || locationsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading map...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Loading your journey map...</p>
         </div>
       </div>
     );
@@ -26,10 +26,10 @@ export default function LearningPathMapPage() {
 
   if (!pathData || !locations) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Chapter not found</p>
-          <Link href="/learning-path" className="text-indigo-600 hover:underline mt-2 inline-block">
+          <p className="text-gray-400">Chapter not found</p>
+          <Link href="/learning-path" className="text-indigo-400 hover:text-indigo-300 mt-2 inline-block">
             ← Back to Learning Path
           </Link>
         </div>
@@ -40,33 +40,33 @@ export default function LearningPathMapPage() {
   const { path, progress } = pathData;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
+    <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="mb-6">
           <Link 
             href="/learning-path"
-            className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-4"
+            className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 mb-4 transition-colors"
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back to Journey
           </Link>
           
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-gray-800 rounded-xl shadow-2xl p-6 border border-gray-700">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold">
+                  <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-semibold border border-indigo-500/30">
                     {path.level}
                   </span>
-                  <span className="text-gray-500">Chapter {path.chapter}</span>
+                  <span className="text-gray-400">Chapter {path.chapter}</span>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{path.title}</h1>
-                <p className="text-gray-600">{path.description}</p>
+                <h1 className="text-3xl font-bold text-white mb-2">{path.title}</h1>
+                <p className="text-gray-400">{path.description}</p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold text-indigo-600">
+                <div className="text-3xl font-bold text-indigo-400">
                   {progress?.progress_percent || 0}%
                 </div>
                 <div className="text-sm text-gray-500">Complete</div>
@@ -75,7 +75,7 @@ export default function LearningPathMapPage() {
             
             {/* Progress Bar */}
             <div className="mt-4">
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
                 <div 
                   className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${progress?.progress_percent || 0}%` }}
@@ -86,8 +86,8 @@ export default function LearningPathMapPage() {
         </div>
 
         {/* Interactive Map - Winding Path Design */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center flex items-center justify-center gap-2">
+        <div className="bg-gray-800 rounded-xl shadow-2xl p-8 mb-6 border border-gray-700">
+          <h2 className="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center gap-2">
             <span className="text-3xl">🗺️</span>
             <span>Your Learning Journey</span>
           </h2>
@@ -99,7 +99,7 @@ export default function LearningPathMapPage() {
               transform-origin: center;
             }
           `}</style>
-          <div className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 overflow-hidden shadow-inner" style={{ minHeight: '800px' }}>
+          <div className="relative bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 rounded-2xl p-8 overflow-hidden shadow-inner" style={{ minHeight: '800px' }}>
             {/* Enhanced World Map Background */}
             <div className="absolute inset-0 opacity-8">
               <svg viewBox="0 0 1200 700" className="w-full h-full">
@@ -427,8 +427,8 @@ export default function LearningPathMapPage() {
                         width="180"
                         height="60"
                         rx="10"
-                        fill="white"
-                        stroke={is_completed ? "#10b981" : is_unlocked ? "#6366f1" : "#d1d5db"}
+                        fill="#1f2937"
+                        stroke={is_completed ? "#10b981" : is_unlocked ? "#6366f1" : "#4b5563"}
                         strokeWidth="2.5"
                         filter="url(#shadow)"
                       />
@@ -438,7 +438,7 @@ export default function LearningPathMapPage() {
                         textAnchor="middle"
                         fontSize="15"
                         fontWeight="bold"
-                        fill="#1f2937"
+                        fill="#ffffff"
                       >
                         {location.name}
                       </text>
@@ -447,7 +447,7 @@ export default function LearningPathMapPage() {
                         y={isAbove ? "-15" : "45"}
                         textAnchor="middle"
                         fontSize="12"
-                        fill="#6b7280"
+                        fill="#9ca3af"
                       >
                         ⏱️ {location.estimated_minutes} min
                       </text>
@@ -461,24 +461,24 @@ export default function LearningPathMapPage() {
 
           {/* Legend */}
           <div className="mt-8 flex items-center justify-center gap-8 text-sm">
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 rounded-lg border border-green-500/30">
               <div className="w-4 h-4 rounded-full bg-gradient-to-br from-green-500 to-green-600"></div>
-              <span className="text-gray-700 font-medium">Completed</span>
+              <span className="text-green-400 font-medium">Completed</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-lg">
-              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600"></div>
-              <span className="text-gray-700 font-medium">Available</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-indigo-500/20 rounded-lg border border-indigo-500/30">
+              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600"></div>
+              <span className="text-indigo-400 font-medium">Available</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
-              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-gray-300 to-gray-400"></div>
-              <span className="text-gray-700 font-medium">Locked</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-700 rounded-lg border border-gray-600">
+              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-gray-400 to-gray-500"></div>
+              <span className="text-gray-400 font-medium">Locked</span>
             </div>
           </div>
         </div>
 
         {/* Location List */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Locations</h2>
+        <div className="bg-gray-800 rounded-xl shadow-2xl p-6 border border-gray-700">
+          <h2 className="text-xl font-bold text-white mb-4">Locations</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {locations.map((locData) => {
               const { location, is_unlocked, is_completed, completion_percent } = locData;
@@ -489,12 +489,12 @@ export default function LearningPathMapPage() {
                   href={is_unlocked ? `/learning-path/locations/${location._id}` : '#'}
                   className={`border-2 rounded-lg p-4 transition-all ${
                     is_unlocked 
-                      ? 'border-indigo-200 hover:border-indigo-400 hover:shadow-md cursor-pointer' 
-                      : 'border-gray-200 opacity-50 cursor-not-allowed'
+                      ? 'border-indigo-500/30 bg-gray-700/50 hover:border-indigo-400 hover:bg-gray-700 hover:shadow-lg cursor-pointer' 
+                      : 'border-gray-700 bg-gray-800/50 opacity-50 cursor-not-allowed'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-bold text-gray-900">{location.name}</h3>
+                    <h3 className="font-bold text-white">{location.name}</h3>
                     <div>
                       {is_completed && <CheckCircleIcon className="w-6 h-6 text-green-500" />}
                       {!is_completed && is_unlocked && <PlayCircleIcon className="w-6 h-6 text-indigo-500" />}
@@ -502,17 +502,17 @@ export default function LearningPathMapPage() {
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-600 mb-3">{location.description}</p>
+                  <p className="text-sm text-gray-400 mb-3">{location.description}</p>
                   
                   {is_unlocked && (
                     <>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                      <div className="w-full bg-gray-600 rounded-full h-2 mb-2">
                         <div 
-                          className="bg-indigo-600 h-2 rounded-full transition-all"
+                          className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all"
                           style={{ width: `${completion_percent}%` }}
                         ></div>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center justify-between text-xs text-gray-400">
                         <span>⏱️ {location.estimated_minutes} min</span>
                         <span>{location.scenarios.length} scenarios</span>
                       </div>
@@ -520,7 +520,7 @@ export default function LearningPathMapPage() {
                   )}
                   
                   {!is_unlocked && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-400">
                       🔒 Complete previous locations to unlock
                     </div>
                   )}
