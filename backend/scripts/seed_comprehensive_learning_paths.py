@@ -11,8 +11,11 @@ from bson import ObjectId
 import os
 
 # MongoDB connection
-MONGODB_URL = os.getenv("MONGODB_URI", "mongodb+srv://saud:A20WJXcybOc2aAgb@cluster0.8hmnx1o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+MONGODB_URL = os.getenv("MONGODB_URI")
 DB_NAME = os.getenv("MONGODB_DB_NAME", "german_ai")
+
+if not MONGODB_URL:
+    raise ValueError("MONGODB_URI environment variable is required. Please set it in your .env file.")
 
 async def seed_comprehensive_learning_paths():
     """Seed comprehensive learning paths for all levels"""
