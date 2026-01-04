@@ -16,10 +16,10 @@ export default function LocationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading location...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Loading location...</p>
         </div>
       </div>
     );
@@ -27,10 +27,10 @@ export default function LocationDetailPage() {
 
   if (!locationData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Location not found</p>
-          <Link href="/learning-path" className="text-indigo-600 hover:underline mt-2 inline-block">
+          <p className="text-gray-400">Location not found</p>
+          <Link href="/learning-path" className="text-indigo-400 hover:text-indigo-300 mt-2 inline-block">
             ← Back to Learning Path
           </Link>
         </div>
@@ -41,28 +41,28 @@ export default function LocationDetailPage() {
   const { location, is_unlocked, is_completed, completion_percent } = locationData;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
+    <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Back Button */}
         <Link 
           href={`/learning-path/${location.chapter_id}/map`}
-          className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6"
+          className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 mb-6 transition-colors"
         >
           <ArrowLeftIcon className="w-4 h-4" />
           Back to Map
         </Link>
 
         {/* Location Header */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
+        <div className="bg-gray-800 rounded-xl shadow-2xl p-8 mb-6 border border-gray-700">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <MapPinIcon className="w-5 h-5 text-indigo-600" />
-                <span className="text-gray-500 text-sm">{location.type}</span>
+                <MapPinIcon className="w-5 h-5 text-indigo-400" />
+                <span className="text-gray-400 text-sm">{location.type}</span>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{location.name}</h1>
-              <p className="text-gray-600">{location.description}</p>
+              <h1 className="text-3xl font-bold text-white mb-2">{location.name}</h1>
+              <p className="text-gray-400">{location.description}</p>
             </div>
             <div className="text-right">
               {is_completed ? (
@@ -78,11 +78,11 @@ export default function LocationDetailPage() {
           {/* Progress */}
           {is_unlocked && (
             <div className="mb-4">
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <div className="flex justify-between text-sm text-gray-400 mb-2">
                 <span>Progress</span>
                 <span className="font-semibold">{completion_percent}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="w-full bg-gray-700 rounded-full h-3">
                 <div 
                   className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all"
                   style={{ width: `${completion_percent}%` }}
@@ -92,7 +92,7 @@ export default function LocationDetailPage() {
           )}
 
           {/* Info */}
-          <div className="flex items-center gap-6 text-sm text-gray-600">
+          <div className="flex items-center gap-6 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <ClockIcon className="w-4 h-4" />
               <span>{location.estimated_minutes} minutes</span>
@@ -109,13 +109,13 @@ export default function LocationDetailPage() {
         </div>
 
         {/* Activities */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Learning Activities</h2>
+        <div className="bg-gray-800 rounded-xl shadow-2xl p-6 border border-gray-700">
+          <h2 className="text-xl font-bold text-white mb-4">Learning Activities</h2>
           
           {!is_unlocked ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">🔒</div>
-              <p className="text-gray-600">Complete previous locations to unlock this area</p>
+              <p className="text-gray-400">Complete previous locations to unlock this area</p>
             </div>
           ) : activities && activities.length > 0 ? (
             <div className="space-y-3">
@@ -157,26 +157,26 @@ export default function LocationDetailPage() {
                   <Link
                     key={activity.id}
                     href={getActivityLink(activity)}
-                    className={`block border-2 rounded-lg p-4 hover:shadow-md transition-all ${
+                    className={`block border-2 rounded-lg p-4 hover:shadow-lg transition-all ${
                       isCompleted 
-                        ? 'border-green-200 bg-green-50' 
-                        : `border-${color}-200 hover:border-${color}-400`
+                        ? 'border-green-500/30 bg-green-500/10' 
+                        : 'border-indigo-500/30 bg-gray-700/50 hover:border-indigo-400 hover:bg-gray-700'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3 flex-1">
-                        <div className={`p-2 rounded-lg ${isCompleted ? 'bg-green-100 text-green-600' : `bg-${color}-100 text-${color}-600`}`}>
+                        <div className={`p-2 rounded-lg ${isCompleted ? 'bg-green-500/20 text-green-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
                           {getActivityIcon(activity.type)}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">{activity.name}</h3>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${isCompleted ? 'bg-green-100 text-green-700' : `bg-${color}-100 text-${color}-700`}`}>
+                            <h3 className="font-semibold text-white">{activity.name}</h3>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${isCompleted ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'}`}>
                               {activity.type}
                             </span>
-                            {isCompleted && <span className="text-green-500">✓</span>}
+                            {isCompleted && <span className="text-green-400">✓</span>}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{activity.description}</p>
+                          <p className="text-sm text-gray-400 mb-2">{activity.description}</p>
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span>⏱️ {activity.estimated_minutes} min</span>
                             <span>⭐ {activity.xp_reward} XP</span>
@@ -184,14 +184,14 @@ export default function LocationDetailPage() {
                           </div>
                         </div>
                       </div>
-                      <ArrowLeftIcon className={`w-5 h-5 rotate-180 flex-shrink-0 ${isCompleted ? 'text-green-600' : `text-${color}-600`}`} />
+                      <ArrowLeftIcon className={`w-5 h-5 rotate-180 flex-shrink-0 ${isCompleted ? 'text-green-400' : 'text-indigo-400'}`} />
                     </div>
                   </Link>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-400">
               <p>No activities available yet</p>
               <p className="text-sm mt-2">Check back soon for new content!</p>
             </div>

@@ -111,6 +111,23 @@ async def seed_locations():
         ]
     }
     
+    # Fetch scenarios from database to link to locations
+    print("📚 Fetching scenarios from database...")
+    all_scenarios = await db.scenarios.find({}).to_list(1000)
+    print(f"Found {len(all_scenarios)} scenarios")
+    
+    # Group scenarios by difficulty
+    scenarios_by_difficulty = {}
+    for scenario in all_scenarios:
+        difficulty = scenario.get("difficulty", "a1").lower()
+        if difficulty not in scenarios_by_difficulty:
+            scenarios_by_difficulty[difficulty] = []
+        scenarios_by_difficulty[difficulty].append(str(scenario["_id"]))
+    
+    print("\nScenarios by difficulty:")
+    for diff, scen_list in scenarios_by_difficulty.items():
+        print(f"  {diff.upper()}: {len(scen_list)} scenarios")
+    
     # Create locations for each learning path
     for path in learning_paths:
         level = path.get("level", "A1")
@@ -119,11 +136,22 @@ async def seed_locations():
         # Get appropriate templates for this level
         templates = location_templates.get(level, location_templates["A1"])
         
+        # Get scenarios for this level
+        level_scenarios = scenarios_by_difficulty.get(level.lower(), [])
+        
         # Create 5-7 locations per chapter
         num_locations = min(len(templates), 5 + (chapter % 3))
         
         for i in range(num_locations):
             template = templates[i % len(templates)]
+            
+            # Assign 2-4 scenarios per location
+            scenarios_per_location = min(len(level_scenarios), 2 + (i % 3))
+            start_idx = (chapter * 10 + i * 3) % max(1, len(level_scenarios))
+            location_scenarios = [
+                level_scenarios[(start_idx + j) % len(level_scenarios)] 
+                for j in range(scenarios_per_location)
+            ] if level_scenarios else []
             
             location = {
                 "_id": ObjectId(),
@@ -136,7 +164,7 @@ async def seed_locations():
                     "x": 100 + (i * 200),
                     "y": 100 + (i * 150)
                 },
-                "scenarios": [],
+                "scenarios": location_scenarios,
                 "characters": [],
                 "estimated_minutes": 15 + (i * 5),
                 "difficulty_requirements": {
