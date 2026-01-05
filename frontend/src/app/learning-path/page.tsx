@@ -8,7 +8,7 @@ import { MapIcon, TrophyIcon, FlameIcon, MessageCircleIcon, BookOpenIcon, UsersI
 
 export default function LearningPathPage() {
   const router = useRouter();
-  const { activeJourney } = useJourney();
+  const { activeJourney, loading: journeyLoading } = useJourney();
   
   // Always filter by the active journey's level to prevent random chapter switching
   const journeyLevel = activeJourney?.level;
@@ -18,7 +18,8 @@ export default function LearningPathPage() {
   const { data: recommendations } = useRecommendations(journeyLevel);
   const { data: challenges } = useDailyChallenges(journeyLevel);
 
-  if (pathsLoading || progressLoading) {
+  // Wait for journey to load before showing content
+  if (journeyLoading || pathsLoading || progressLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">

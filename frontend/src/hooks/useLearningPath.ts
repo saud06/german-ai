@@ -14,6 +14,13 @@ export function useLearningPaths(journeyLevel?: string) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Don't fetch until we have a journey level to prevent loading all chapters
+    if (!journeyLevel) {
+      setIsLoading(true);
+      return;
+    }
+    
+    setIsLoading(true);
     api.getAllLearningPaths(journeyLevel)
       .then(setData)
       .catch(setError)
@@ -161,6 +168,12 @@ export function useRecommendations(journeyLevel?: string) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!journeyLevel) {
+      setIsLoading(true);
+      return;
+    }
+    
+    setIsLoading(true);
     api.getRecommendations(journeyLevel)
       .then(setData)
       .catch(setError)
@@ -176,6 +189,12 @@ export function useDailyChallenges(journeyLevel?: string) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!journeyLevel) {
+      setIsLoading(true);
+      return;
+    }
+    
+    setIsLoading(true);
     api.getDailyChallenges(journeyLevel)
       .then(setData)
       .catch(setError)
