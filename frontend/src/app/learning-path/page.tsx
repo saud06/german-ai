@@ -10,9 +10,8 @@ export default function LearningPathPage() {
   const router = useRouter();
   const { activeJourney } = useJourney();
   
-  // For Student journey, filter by their level (B1)
-  // For other journeys, show all levels
-  const journeyLevel = activeJourney?.type === 'student' ? activeJourney.level : undefined;
+  // Always filter by the active journey's level to prevent random chapter switching
+  const journeyLevel = activeJourney?.level;
   
   const { data: paths, isLoading: pathsLoading } = useLearningPaths(journeyLevel);
   const { data: progress, isLoading: progressLoading } = useProgressSummary();
